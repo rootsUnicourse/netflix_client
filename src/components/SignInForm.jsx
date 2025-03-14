@@ -45,13 +45,12 @@ export default function SignInForm() {
         <Card
             sx={{
                 width: 400,
-                backgroundColor: 'rgba(0,0,0,0.75)',
+                backgroundColor: 'rgba(0,0,0,0.6)',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 padding: '30px',
                 borderRadius: '12px',
-                boxShadow: '0px 4px 10px rgba(0,0,0,0.5)',
             }}
         >
             <CardContent sx={{ width: '100%' }}>

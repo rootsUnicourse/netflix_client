@@ -167,7 +167,7 @@ export default function SignUpForm() {
                 </Box>
 
                 {/* reCAPTCHA Disclaimer */}
-                <Box sx={{ textAlign: 'center', width: '100%', marginTop: '100px', marginBottom: '100px' }}>
+                <Box sx={{ textAlign: 'center', width: '100%', marginTop: '100px', marginBottom: '29px' }}>
                     <Typography
                         variant="body2"
                         sx={{
