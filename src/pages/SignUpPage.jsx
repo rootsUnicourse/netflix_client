@@ -1,4 +1,3 @@
-// client/src/pages/SignUpPage.js
 import React from 'react';
 import { Box } from '@mui/material';
 import SignUpForm from '../components/SignUpForm';
@@ -8,26 +7,24 @@ import Footer from '../components/Footer';
 
 const backgroundStyles = {
     width: '100%',
-    height: '100vh',
     backgroundImage: `url(${SignInBack})`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
-    position: 'relative',
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'center', 
+    alignItems: 'center',
+    position: 'relative',
 };
 
 export default function SignUpPage() {
     return (
         <Box sx={backgroundStyles}>
-            {/* A dark overlay to simulate Netflix's gradient */}
+            {/* Dark Overlay */}
             <Box
                 sx={{
                     position: 'absolute',
                     width: '100%',
-                    height: '100%',
                     backgroundColor: 'rgba(0, 0, 0, 0.6)',
                     top: 0,
                     left: 0,
@@ -39,8 +36,8 @@ export default function SignUpPage() {
             <Box
                 sx={{
                     position: 'absolute',
-                    top: '20px', // Distance from top
-                    left: '120px', // Distance from left
+                    top: '30px',
+                    left: '60px',
                     zIndex: 2,
                 }}
             >
@@ -48,13 +45,13 @@ export default function SignUpPage() {
                     src={NetflixLogo}
                     alt="Netflix"
                     style={{
-                        width: '150px', // Adjust logo size
+                        width: '160px',
                         height: 'auto',
                     }}
                 />
             </Box>
 
-            {/* Centered SignUp Form under the Netflix Logo */}
+            {/* SignUp Form - Positioned Higher */}
             <Box
                 sx={{
                     position: 'relative',
@@ -62,15 +59,17 @@ export default function SignUpPage() {
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    marginTop: '40px',
-                    marginBottom: '40px'
+                    justifyContent: 'flex-start', // Moves form higher
+                    flex: 1,
+                    marginTop: '100px', // Moves form up
+                    marginBottom: '50px'
                 }}
             >
                 <SignUpForm />
             </Box>
-            {/* Footer Below Sign Up Form */}
-            <Box sx={{ width: '100%' }}>
+
+            {/* Footer - Stays at Bottom */}
+            <Box sx={{ width: '100%', zIndex: 2, flexShrink: 0 }}>
                 <Footer />
             </Box>
         </Box>

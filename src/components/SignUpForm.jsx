@@ -78,12 +78,13 @@ export default function SignUpForm() {
                         fontWeight: '400',
                         fontFamily: 'ABeeZee, sans-serif',
                         color: '#fff',
-                        textAlign: 'center',
+                        textAlign: 'left',  // 👈 Set text alignment to left
+                        width: '100%',       // 👈 Ensures alignment applies correctly
                     }}
                 >
                     Sign Up
                 </Typography>
-
+                
                 {/* Form Container */}
                 <Box
                     component="form"
@@ -166,7 +167,7 @@ export default function SignUpForm() {
                 </Box>
 
                 {/* reCAPTCHA Disclaimer */}
-                <Box sx={{ textAlign: 'center', width: '100%' }}>
+                <Box sx={{ textAlign: 'center', width: '100%', marginTop: '100px', marginBottom: '100px' }}>
                     <Typography
                         variant="body2"
                         sx={{

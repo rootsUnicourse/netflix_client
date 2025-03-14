@@ -10,7 +10,6 @@ export default function Footer() {
                 fontSize: '13px',
                 px: { xs: 4, sm: 6 },
                 py: 5,
-                maxWidth: '1100px',
                 margin: '0 auto',
                 backgroundColor: 'rgba(0,0,0,0.60)'
             }}
@@ -19,7 +18,7 @@ export default function Footer() {
             <Typography sx={{ mb: 3, fontWeight: 400, color: '#fff' }}>
                 Questions? Call{' '}
                 <Link
-                    href="tel:1-844-505-2993"
+                    href="#"
                     sx={{
                         color: '#fff',
                         fontWeight: '400px',
