@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Box, TextField, Button, Typography, Card, CardContent, FormControlLabel, Checkbox } from '@mui/material';
 import { login } from '../api/api';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
+import UserContext from '../context/UserContext';
 
 export default function SignInForm() {
     const [emailOrPhone, setEmailOrPhone] = useState('');
@@ -10,15 +11,16 @@ export default function SignInForm() {
     const [rememberMe, setRememberMe] = useState(false);
     const [error, setError] = useState('');
     const navigate = useNavigate();
+    const { setUser } = useContext(UserContext);
 
-    // 🔹 Check if user is already remembered in cookies on component mount
+
     useEffect(() => {
         const storedUser = Cookies.get('user');
         if (storedUser) {
             const { emailOrPhone, password } = JSON.parse(storedUser);
             setEmailOrPhone(emailOrPhone);
             setPassword(password);
-            navigate('/dashboard'); // Redirect immediately if cookie exists
+            navigate('/profiles'); // Redirect immediately if cookie exists
         }
     }, [navigate]);
 
@@ -28,13 +30,16 @@ export default function SignInForm() {
 
         try {
             const { data } = await login({ emailOrPhone, password });
+            setUser(data.user); // ✅ Set user in context
+            localStorage.setItem('user', JSON.stringify(data.user)); 
+            localStorage.setItem('token', data.token); 
 
-            // If "Remember Me" is checked, store credentials in a cookie for 1 hour
+           
             if (rememberMe) {
                 Cookies.set('user', JSON.stringify({ emailOrPhone, password }), { expires: 1 / 24 });
             }
 
-            navigate('/dashboard'); // Redirect after successful login
+            navigate('/dashboard'); 
         } catch (err) {
             console.error(err);
             setError(err.response?.data?.message || 'Invalid login credentials.');
