@@ -17,6 +17,8 @@ api.interceptors.request.use(
 
 export const signUp = async (payload) => api.post('/auth/signup', payload);
 export const login = async (payload) => api.post('/auth/login', payload);
+
+// Profile operations
 export const getProfiles = async () => api.get('/profiles');
 export const addProfile = async (profileData) => api.post('/profiles/add', profileData);
 export const deleteProfile = async (profileId) => api.delete(`/profiles/${profileId}`);
