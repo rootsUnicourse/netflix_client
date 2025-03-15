@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Box, Typography, Button, IconButton } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import NavigateNextIcon from '@mui/icons-material/NavigateNext';
-import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 
 // Import the banner images
 import SpaceForceImg from '../assets/images/spaceforce.jpeg';
@@ -65,14 +63,15 @@ const HeroBanner = () => {
     img.src = featuredContent[nextIndex].image;
   }, [currentIndex, nextIndex]);
   
-  // Auto-rotate featured content every 8 seconds
+  // Auto-rotate featured content every 5 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       handleNext();
-    }, 8000);
+    }, 5000);
     
+    // Clear interval on component unmount
     return () => clearInterval(interval);
-  }, [currentIndex]);
+  }, []); // Remove currentIndex from dependency array to ensure continuous rotation
   
   const handleNext = () => {
     if (isTransitioning) return;
@@ -80,20 +79,6 @@ const HeroBanner = () => {
     setIsTransitioning(true);
     setTimeout(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % featuredContent.length);
-      setTimeout(() => {
-        setIsTransitioning(false);
-      }, 100);
-    }, 300);
-  };
-  
-  const handlePrev = () => {
-    if (isTransitioning) return;
-    
-    setIsTransitioning(true);
-    setTimeout(() => {
-      setCurrentIndex((prevIndex) => 
-        prevIndex === 0 ? featuredContent.length - 1 : prevIndex - 1
-      );
       setTimeout(() => {
         setIsTransitioning(false);
       }, 100);
@@ -279,43 +264,6 @@ const HeroBanner = () => {
         </Typography>
       </Box>
       
-      {/* Navigation Arrows */}
-      <IconButton
-        onClick={handlePrev}
-        sx={{
-          position: 'absolute',
-          left: '2%',
-          top: '50%',
-          transform: 'translateY(-50%)',
-          color: 'white',
-          bgcolor: 'rgba(0,0,0,0.5)',
-          '&:hover': {
-            bgcolor: 'rgba(0,0,0,0.7)',
-          },
-          zIndex: 3,
-        }}
-      >
-        <NavigateBeforeIcon fontSize="large" />
-      </IconButton>
-      
-      <IconButton
-        onClick={handleNext}
-        sx={{
-          position: 'absolute',
-          right: '2%',
-          top: '50%',
-          transform: 'translateY(-50%)',
-          color: 'white',
-          bgcolor: 'rgba(0,0,0,0.5)',
-          '&:hover': {
-            bgcolor: 'rgba(0,0,0,0.7)',
-          },
-          zIndex: 3,
-        }}
-      >
-        <NavigateNextIcon fontSize="large" />
-      </IconButton>
-      
       {/* Indicator Dots */}
       <Box
         sx={{
@@ -336,16 +284,6 @@ const HeroBanner = () => {
               height: '3px',
               bgcolor: index === currentIndex ? 'white' : 'rgba(255,255,255,0.5)',
               transition: 'background-color 0.3s',
-              cursor: 'pointer',
-            }}
-            onClick={() => {
-              if (!isTransitioning) {
-                setIsTransitioning(true);
-                setTimeout(() => {
-                  setCurrentIndex(index);
-                  setIsTransitioning(false);
-                }, 500);
-              }
             }}
           />
         ))}
