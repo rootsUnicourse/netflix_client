@@ -4,6 +4,7 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteIcon from '@mui/icons-material/Delete';
 import UserContext from '../context/UserContext';
 import ApiService from '../api/api';
+import { useNavigate } from 'react-router-dom';
 
 // Profile Avatars
 import RedAvatar from '../assets/images/profile1.png';
@@ -14,9 +15,10 @@ import mummi from '../assets/images/profile5.png';
 
 const avatars = [RedAvatar, BlueAvatar, PurpleAvatar, OrangeAvatar, mummi];
 
-export default function ProfileSelection({ onSelectProfile }) {
+export default function ProfileSelection() {
     const { profiles, setProfiles } = useContext(UserContext);
     const [isEditing, setIsEditing] = useState(null);
+    const navigate = useNavigate();
 
     // Load profiles from backend on component mount
     useEffect(() => {
@@ -31,6 +33,14 @@ export default function ProfileSelection({ onSelectProfile }) {
         
         fetchProfiles();
     }, [setProfiles]);
+
+    // Handle profile selection
+    const handleSelectProfile = (profile) => {
+        // Store the selected profile in localStorage
+        localStorage.setItem('currentProfile', JSON.stringify(profile));
+        // Navigate to the home page
+        navigate('/home');
+    };
 
     // Add new profile
     const addProfile = async () => {
@@ -141,7 +151,7 @@ export default function ProfileSelection({ onSelectProfile }) {
                                     transition: 'transform 0.2s'
                                 }
                             }}
-                            onClick={() => onSelectProfile(profile)}
+                            onClick={() => handleSelectProfile(profile)}
                         >
                             <img
                                 src={profile.avatar}
