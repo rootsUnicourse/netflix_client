@@ -16,6 +16,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import UserContext from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
 import HeroBanner from '../components/HeroBanner';
+import TopMatchesRow from '../components/TopMatchesRow';
 
 // Netflix logo will be provided by the user
 import NetflixLogo from '../assets/images/netflixlogo.png'; // Updated path to use existing logo
@@ -204,9 +205,16 @@ export default function Home() {
                 {/* Hero Banner */}
                 <HeroBanner />
                 
-                {/* Content Rows will go here */}
-                <Container maxWidth="xl" sx={{ mt: 4 }}>
-                    {/* Content rows will be added later */}
+                {/* Content Rows */}
+                <Container 
+                    maxWidth={false} 
+                    sx={{ 
+                        mt: 4,
+                        px: { xs: 1, sm: 2, md: 4 }
+                    }}
+                >
+                    {/* Top Matches Row - AI Recommended Content */}
+                    <TopMatchesRow user={user} selectedProfile={selectedProfile} />
                 </Container>
             </Box>
         </Box>

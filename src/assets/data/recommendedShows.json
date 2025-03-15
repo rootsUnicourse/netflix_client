@@ -1,0 +1,114 @@
+{
+  "recommendedShows": [
+    {
+      "id": 1,
+      "title": "Space Force",
+      "image": "../images/spaceforce.jpeg",
+      "type": "series",
+      "matchPercentage": 98,
+      "year": 2020,
+      "maturityRating": "TV-MA",
+      "duration": "1 Season",
+      "genres": ["Comedy", "Satire"]
+    },
+    {
+      "id": 2,
+      "title": "The Water Man",
+      "image": "../images/thewaterman.png",
+      "type": "movie",
+      "matchPercentage": 95,
+      "year": 2021,
+      "maturityRating": "PG",
+      "duration": "1h 32m",
+      "genres": ["Drama", "Adventure"]
+    },
+    {
+      "id": 3,
+      "title": "Suits",
+      "image": "../images/suits.png",
+      "type": "series",
+      "matchPercentage": 97,
+      "year": 2011,
+      "maturityRating": "TV-14",
+      "duration": "9 Seasons",
+      "genres": ["Legal Drama", "Comedy"]
+    },
+    {
+      "id": 4,
+      "title": "Extraordinary",
+      "image": "../images/extraordinary.jpeg",
+      "type": "series",
+      "matchPercentage": 92,
+      "year": 2022,
+      "maturityRating": "TV-14",
+      "duration": "1 Season",
+      "genres": ["Legal Drama", "Romance"]
+    },
+    {
+      "id": 5,
+      "title": "Shot Caller",
+      "image": "../images/shotcaller.png",
+      "type": "movie",
+      "matchPercentage": 89,
+      "year": 2017,
+      "maturityRating": "R",
+      "duration": "2h 1m",
+      "genres": ["Crime", "Thriller"]
+    },
+    {
+      "id": 6,
+      "title": "Sword of Destiny",
+      "image": "../images/swordofdestiny.jpeg",
+      "type": "series",
+      "matchPercentage": 94,
+      "year": 2023,
+      "maturityRating": "TV-MA",
+      "duration": "1 Season",
+      "genres": ["Fantasy", "Action"]
+    },
+    {
+      "id": 7,
+      "title": "Ready Player One",
+      "image": "../images/readyplayerone.png",
+      "type": "movie",
+      "matchPercentage": 96,
+      "year": 2018,
+      "maturityRating": "PG-13",
+      "duration": "2h 20m",
+      "genres": ["Sci-Fi", "Adventure"]
+    },
+    {
+      "id": 8,
+      "title": "Captains of the World",
+      "image": "../images/captainsoftheworld.jpeg",
+      "type": "movie",
+      "matchPercentage": 91,
+      "year": 2023,
+      "maturityRating": "PG-13",
+      "duration": "1h 55m",
+      "genres": ["Sports", "Drama"]
+    },
+    {
+      "id": 9,
+      "title": "Extraction 2",
+      "image": "../images/extraction2.jpeg",
+      "type": "movie",
+      "matchPercentage": 99,
+      "year": 2023,
+      "maturityRating": "R",
+      "duration": "2h 3m",
+      "genres": ["Action", "Thriller"]
+    },
+    {
+      "id": 10,
+      "title": "Resident Alien",
+      "image": "../images/residentalien.png",
+      "type": "series",
+      "matchPercentage": 93,
+      "year": 2021,
+      "maturityRating": "TV-MA",
+      "duration": "2 Seasons",
+      "genres": ["Sci-Fi", "Comedy"]
+    }
+  ]
+} 
