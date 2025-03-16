@@ -15,10 +15,6 @@ import { styled } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
 import UserContext from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
-import HeroBanner from '../components/HeroBanner';
-import TopMatchesRow from '../components/TopMatchesRow';
-import NewestShowsRow from '../components/NewestShowsRow';
-import TopIsraelShowsRow from '../components/TopIsraelShowsRow';
 
 // Netflix logo will be provided by the user
 import NetflixLogo from '../assets/images/netflixlogo.png'; // Updated path to use existing logo
@@ -77,6 +73,7 @@ export default function Home() {
             flexGrow: 1, 
             bgcolor: '#141414', 
             minHeight: '100vh',
+            backgroundImage: 'linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(20,20,20,1) 100%)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
         }}>
@@ -89,8 +86,7 @@ export default function Home() {
                     transition: 'background-color 0.3s',
                     '&.scrolled': {
                         backgroundColor: '#141414',
-                    },
-                    zIndex: 1100
+                    }
                 }}
             >
                 <Toolbar sx={{ padding: { xs: '0 16px', sm: '0 40px' } }}>
@@ -199,34 +195,29 @@ export default function Home() {
                 </Toolbar>
             </AppBar>
             
-            {/* Main Content Area */}
-            <Box sx={{ width: '100%' }}>
-                {/* Add Toolbar to create space below the fixed AppBar */}
-                <Toolbar />
-                
-                {/* Hero Banner */}
-                <HeroBanner />
-                
-                {/* Content Rows */}
-                <Container 
-                    maxWidth={false} 
+            {/* Main Content Area - Add a Toolbar component to create space below the fixed AppBar */}
+            <Toolbar />
+            <Container maxWidth="xl" sx={{ mt: 4 }}>
+                {/* Hero Banner - Placeholder for now */}
+                <Box 
                     sx={{ 
-                        mt: -8,
-                        px: { xs: 1, sm: 2, md: 4 },
+                        height: '80vh', 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        justifyContent: 'flex-end',
+                        padding: '0 0 10% 5%',
                         position: 'relative',
-                        zIndex: 1
+                        backgroundImage: 'linear-gradient(to top, rgba(20,20,20,1) 0%, transparent 50%)',
                     }}
                 >
-                    {/* Top Matches Row - AI Recommended Content */}
-                    <TopMatchesRow user={user} selectedProfile={selectedProfile} />
-                    
-                    {/* Newest Shows Row */}
-                    <NewestShowsRow />
-                    
-                    {/* Top 10 in Israel Row */}
-                    <TopIsraelShowsRow />
-                </Container>
-            </Box>
+                    <Typography variant="h2" sx={{ color: 'white', fontWeight: 'bold', mb: 2 }}>
+                        Welcome to Netflix
+                    </Typography>
+                    <Typography variant="h5" sx={{ color: 'white', maxWidth: '40%', mb: 3 }}>
+                        Watch movies, TV shows and more on Netflix
+                    </Typography>
+                </Box>
+            </Container>
         </Box>
     );
 } 
