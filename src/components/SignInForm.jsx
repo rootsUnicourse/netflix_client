@@ -39,7 +39,7 @@ export default function SignInForm() {
                 Cookies.set('user', JSON.stringify({ emailOrPhone, password }), { expires: 1 / 24 });
             }
 
-            navigate('/dashboard'); 
+            navigate('/profiles'); 
         } catch (err) {
             console.error(err);
             setError(err.response?.data?.message || 'Invalid login credentials.');
