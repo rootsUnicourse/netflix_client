@@ -1,0 +1,104 @@
+{
+  "newestShows": [
+    {
+      "id": 1,
+      "title": "House of Ninjas",
+      "image": "../images/rurounikenshin.jpeg",
+      "type": "series",
+      "year": 2024,
+      "maturityRating": "TV-MA",
+      "duration": "1 Season",
+      "genres": ["Action", "Drama"]
+    },
+    {
+      "id": 2,
+      "title": "The Vince",
+      "image": "../images/thevince.jpeg",
+      "type": "movie",
+      "year": 2024,
+      "maturityRating": "R",
+      "duration": "2h 15m",
+      "genres": ["Drama", "Biography"]
+    },
+    {
+      "id": 3,
+      "title": "Bleach",
+      "image": "../images/bleach.jpeg",
+      "type": "series",
+      "year": 2023,
+      "maturityRating": "TV-14",
+      "duration": "1 Season",
+      "genres": ["Anime", "Action"]
+    },
+    {
+      "id": 4,
+      "title": "The Outsider",
+      "image": "../images/outsider.jpeg",
+      "type": "series",
+      "year": 2023,
+      "maturityRating": "TV-MA",
+      "duration": "1 Season",
+      "genres": ["Crime", "Mystery"]
+    },
+    {
+      "id": 5,
+      "title": "The Garfield Show",
+      "image": "../images/thegarfieldshow.png",
+      "type": "series",
+      "year": 2023,
+      "maturityRating": "TV-Y7",
+      "duration": "1 Season",
+      "genres": ["Animation", "Comedy"]
+    },
+    {
+      "id": 6,
+      "title": "Super Mario Bros",
+      "image": "../images/mariobros.png",
+      "type": "movie",
+      "year": 2023,
+      "maturityRating": "PG",
+      "duration": "1h 32m",
+      "genres": ["Animation", "Adventure"]
+    },
+    {
+      "id": 7,
+      "title": "Captains of the World",
+      "image": "../images/captainsoftheworld.jpeg",
+      "type": "documentary",
+      "year": 2023,
+      "maturityRating": "TV-14",
+      "duration": "1 Season",
+      "genres": ["Sports", "Documentary"]
+    },
+    {
+      "id": 8,
+      "title": "Extraction 2",
+      "image": "../images/extraction2.jpeg",
+      "type": "movie",
+      "year": 2023,
+      "maturityRating": "R",
+      "duration": "2h 3m",
+      "genres": ["Action", "Thriller"]
+    },
+    {
+      "id": 9,
+      "title": "Sword of Destiny",
+      "image": "../images/swordofdestiny.jpeg",
+      "type": "series",
+      "year": 2023,
+      "maturityRating": "TV-MA",
+      "duration": "1 Season",
+      "genres": ["Fantasy", "Action"]
+    },
+    {
+      "id": 10,
+      "title": "Shot Caller",
+      "image": "../images/shotcaller.png",
+      "type": "movie",
+      "year": 2023,
+      "maturityRating": "R",
+      "duration": "2h 1m",
+      "genres": ["Crime", "Thriller"]
+    }
+  ]
+} 

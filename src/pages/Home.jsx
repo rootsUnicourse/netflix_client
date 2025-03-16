@@ -17,6 +17,7 @@ import UserContext from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
 import HeroBanner from '../components/HeroBanner';
 import TopMatchesRow from '../components/TopMatchesRow';
+import NewestShowsRow from '../components/NewestShowsRow';
 
 // Netflix logo will be provided by the user
 import NetflixLogo from '../assets/images/netflixlogo.png'; // Updated path to use existing logo
@@ -209,12 +210,17 @@ export default function Home() {
                 <Container 
                     maxWidth={false} 
                     sx={{ 
-                        mt: 4,
-                        px: { xs: 1, sm: 2, md: 4 }
+                        mt: -8,
+                        px: { xs: 1, sm: 2, md: 4 },
+                        position: 'relative',
+                        zIndex: 1
                     }}
                 >
                     {/* Top Matches Row - AI Recommended Content */}
                     <TopMatchesRow user={user} selectedProfile={selectedProfile} />
+                    
+                    {/* Newest Shows Row */}
+                    <NewestShowsRow />
                 </Container>
             </Box>
         </Box>
