@@ -1,10 +1,10 @@
 import React from 'react';
-import { 
-  Box, 
-  Typography, 
-  Button, 
-  Grid, 
-  Divider, 
+import {
+  Box,
+  Typography,
+  Button,
+  Grid,
+  Divider,
   IconButton,
   Dialog,
   DialogContent,
@@ -153,8 +153,8 @@ const MoreInfo = ({ open, onClose, media }) => {
           </Box>
         </Box>
 
-        <DialogContent sx={{ 
-          bgcolor: '#181818', 
+        <DialogContent sx={{
+          bgcolor: '#181818',
           p: 3,
           overflowY: 'auto',
           maxHeight: { xs: 'calc(90vh - 300px)', sm: 'calc(90vh - 350px)', md: 'calc(90vh - 400px)' },
@@ -183,16 +183,16 @@ const MoreInfo = ({ open, onClose, media }) => {
                 <Typography sx={{ color: '#777', mr: 1 }}>
                   {formatYear(media.releaseDate)}
                 </Typography>
-                <Chip 
-                  label={media.maturityRating || 'Not Rated'} 
-                  size="small" 
-                  sx={{ 
-                    bgcolor: 'transparent', 
+                <Chip
+                  label={media.maturityRating || 'Not Rated'}
+                  size="small"
+                  sx={{
+                    bgcolor: 'transparent',
                     border: '1px solid #777',
                     color: '#777',
                     height: '20px',
                     mr: 1
-                  }} 
+                  }}
                 />
                 {media.type === 'movie' ? (
                   <Typography sx={{ color: '#777' }}>
@@ -229,7 +229,7 @@ const MoreInfo = ({ open, onClose, media }) => {
                   <Typography component="span" sx={{ color: '#777' }}>
                     {media.type === 'movie' ? 'Director: ' : 'Creators: '}
                   </Typography>
-                  {media.type === 'movie' 
+                  {media.type === 'movie'
                     ? media.director || 'Unknown'
                     : media.creators?.join(', ') || 'Unknown'}
                 </Typography>
@@ -248,7 +248,7 @@ const MoreInfo = ({ open, onClose, media }) => {
               <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
                 Episodes
               </Typography>
-              
+
               <List sx={{ bgcolor: '#333', borderRadius: '4px' }}>
                 {/* This is a placeholder. In a real implementation, you would fetch and display actual episodes */}
                 {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
@@ -256,8 +256,8 @@ const MoreInfo = ({ open, onClose, media }) => {
                     <ListItem sx={{ py: 2 }}>
                       <Typography sx={{ mr: 2, color: '#777' }}>{num}</Typography>
                       <Box sx={{ width: '130px', height: '80px', bgcolor: '#555', mr: 2, borderRadius: '4px' }} />
-                      <ListItemText 
-                        primary={`Episode ${num}`} 
+                      <ListItemText
+                        primary={`Episode ${num}`}
                         secondary={
                           <Typography variant="body2" sx={{ color: '#777' }}>
                             {`${Math.floor(Math.random() * 20 + 30)}m`}
@@ -272,96 +272,113 @@ const MoreInfo = ({ open, onClose, media }) => {
             </Box>
           )}
 
+          {/* Photos section - moved below the details */}
+          <Box sx={{ mt: 4 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
+              Photos
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 2 }}>
+              {media.additionalImages?.length > 0 ? (
+                media.additionalImages.map((image, index) => (
+                  <Box
+                    key={index}
+                    component="img"
+                    src={image}
+                    alt={`${media.title} scene ${index + 1}`}
+                    sx={{
+                      width: '200px',
+                      height: '120px',
+                      objectFit: 'cover',
+                      borderRadius: '4px'
+                    }}
+                  />
+                ))
+              ) : (
+                // Placeholder images if none available
+                [1, 2, 3].map((num) => (
+                  <Box
+                    key={num}
+                    sx={{
+                      width: '200px',
+                      height: '120px',
+                      bgcolor: '#333',
+                      borderRadius: '4px'
+                    }}
+                  />
+                ))
+              )}
+            </Box>
+          </Box>
+
           {/* About section */}
           <Box sx={{ mt: 4 }}>
             <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
               About {media.title}
             </Typography>
-            
-            <Grid container spacing={3}>
-              {/* Photos */}
-              <Grid item xs={12}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
-                  Photos
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 2 }}>
-                  {media.additionalImages?.length > 0 ? (
-                    media.additionalImages.map((image, index) => (
-                      <Box 
-                        key={index}
-                        component="img"
-                        src={image}
-                        alt={`${media.title} scene ${index + 1}`}
-                        sx={{ 
-                          width: '200px', 
-                          height: '120px', 
-                          objectFit: 'cover',
-                          borderRadius: '4px'
-                        }}
-                      />
-                    ))
-                  ) : (
-                    // Placeholder images if none available
-                    [1, 2, 3].map((num) => (
-                      <Box 
-                        key={num}
-                        sx={{ 
-                          width: '200px', 
-                          height: '120px', 
-                          bgcolor: '#333',
-                          borderRadius: '4px'
-                        }}
-                      />
-                    ))
-                  )}
-                </Box>
-              </Grid>
 
-              {/* Details */}
-              <Grid item xs={12}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
-                  Details
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+              <Typography sx={{ color: '#f0f0f0' }}>
+                <Typography component="span" sx={{ color: '#777', fontWeight: 'bold', mr: 1 }}>
+                  {media.type === 'movie' ? 'Director:' : 'Director:'}
                 </Typography>
-                
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <Typography sx={{ color: '#777', mb: 0.5 }}>
-                      <Typography component="span" sx={{ color: '#777' }}>Director: </Typography>
-                      {media.type === 'movie' 
-                        ? media.director || 'Unknown'
-                        : media.creators?.join(', ') || 'Unknown'}
-                    </Typography>
-                    
-                    <Typography sx={{ color: '#777', mb: 0.5 }}>
-                      <Typography component="span" sx={{ color: '#777' }}>Cast: </Typography>
-                      {media.cast?.slice(0, 5).map((actor, index) => (
-                        <React.Fragment key={actor.id}>
-                          <Typography component="span">{actor.name}</Typography>
-                          {index < Math.min(media.cast.length, 5) - 1 && ', '}
-                        </React.Fragment>
-                      ))}
-                    </Typography>
-                  </Grid>
-                  
-                  <Grid item xs={12} sm={6}>
-                    <Typography sx={{ color: '#777', mb: 0.5 }}>
-                      <Typography component="span" sx={{ color: '#777' }}>Genres: </Typography>
-                      {media.genres?.join(', ')}
-                    </Typography>
-                    
-                    <Typography sx={{ color: '#777', mb: 0.5 }}>
-                      <Typography component="span" sx={{ color: '#777' }}>This show is: </Typography>
-                      {media.contentTags?.slice(0, 3).join(', ') || 'No tags available'}
-                    </Typography>
-                    
-                    <Typography sx={{ color: '#777' }}>
-                      <Typography component="span" sx={{ color: '#777' }}>Maturity rating: </Typography>
-                      {media.maturityRating || 'Not Rated'}
-                    </Typography>
-                  </Grid>
-                </Grid>
-              </Grid>
-            </Grid>
+                {media.type === 'movie'
+                  ? media.director || 'Unknown'
+                  : media.creators?.join(', ') || 'Unknown'}
+              </Typography>
+
+              <Typography sx={{ color: '#f0f0f0' }}>
+                <Typography component="span" sx={{ color: '#777', fontWeight: 'bold', mr: 1 }}>
+                  Cast:
+                </Typography>
+                {media.cast?.slice(0, 10).map((actor, index) => (
+                  <React.Fragment key={actor.id}>
+                    <Typography component="span">{actor.name}</Typography>
+                    {index < Math.min(media.cast.length, 10) - 1 && ', '}
+                  </React.Fragment>
+                ))}
+              </Typography>
+
+              <Typography sx={{ color: '#f0f0f0' }}>
+                <Typography component="span" sx={{ color: '#777', fontWeight: 'bold', mr: 1 }}>
+                  Genres:
+                </Typography>
+                {media.genres?.join(', ')}
+              </Typography>
+
+              <Typography sx={{ color: '#f0f0f0' }}>
+                <Typography component="span" sx={{ color: '#777', fontWeight: 'bold', mr: 1 }}>
+                  This show is:
+                </Typography>
+                {media.contentTags?.slice(0, 3).join(', ') || 'No tags available'}
+              </Typography>
+
+              <Typography sx={{ color: '#f0f0f0' }}>
+                <Typography component="span" sx={{ color: '#777', fontWeight: 'bold', mr: 1 }}>
+                  Maturity rating:
+                </Typography>
+                {media.maturityRating || 'Not Rated'}
+              </Typography>
+
+              {media.maturityRating && (
+                <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                  <Box
+                    sx={{
+                      border: '1px solid #777',
+                      px: 1,
+                      py: 0.5,
+                      mr: 2,
+                      borderRadius: 0.5,
+                      fontSize: '14px',
+                      color: '#f0f0f0'
+                    }}
+                  >
+                    {media.maturityRating}
+                  </Box>
+                </Box>
+              )}
+            </Box>
+
+
           </Box>
         </DialogContent>
       </Box>
