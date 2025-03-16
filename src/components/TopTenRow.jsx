@@ -15,7 +15,7 @@ const TopTenRow = ({ title, items }) => {
     if (!container) return;
 
     const containerWidth = container.clientWidth;
-    const itemWidth = 200; // Approximate width of each item including margins
+    const itemWidth = 220; // Increased width to account for larger margins
     const itemsToSlide = Math.floor(containerWidth / itemWidth);
     const slideDelta = itemsToSlide * itemWidth;
 
@@ -38,7 +38,7 @@ const TopTenRow = ({ title, items }) => {
     const container = rowRef.current;
     if (container) {
       const containerWidth = container.clientWidth;
-      const totalContentWidth = items.length * 200; // Updated to match new item width
+      const totalContentWidth = items.length * 220; // Updated to match new item width
       setShowRightArrow(totalContentWidth > containerWidth);
     }
   }, [items]);
@@ -109,7 +109,8 @@ const TopTenRow = ({ title, items }) => {
           px: 2,
           transition: 'transform 0.5s ease',
           position: 'relative',
-          height: '240px', // Increased height for portrait images
+          height: '180px', // Slightly increased height for better proportions
+          mt: 2, // Add some margin at the top
         }}
       >
         <Box
@@ -119,6 +120,7 @@ const TopTenRow = ({ title, items }) => {
             transition: 'transform 0.5s ease',
             position: 'relative',
             height: '100%',
+            alignItems: 'center', // Center items vertically
           }}
         >
           {items.map((item, index) => (
@@ -127,8 +129,8 @@ const TopTenRow = ({ title, items }) => {
               sx={{
                 position: 'relative',
                 minWidth: '160px', // Narrower for portrait orientation
-                height: '100%',
-                m: '0 10px',
+                height: '85%', // Reduced height to match numbers
+                m: index === 8 ? '0 50px 0 25px' : '0 30px', // Extra right margin for 9th item (index 8)
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -139,20 +141,23 @@ const TopTenRow = ({ title, items }) => {
                 variant="h1"
                 sx={{
                   position: 'absolute',
-                  left: '-30px',
+                  left: index + 1 === 10 ? '-50px' : '-40px', // Adjust left position for number 10
                   fontSize: '200px',
                   fontWeight: 'bold',
-                  color: '#333',
+                  color: '#000000B2',
                   opacity: 0.8,
                   zIndex: 0,
                   fontFamily: 'Arial, sans-serif',
-                  WebkitTextStroke: '2px #555',
+                  WebkitTextStroke: '4px #FFFFFF4D',
                   lineHeight: '0.8',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   width: '100px',
                   height: '100%',
+                  top: '50%',
+                  transform: 'translateY(-50%)', // Center vertically
+                  letterSpacing: index + 1 === 10 ? '-35px' : 'normal', // Reduced negative spacing to create a small gap
                 }}
               >
                 {index + 1}
@@ -169,7 +174,7 @@ const TopTenRow = ({ title, items }) => {
                   borderRadius: '4px',
                   overflow: 'hidden',
                   boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
-                  ml: '20px', // Offset to account for the number
+                  ml: '35px', // Consistent margin for all positions
                 }}
               >
                 <img
@@ -178,7 +183,7 @@ const TopTenRow = ({ title, items }) => {
                   style={{
                     width: '100%',
                     height: '100%',
-                    objectFit: 'cover',
+                    objectFit: 'fit',
                     position: 'absolute',
                     border: '1px solid rgba(255,255,255,0.1)',
                   }}

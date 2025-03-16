@@ -8,7 +8,15 @@ const TopIsraelShowsRow = () => {
   useEffect(() => {
     // Get the top shows in Israel
     const shows = topIsraelShowsService.getTopIsraelShows();
-    setTopShows(shows);
+    
+    // Add "Recently Added" flag to shows 1, 2, 7, and 8 (indexes 0, 1, 6, 7)
+    // based on the reference image
+    const showsWithFlags = shows.map((show, index) => ({
+      ...show,
+      recentlyAdded: [0, 1, 6, 7].includes(index)
+    }));
+    
+    setTopShows(showsWithFlags);
   }, []);
 
   // Don't render if no shows found
