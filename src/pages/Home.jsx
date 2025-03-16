@@ -18,6 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import HeroBanner from '../components/HeroBanner';
 import TopMatchesRow from '../components/TopMatchesRow';
 import NewestShowsRow from '../components/NewestShowsRow';
+import TopIsraelShowsRow from '../components/TopIsraelShowsRow';
 
 // Netflix logo will be provided by the user
 import NetflixLogo from '../assets/images/netflixlogo.png'; // Updated path to use existing logo
@@ -221,6 +222,9 @@ export default function Home() {
                     
                     {/* Newest Shows Row */}
                     <NewestShowsRow />
+                    
+                    {/* Top 10 in Israel Row */}
+                    <TopIsraelShowsRow />
                 </Container>
             </Box>
         </Box>
