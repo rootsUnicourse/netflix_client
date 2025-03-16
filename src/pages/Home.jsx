@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { 
     AppBar, 
     Toolbar, 
@@ -9,12 +9,17 @@ import {
     IconButton,
     Menu,
     MenuItem,
-    Avatar
+    Avatar,
+    CssBaseline
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
 import UserContext from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+
+// Components
+import CoverPhotoSection from '../components/CoverPhotoSection';
 
 // Netflix logo will be provided by the user
 import NetflixLogo from '../assets/images/netflixlogo.png'; // Updated path to use existing logo
@@ -35,11 +40,13 @@ const NavButton = styled(Button)(({ theme }) => ({
 export default function Home() {
     const { user, profiles } = useContext(UserContext);
     const navigate = useNavigate();
-    const [anchorEl, setAnchorEl] = React.useState(null);
-    const [selectedProfile, setSelectedProfile] = React.useState(null);
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [selectedProfile, setSelectedProfile] = useState(null);
+    const [featuredMedia, setFeaturedMedia] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     // Get the current profile from localStorage or use the first profile
-    React.useEffect(() => {
+    useEffect(() => {
         const currentProfile = localStorage.getItem('currentProfile');
         if (currentProfile) {
             setSelectedProfile(JSON.parse(currentProfile));
@@ -48,6 +55,51 @@ export default function Home() {
             localStorage.setItem('currentProfile', JSON.stringify(profiles[0]));
         }
     }, [profiles]);
+
+    // Fetch featured media for the cover section
+    useEffect(() => {
+        const fetchFeaturedMedia = async () => {
+            try {
+                setIsLoading(true);
+                // Fetch newest media items
+                const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/media`, {
+                    params: {
+                        limit: 4,
+                        sort: 'releaseDate',  // Sort by release date instead of popularity
+                        order: 'desc'         // Descending order (newest first)
+                    }
+                });
+                
+                if (response.data.results && response.data.results.length > 0) {
+                    setFeaturedMedia(response.data.results);
+                    console.log('Fetched newest media:', response.data.results);
+                }
+                setIsLoading(false);
+            } catch (error) {
+                console.error('Error fetching featured media:', error);
+                setIsLoading(false);
+            }
+        };
+
+        fetchFeaturedMedia();
+    }, []);
+
+    // Disable horizontal scrolling
+    useEffect(() => {
+        // Save original overflow style
+        const originalOverflow = document.body.style.overflow;
+        const originalOverflowX = document.body.style.overflowX;
+        
+        // Disable horizontal scrolling
+        document.body.style.overflow = 'auto';
+        document.body.style.overflowX = 'hidden';
+        
+        // Cleanup function to restore original styles when component unmounts
+        return () => {
+            document.body.style.overflow = originalOverflow;
+            document.body.style.overflowX = originalOverflowX;
+        };
+    }, []);
 
     const handleProfileMenuOpen = (event) => {
         setAnchorEl(event.currentTarget);
@@ -73,10 +125,11 @@ export default function Home() {
             flexGrow: 1, 
             bgcolor: '#141414', 
             minHeight: '100vh',
-            backgroundImage: 'linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(20,20,20,1) 100%)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
+            overflowX: 'hidden', // Disable horizontal scrolling at the container level too
         }}>
+            <CssBaseline /> {/* Ensures consistent styling and removes default margins */}
             <AppBar 
                 position="fixed" 
                 sx={{ 
@@ -195,28 +248,14 @@ export default function Home() {
                 </Toolbar>
             </AppBar>
             
-            {/* Main Content Area - Add a Toolbar component to create space below the fixed AppBar */}
-            <Toolbar />
-            <Container maxWidth="xl" sx={{ mt: 4 }}>
-                {/* Hero Banner - Placeholder for now */}
-                <Box 
-                    sx={{ 
-                        height: '80vh', 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        justifyContent: 'flex-end',
-                        padding: '0 0 10% 5%',
-                        position: 'relative',
-                        backgroundImage: 'linear-gradient(to top, rgba(20,20,20,1) 0%, transparent 50%)',
-                    }}
-                >
-                    <Typography variant="h2" sx={{ color: 'white', fontWeight: 'bold', mb: 2 }}>
-                        Welcome to Netflix
-                    </Typography>
-                    <Typography variant="h5" sx={{ color: 'white', maxWidth: '40%', mb: 3 }}>
-                        Watch movies, TV shows and more on Netflix
-                    </Typography>
-                </Box>
+            {/* Cover Photo Section */}
+            {!isLoading && featuredMedia.length > 0 && (
+                <CoverPhotoSection featuredMediaList={featuredMedia} />
+            )}
+            
+            {/* Main Content Area */}
+            <Container maxWidth="xl" sx={{ mt: 4, overflowX: 'hidden' }}>
+                {/* Content rows will go here */}
             </Container>
         </Box>
     );
