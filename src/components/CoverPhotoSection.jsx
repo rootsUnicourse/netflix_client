@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import MoreInfo from './MoreInfo';
 
 const CoverPhotoSection = ({ featuredMediaList = [], featured }) => {
   const [displayedMedia, setDisplayedMedia] = useState(featured);
   const [fadeIn, setFadeIn] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [moreInfoOpen, setMoreInfoOpen] = useState(false);
+  const [selectedMedia, setSelectedMedia] = useState(null);
   
   // Initialize with provided media list or featured item
   useEffect(() => {
@@ -18,7 +21,7 @@ const CoverPhotoSection = ({ featuredMediaList = [], featured }) => {
 
   // Rotate through featured media every 4 seconds
   useEffect(() => {
-    if (!featuredMediaList || featuredMediaList.length <= 1 || featured) return;
+    if (!featuredMediaList || featuredMediaList.length <= 1 || featured || moreInfoOpen) return;
     
     const interval = setInterval(() => {
       setCurrentIndex((prevIndex) => {
@@ -29,7 +32,7 @@ const CoverPhotoSection = ({ featuredMediaList = [], featured }) => {
     }, 4000);
     
     return () => clearInterval(interval);
-  }, [featuredMediaList, featured]);
+  }, [featuredMediaList, featured, moreInfoOpen]);
 
   // Handle media change with fade effect
   const handleMediaChange = (newMedia) => {
@@ -51,6 +54,17 @@ const CoverPhotoSection = ({ featuredMediaList = [], featured }) => {
       setCurrentIndex(index);
       handleMediaChange(featuredMediaList[index]);
     }
+  };
+
+  // Handle opening the more info dialog
+  const handleMoreInfoOpen = () => {
+    setSelectedMedia(displayedMedia);
+    setMoreInfoOpen(true);
+  };
+
+  // Handle closing the more info dialog
+  const handleMoreInfoClose = () => {
+    setMoreInfoOpen(false);
   };
 
   if (!displayedMedia) return null;
@@ -134,6 +148,7 @@ const CoverPhotoSection = ({ featuredMediaList = [], featured }) => {
       <Button 
         variant="contained" 
         startIcon={<InfoOutlinedIcon />}
+        onClick={handleMoreInfoOpen}
         sx={{ 
           bgcolor: 'rgba(255,255,255,0.2)', 
           color: 'white',
@@ -184,6 +199,13 @@ const CoverPhotoSection = ({ featuredMediaList = [], featured }) => {
           ))}
         </Box>
       )}
+
+      {/* More Info Dialog */}
+      <MoreInfo 
+        open={moreInfoOpen} 
+        onClose={handleMoreInfoClose} 
+        media={selectedMedia || displayedMedia} 
+      />
     </Box>
   );
 };
