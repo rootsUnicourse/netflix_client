@@ -214,7 +214,7 @@ const MoreInfo = ({ open, onClose, media }) => {
             <Grid item xs={12} md={4}>
               {/* Cast & Crew */}
               <Box sx={{ mb: 2 }}>
-                <Typography sx={{ color: '#777', mb: 0.5 }}>
+                <Typography sx={{ color: '#f0f0f0', mb: 0.5 }}>
                   <Typography component="span" sx={{ color: '#777' }}>Cast: </Typography>
                   {media.cast?.slice(0, 3).map((actor, index) => (
                     <React.Fragment key={actor.id}>
@@ -225,18 +225,14 @@ const MoreInfo = ({ open, onClose, media }) => {
                   {media.cast?.length > 3 && ', more...'}
                 </Typography>
 
-                <Typography sx={{ color: '#777', mb: 0.5 }}>
-                  <Typography component="span" sx={{ color: '#777' }}>
-                    {media.type === 'movie' ? 'Director: ' : 'Creators: '}
-                  </Typography>
-                  {media.type === 'movie'
-                    ? media.director || 'Unknown'
-                    : media.creators?.join(', ') || 'Unknown'}
-                </Typography>
-
-                <Typography sx={{ color: '#777' }}>
+                <Typography sx={{ color: '#f0f0f0' }}>
                   <Typography component="span" sx={{ color: '#777' }}>Genres: </Typography>
                   {media.genres?.join(', ')}
+                </Typography>
+
+                <Typography sx={{ color: '#f0f0f0' }}>
+                  <Typography component="span" sx={{ color: '#777' }}>This show is: </Typography>
+                  {media.contentTags?.slice(0, 2).join(', ')}
                 </Typography>
               </Box>
             </Grid>
