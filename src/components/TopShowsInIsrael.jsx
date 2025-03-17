@@ -19,10 +19,10 @@ const TopShowsInIsrael = () => {
       try {
         setLoading(true);
         const response = await getTopShowsInIsrael(10);
-        
+
         setTopShows(response.data.results);
         setLoading(false);
-        
+
         // Check if we can scroll right after content is loaded
         setTimeout(checkScrollability, 100);
       } catch (error) {
@@ -78,12 +78,12 @@ const TopShowsInIsrael = () => {
 
   return (
     <Box sx={{ mt: 4, mb: 4, px: 4, position: 'relative' }}>
-      <Typography 
-        variant="h5" 
-        sx={{ 
-          fontWeight: 'bold', 
-          mb: 2, 
-          color: 'white' 
+      <Typography
+        variant="h5"
+        sx={{
+          fontWeight: 'bold',
+          mb: 2,
+          color: 'white'
         }}
       >
         Top 10 in Israel Today
@@ -133,11 +133,11 @@ const TopShowsInIsrael = () => {
         )}
 
         {/* Content Row */}
-        <Box 
+        <Box
           ref={rowRef}
           onScroll={handleScroll}
-          sx={{ 
-            display: 'flex', 
+          sx={{
+            display: 'flex',
             overflowX: 'hidden',
             gap: 4,
             pb: 2,
@@ -153,12 +153,12 @@ const TopShowsInIsrael = () => {
             // Skeleton loaders while content is loading
             Array.from(new Array(10)).map((_, index) => (
               <Box key={index} sx={{ position: 'relative', minWidth: '120px', height: '200px' }}>
-                <Skeleton 
-                  variant="rectangular" 
-                  width={120} 
-                  height={200} 
-                  animation="wave" 
-                  sx={{ bgcolor: '#333', borderRadius: '4px' }} 
+                <Skeleton
+                  variant="rectangular"
+                  width={120}
+                  height={200}
+                  animation="wave"
+                  sx={{ bgcolor: '#333', borderRadius: '4px' }}
                 />
               </Box>
             ))
@@ -170,9 +170,9 @@ const TopShowsInIsrael = () => {
           ) : (
             // Actual content
             topShows.map((show, index) => (
-              <Box 
-                key={show._id} 
-                sx={{ 
+              <Box
+                key={show._id}
+                sx={{
                   position: 'relative',
                   minWidth: '120px',
                   height: '200px',
@@ -184,7 +184,7 @@ const TopShowsInIsrael = () => {
                   },
                   display: 'flex',
                   alignItems: 'center',
-                  marginLeft: '30px'
+                  marginLeft: '60px'
                 }}
                 onClick={() => handleShowClick(show)}
               >
@@ -193,28 +193,30 @@ const TopShowsInIsrael = () => {
                   variant="h1"
                   sx={{
                     position: 'absolute',
-                    left: '-40px',
-                    fontSize: '140px',
+                    left: '-70px',
+                    fontSize: '180px',
                     fontWeight: 'bold',
-                    color: '#333',
+                    color: '#141414',
                     opacity: 0.8,
                     textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
                     zIndex: 0,
-                    WebkitTextStroke: '2px #777',
-                    fontFamily: 'Arial, sans-serif'
+                    WebkitTextStroke: '3px #777',
+                    fontFamily: 'Arial, sans-serif',
+                    lineHeight: '0.8',
+                    marginTop: '-10px'
                   }}
                 >
                   {index + 1}
                 </Typography>
-                
+
                 {/* Poster Image */}
-                <Box 
+                <Box
                   component="img"
                   src={show.posterPath || show.backdropPath}
                   alt={show.title}
-                  sx={{ 
+                  sx={{
                     width: '120px',
-                    height: '180px',
+                    height: '150px',
                     objectFit: 'cover',
                     borderRadius: '4px',
                     position: 'relative',
@@ -222,38 +224,17 @@ const TopShowsInIsrael = () => {
                     boxShadow: '0 4px 8px rgba(0,0,0,0.5)'
                   }}
                 />
-
-                {/* Show Season Info - Only for TV shows with multiple seasons */}
-                {show.seasons > 1 && (
-                  <Box 
-                    sx={{ 
-                      position: 'absolute',
-                      bottom: 10,
-                      right: 5,
-                      bgcolor: 'rgba(0,0,0,0.7)',
-                      color: 'white',
-                      fontSize: '10px',
-                      fontWeight: 'bold',
-                      py: 0.5,
-                      px: 1,
-                      borderRadius: '4px',
-                      zIndex: 2
-                    }}
-                  >
-                    {show.seasons} Seasons
-                  </Box>
-                )}
               </Box>
             ))
           )}
         </Box>
       </Box>
-      
+
       {/* MoreInfo Dialog */}
-      <MoreInfo 
-        open={moreInfoOpen} 
-        onClose={handleMoreInfoClose} 
-        media={selectedMedia} 
+      <MoreInfo
+        open={moreInfoOpen}
+        onClose={handleMoreInfoClose}
+        media={selectedMedia}
       />
     </Box>
   );
