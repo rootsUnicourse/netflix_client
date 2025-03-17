@@ -11,6 +11,7 @@ const NewOnNetflix = () => {
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [moreInfoOpen, setMoreInfoOpen] = useState(false);
   const [scrollPosition, setScrollPosition] = useState(0);
+  const [canScrollRight, setCanScrollRight] = useState(false);
   const rowRef = useRef(null);
 
   useEffect(() => {
@@ -21,6 +22,9 @@ const NewOnNetflix = () => {
         
         setNewShows(response.data.results);
         setLoading(false);
+        
+        // Check if we can scroll right after content is loaded
+        setTimeout(checkScrollability, 100);
       } catch (error) {
         console.error('Error fetching new shows:', error);
         setLoading(false);
@@ -29,6 +33,14 @@ const NewOnNetflix = () => {
 
     fetchNewShows();
   }, []);
+
+  // Check if we can scroll right
+  const checkScrollability = () => {
+    if (rowRef.current) {
+      const { scrollWidth, clientWidth, scrollLeft } = rowRef.current;
+      setCanScrollRight(scrollWidth > clientWidth + scrollLeft);
+    }
+  };
 
   const handleShowClick = (media) => {
     setSelectedMedia(media);
@@ -58,7 +70,9 @@ const NewOnNetflix = () => {
   // Handle scroll events to update scroll position state
   const handleScroll = () => {
     if (rowRef.current) {
-      setScrollPosition(rowRef.current.scrollLeft);
+      const { scrollWidth, clientWidth, scrollLeft } = rowRef.current;
+      setScrollPosition(scrollLeft);
+      setCanScrollRight(scrollWidth > clientWidth + scrollLeft);
     }
   };
 
@@ -98,23 +112,25 @@ const NewOnNetflix = () => {
         )}
 
         {/* Right Arrow */}
-        <IconButton
-          onClick={handleScrollRight}
-          sx={{
-            position: 'absolute',
-            right: -20,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            bgcolor: 'rgba(0,0,0,0.5)',
-            color: 'white',
-            zIndex: 2,
-            '&:hover': {
-              bgcolor: 'rgba(0,0,0,0.7)',
-            },
-          }}
-        >
-          <ChevronRightIcon fontSize="large" />
-        </IconButton>
+        {canScrollRight && (
+          <IconButton
+            onClick={handleScrollRight}
+            sx={{
+              position: 'absolute',
+              right: -20,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              bgcolor: 'rgba(0,0,0,0.5)',
+              color: 'white',
+              zIndex: 2,
+              '&:hover': {
+                bgcolor: 'rgba(0,0,0,0.7)',
+              },
+            }}
+          >
+            <ChevronRightIcon fontSize="large" />
+          </IconButton>
+        )}
 
         {/* Content Row */}
         <Box 
