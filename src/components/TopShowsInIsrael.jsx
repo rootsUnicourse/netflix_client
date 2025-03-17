@@ -139,7 +139,7 @@ const TopShowsInIsrael = () => {
           sx={{ 
             display: 'flex', 
             overflowX: 'hidden',
-            gap: 2,
+            gap: 4,
             pb: 2,
             scrollBehavior: 'smooth',
             '&::-webkit-scrollbar': {
@@ -152,11 +152,11 @@ const TopShowsInIsrael = () => {
           {loading ? (
             // Skeleton loaders while content is loading
             Array.from(new Array(10)).map((_, index) => (
-              <Box key={index} sx={{ position: 'relative', minWidth: '200px' }}>
+              <Box key={index} sx={{ position: 'relative', minWidth: '120px', height: '200px' }}>
                 <Skeleton 
                   variant="rectangular" 
-                  width={200} 
-                  height={120} 
+                  width={120} 
+                  height={200} 
                   animation="wave" 
                   sx={{ bgcolor: '#333', borderRadius: '4px' }} 
                 />
@@ -174,70 +174,70 @@ const TopShowsInIsrael = () => {
                 key={show._id} 
                 sx={{ 
                   position: 'relative',
-                  minWidth: '200px',
+                  minWidth: '120px',
+                  height: '200px',
                   cursor: 'pointer',
                   transition: 'transform 0.3s',
                   '&:hover': {
                     transform: 'scale(1.05)',
                     zIndex: 1
-                  }
+                  },
+                  display: 'flex',
+                  alignItems: 'center',
+                  marginLeft: '30px'
                 }}
                 onClick={() => handleShowClick(show)}
               >
-                <Box 
-                  component="img"
-                  src={show.backdropPath || show.posterPath}
-                  alt={show.title}
-                  sx={{ 
-                    width: '200px',
-                    height: '120px',
-                    objectFit: 'cover',
-                    borderRadius: '4px'
-                  }}
-                />
-                
-                {/* Top 10 Ranking Badge */}
-                <Box 
-                  sx={{ 
+                {/* Ranking Number */}
+                <Typography
+                  variant="h1"
+                  sx={{
                     position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    bgcolor: 'rgba(0,0,0,0.7)',
-                    color: 'white',
-                    fontSize: '16px',
+                    left: '-40px',
+                    fontSize: '140px',
                     fontWeight: 'bold',
-                    py: 0.5,
-                    px: 1,
-                    borderBottomRightRadius: '4px',
-                    display: 'flex',
-                    alignItems: 'center'
+                    color: '#333',
+                    opacity: 0.8,
+                    textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
+                    zIndex: 0,
+                    WebkitTextStroke: '2px #777',
+                    fontFamily: 'Arial, sans-serif'
                   }}
                 >
-                  <Typography 
-                    variant="body1" 
-                    sx={{ 
-                      color: '#E50914', 
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    #{index + 1}
-                  </Typography>
-                </Box>
+                  {index + 1}
+                </Typography>
+                
+                {/* Poster Image */}
+                <Box 
+                  component="img"
+                  src={show.posterPath || show.backdropPath}
+                  alt={show.title}
+                  sx={{ 
+                    width: '120px',
+                    height: '180px',
+                    objectFit: 'cover',
+                    borderRadius: '4px',
+                    position: 'relative',
+                    zIndex: 1,
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.5)'
+                  }}
+                />
 
                 {/* Show Season Info - Only for TV shows with multiple seasons */}
                 {show.seasons > 1 && (
                   <Box 
                     sx={{ 
                       position: 'absolute',
-                      bottom: 0,
-                      right: 0,
+                      bottom: 10,
+                      right: 5,
                       bgcolor: 'rgba(0,0,0,0.7)',
                       color: 'white',
-                      fontSize: '12px',
+                      fontSize: '10px',
                       fontWeight: 'bold',
                       py: 0.5,
                       px: 1,
-                      borderTopLeftRadius: '4px'
+                      borderRadius: '4px',
+                      zIndex: 2
                     }}
                   >
                     {show.seasons} Seasons
