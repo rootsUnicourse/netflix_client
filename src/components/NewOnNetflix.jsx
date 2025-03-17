@@ -1,20 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Typography, Grid, Skeleton } from '@mui/material';
+import React, { useState, useEffect, useRef } from 'react';
+import { Box, Typography, Grid, Skeleton, IconButton } from '@mui/material';
 import MoreInfo from './MoreInfo';
 import ApiService, { getNewReleases } from '../api/api';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 const NewOnNetflix = () => {
   const [newShows, setNewShows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [moreInfoOpen, setMoreInfoOpen] = useState(false);
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const rowRef = useRef(null);
 
   useEffect(() => {
     const fetchNewShows = async () => {
       try {
         setLoading(true);
         const response = await getNewReleases(10);
-        console.log(response.data.results);
         
         setNewShows(response.data.results);
         setLoading(false);
@@ -36,8 +39,31 @@ const NewOnNetflix = () => {
     setMoreInfoOpen(false);
   };
 
+  const handleScrollLeft = () => {
+    if (rowRef.current) {
+      const newPosition = Math.max(0, scrollPosition - 800);
+      rowRef.current.scrollTo({ left: newPosition, behavior: 'smooth' });
+      setScrollPosition(newPosition);
+    }
+  };
+
+  const handleScrollRight = () => {
+    if (rowRef.current) {
+      const newPosition = scrollPosition + 800;
+      rowRef.current.scrollTo({ left: newPosition, behavior: 'smooth' });
+      setScrollPosition(newPosition);
+    }
+  };
+
+  // Handle scroll events to update scroll position state
+  const handleScroll = () => {
+    if (rowRef.current) {
+      setScrollPosition(rowRef.current.scrollLeft);
+    }
+  };
+
   return (
-    <Box sx={{ mt: 4, mb: 4, px: 4 }}>
+    <Box sx={{ mt: 4, mb: 4, px: 4, position: 'relative' }}>
       <Typography 
         variant="h5" 
         sx={{ 
@@ -49,130 +75,168 @@ const NewOnNetflix = () => {
         New on Netflix
       </Typography>
 
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          overflowX: 'auto',
-          gap: 2,
-          pb: 2,
-          '&::-webkit-scrollbar': {
-            height: '8px',
-          },
-          '&::-webkit-scrollbar-track': {
-            background: '#111',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            background: '#555',
-            borderRadius: '4px',
-          },
-          '&::-webkit-scrollbar-thumb:hover': {
-            background: '#777',
-          },
-        }}
-      >
-        {loading ? (
-          // Skeleton loaders while content is loading
-          Array.from(new Array(10)).map((_, index) => (
-            <Box key={index} sx={{ position: 'relative', minWidth: '200px' }}>
-              <Skeleton 
-                variant="rectangular" 
-                width={200} 
-                height={120} 
-                animation="wave" 
-                sx={{ bgcolor: '#333', borderRadius: '4px' }} 
-              />
-            </Box>
-          ))
-        ) : newShows.length === 0 ? (
-          // No new releases found
-          <Typography sx={{ color: '#777', fontStyle: 'italic', py: 4 }}>
-            No new releases found. Check back later!
-          </Typography>
-        ) : (
-          // Actual content
-          newShows.map((show) => (
-            <Box 
-              key={show._id} 
-              sx={{ 
-                position: 'relative',
-                minWidth: '200px',
-                cursor: 'pointer',
-                transition: 'transform 0.3s',
-                '&:hover': {
-                  transform: 'scale(1.05)',
-                  zIndex: 1
-                }
-              }}
-              onClick={() => handleShowClick(show)}
-            >
+      <Box sx={{ position: 'relative' }}>
+        {/* Left Arrow */}
+        {scrollPosition > 0 && (
+          <IconButton
+            onClick={handleScrollLeft}
+            sx={{
+              position: 'absolute',
+              left: -20,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              bgcolor: 'rgba(0,0,0,0.5)',
+              color: 'white',
+              zIndex: 2,
+              '&:hover': {
+                bgcolor: 'rgba(0,0,0,0.7)',
+              },
+            }}
+          >
+            <ChevronLeftIcon fontSize="large" />
+          </IconButton>
+        )}
+
+        {/* Right Arrow */}
+        <IconButton
+          onClick={handleScrollRight}
+          sx={{
+            position: 'absolute',
+            right: -20,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            bgcolor: 'rgba(0,0,0,0.5)',
+            color: 'white',
+            zIndex: 2,
+            '&:hover': {
+              bgcolor: 'rgba(0,0,0,0.7)',
+            },
+          }}
+        >
+          <ChevronRightIcon fontSize="large" />
+        </IconButton>
+
+        {/* Content Row */}
+        <Box 
+          ref={rowRef}
+          onScroll={handleScroll}
+          sx={{ 
+            display: 'flex', 
+            overflowX: 'hidden',
+            gap: 2,
+            pb: 2,
+            scrollBehavior: 'smooth',
+            '&::-webkit-scrollbar': {
+              display: 'none',
+            },
+            msOverflowStyle: 'none',
+            scrollbarWidth: 'none',
+          }}
+        >
+          {loading ? (
+            // Skeleton loaders while content is loading
+            Array.from(new Array(10)).map((_, index) => (
+              <Box key={index} sx={{ position: 'relative', minWidth: '200px' }}>
+                <Skeleton 
+                  variant="rectangular" 
+                  width={200} 
+                  height={120} 
+                  animation="wave" 
+                  sx={{ bgcolor: '#333', borderRadius: '4px' }} 
+                />
+              </Box>
+            ))
+          ) : newShows.length === 0 ? (
+            // No new releases found
+            <Typography sx={{ color: '#777', fontStyle: 'italic', py: 4 }}>
+              No new releases found. Check back later!
+            </Typography>
+          ) : (
+            // Actual content
+            newShows.map((show) => (
               <Box 
-                component="img"
-                src={show.posterPath}
-                alt={show.title}
+                key={show._id} 
                 sx={{ 
-                  width: '200px',
-                  height: '120px',
-                  objectFit: 'cover',
-                  borderRadius: '4px'
+                  position: 'relative',
+                  minWidth: '200px',
+                  cursor: 'pointer',
+                  transition: 'transform 0.3s',
+                  '&:hover': {
+                    transform: 'scale(1.05)',
+                    zIndex: 1
+                  }
                 }}
-              />
-              
-              {/* Badge for Recently Added or Leaving Soon */}
-              {show.newRelease && (
+                onClick={() => handleShowClick(show)}
+              >
                 <Box 
+                  component="img"
+                  src={show.posterPath}
+                  alt={show.title}
                   sx={{ 
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    bgcolor: '#E50914',
-                    color: 'white',
-                    fontSize: '12px',
-                    fontWeight: 'bold',
-                    py: 0.5,
-                    px: 1,
-                    borderTopRightRadius: '4px'
+                    width: '200px',
+                    height: '120px',
+                    objectFit: 'cover',
+                    borderRadius: '4px'
                   }}
-                >
-                  Recently Added
-                </Box>
-              )}
-              
-              {/* Top 10 Badge */}
-              {show.trending && (
-                <Box 
-                  sx={{ 
-                    position: 'absolute',
-                    top: 0,
-                    right: 0,
-                    bgcolor: 'rgba(0,0,0,0.7)',
-                    color: 'white',
-                    fontSize: '12px',
-                    fontWeight: 'bold',
-                    py: 0.5,
-                    px: 1,
-                    borderBottomLeftRadius: '4px',
-                    display: 'flex',
-                    alignItems: 'center'
-                  }}
-                >
-                  <Typography 
-                    variant="caption" 
+                />
+                
+                {/* Top 10 Badge */}
+                {show.trending && (
+                  <Box 
                     sx={{ 
-                      color: '#E50914', 
-                      fontWeight: 'bold', 
-                      mr: 0.5 
+                      position: 'absolute',
+                      top: 0,
+                      right: 0,
+                      bgcolor: 'rgba(0,0,0,0.7)',
+                      color: 'white',
+                      fontSize: '12px',
+                      fontWeight: 'bold',
+                      py: 0.5,
+                      px: 1,
+                      borderBottomLeftRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center'
                     }}
                   >
-                    TOP
-                  </Typography>
-                  <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
-                    10
-                  </Typography>
-                </Box>
-              )}
-            </Box>
-          ))
-        )}
+                    <Typography 
+                      variant="caption" 
+                      sx={{ 
+                        color: '#E50914', 
+                        fontWeight: 'bold', 
+                        mr: 0.5 
+                      }}
+                    >
+                      TOP
+                    </Typography>
+                    <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
+                      10
+                    </Typography>
+                  </Box>
+                )}
+
+                {/* New Season Badge - Only for TV shows with multiple seasons */}
+                {show.type === 'tv' && show.seasons > 1 && (
+                  <Box 
+                    sx={{ 
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      bgcolor: '#E50914',
+                      color: 'white',
+                      fontSize: '12px',
+                      fontWeight: 'bold',
+                      py: 0.5,
+                      px: 1,
+                      borderTopRightRadius: '4px'
+                    }}
+                  >
+                    New Season
+                  </Box>
+                )}
+              </Box>
+            ))
+          )}
+        </Box>
       </Box>
       
       {/* MoreInfo Dialog */}
