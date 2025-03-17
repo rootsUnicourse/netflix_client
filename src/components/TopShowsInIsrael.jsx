@@ -184,30 +184,77 @@ const TopShowsInIsrael = () => {
                   },
                   display: 'flex',
                   alignItems: 'center',
-                  marginLeft: '60px'
+                  marginLeft: index === 9 ? '100px' : '60px'
                 }}
                 onClick={() => handleShowClick(show)}
               >
                 {/* Ranking Number */}
-                <Typography
-                  variant="h1"
-                  sx={{
-                    position: 'absolute',
-                    left: '-70px',
-                    fontSize: '180px',
-                    fontWeight: 'bold',
-                    color: '#141414',
-                    opacity: 0.8,
-                    textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
-                    zIndex: 0,
-                    WebkitTextStroke: '3px #777',
-                    fontFamily: 'Arial, sans-serif',
-                    lineHeight: '0.8',
-                    marginTop: '-10px'
-                  }}
-                >
-                  {index + 1}
-                </Typography>
+                {index < 9 ? (
+                  <Typography
+                    variant="h1"
+                    sx={{
+                      position: 'absolute',
+                      left: '-70px',
+                      fontSize: '180px',
+                      fontWeight: 'bold',
+                      color: '#141414',
+                      opacity: 0.8,
+                      textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
+                      zIndex: 0,
+                      WebkitTextStroke: '3px #777',
+                      fontFamily: 'Arial, sans-serif',
+                      lineHeight: '0.8',
+                      marginTop: '-10px'
+                    }}
+                  >
+                    {index + 1}
+                  </Typography>
+                ) : (
+                  // Special styling for number 10
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      left: '-125px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      zIndex: 0
+                    }}
+                  >
+                    <Typography
+                      variant="h1"
+                      sx={{
+                        fontSize: '180px',
+                        fontWeight: 'bold',
+                        color: '#141414',
+                        opacity: 0.8,
+                        textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
+                        WebkitTextStroke: '3px #777',
+                        fontFamily: 'Arial, sans-serif',
+                        lineHeight: '0.8',
+                        marginTop: '-10px'
+                      }}
+                    >
+                      1
+                    </Typography>
+                    <Typography
+                      variant="h1"
+                      sx={{
+                        fontSize: '180px',
+                        fontWeight: 'bold',
+                        color: '#141414',
+                        opacity: 0.8,
+                        textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
+                        WebkitTextStroke: '3px #777',
+                        fontFamily: 'Arial, sans-serif',
+                        lineHeight: '0.8',
+                        marginTop: '-10px',
+                        marginLeft: '-20px'
+                      }}
+                    >
+                      0
+                    </Typography>
+                  </Box>
+                )}
 
                 {/* Poster Image */}
                 <Box
