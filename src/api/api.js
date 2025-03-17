@@ -30,6 +30,16 @@ export const getFeaturedMedia = async (limit = 8) => api.get('/media', {
   params: { sort: 'releaseDate', order: 'desc', limit } 
 });
 
+// Get new releases
+export const getNewReleases = async (limit = 10) => api.get('/media', {
+  params: { 
+    sort: 'releaseDate', 
+    order: 'desc', 
+    limit,
+    newRelease: true
+  }
+});
+
 // Get mixed media with different criteria to ensure we get enough items
 export const getMixedMedia = async (count = 4) => {
   // First try to get all available media
@@ -94,6 +104,7 @@ const ApiService = {
   updateProfileName,
   getMedia,
   getFeaturedMedia,
+  getNewReleases,
   getMixedMedia,
 };
 

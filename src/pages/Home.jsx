@@ -20,6 +20,7 @@ import axios from 'axios';
 
 // Components
 import CoverPhotoSection from '../components/CoverPhotoSection';
+import NewOnNetflix from '../components/NewOnNetflix';
 
 // Netflix logo will be provided by the user
 import NetflixLogo from '../assets/images/netflixlogo.png'; // Updated path to use existing logo
@@ -252,6 +253,9 @@ export default function Home() {
             {!isLoading && featuredMedia.length > 0 && (
                 <CoverPhotoSection featuredMediaList={featuredMedia} />
             )}
+            
+            {/* New on Netflix Section */}
+            <NewOnNetflix />
             
             {/* Main Content Area */}
             <Container maxWidth="xl" sx={{ mt: 4, overflowX: 'hidden' }}>
