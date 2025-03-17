@@ -77,12 +77,11 @@ const TopShowsInIsrael = () => {
   };
 
   return (
-    <Box sx={{ mt: 4, mb: 4, px: 4, position: 'relative' }}>
+    <Box sx={{ mt: 4, px: 4, position: 'relative' }}>
       <Typography
         variant="h5"
         sx={{
           fontWeight: 'bold',
-          mb: 2,
           color: 'white'
         }}
       >
