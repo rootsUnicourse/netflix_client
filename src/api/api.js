@@ -26,9 +26,17 @@ export const updateProfileName = async (profileId, name) => api.put(`/profiles/$
 
 // Media operations
 export const getMedia = async (params) => api.get('/media', { params });
+export const getMediaById = async (id) => api.get(`/media/id/${id}`);
 export const getFeaturedMedia = async (limit = 8) => api.get('/media', { 
   params: { sort: 'releaseDate', order: 'desc', limit } 
 });
+
+// Review operations
+export const createReview = async (reviewData) => api.post('/reviews', reviewData);
+export const getMediaReviews = async (mediaId) => api.get(`/reviews/media/${mediaId}`);
+export const getUserReviews = async () => api.get('/reviews/my-reviews');
+export const updateReview = async (reviewId, reviewData) => api.put(`/reviews/${reviewId}`, reviewData);
+export const deleteReview = async (reviewId) => api.delete(`/reviews/${reviewId}`);
 
 // Get new releases
 export const getNewReleases = async (limit = 10) => api.get('/media', {
@@ -108,10 +116,16 @@ const ApiService = {
   deleteProfile,
   updateProfileName,
   getMedia,
+  getMediaById,
   getFeaturedMedia,
   getNewReleases,
   getTopShowsInIsrael,
   getMixedMedia,
+  createReview,
+  getMediaReviews,
+  getUserReviews,
+  updateReview,
+  deleteReview,
 };
 
 export default ApiService;

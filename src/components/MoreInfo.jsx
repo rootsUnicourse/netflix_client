@@ -24,12 +24,24 @@ const MoreInfo = ({ open, onClose, media }) => {
   const navigate = useNavigate();
   const [selectedSeason, setSelectedSeason] = useState(0);
 
+  console.log('MoreInfo media:', media);
+
   if (!media) return null;
 
   const handleReviewClick = () => {
-    // Will navigate to review page in the future
-    console.log('Navigate to review page');
-    // navigate(`/review/${media._id}`);
+    console.log('Media object:', media);
+    
+    // Check if media._id is a valid MongoDB ID
+    if (!media._id) {
+      console.error('Media ID is missing or invalid');
+      return;
+    }
+    
+    // Remove any suffix that might have been added (like -featured or -trending)
+    const cleanId = media._id.split('-')[0];
+    console.log('Using clean ID for review:', cleanId);
+    
+    navigate(`/review/${cleanId}`);
   };
 
   const handleAddToWatchlist = () => {
