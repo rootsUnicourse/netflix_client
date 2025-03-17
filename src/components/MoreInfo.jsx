@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -22,6 +22,7 @@ import { useNavigate } from 'react-router-dom';
 
 const MoreInfo = ({ open, onClose, media }) => {
   const navigate = useNavigate();
+  const [selectedSeason, setSelectedSeason] = useState(0);
 
   if (!media) return null;
 
@@ -48,6 +49,14 @@ const MoreInfo = ({ open, onClose, media }) => {
   const formatYear = (dateString) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).getFullYear();
+  };
+
+  // Get episodes for the selected season
+  const getEpisodes = () => {
+    if (!media.seasonData || !media.seasonData[selectedSeason] || !media.seasonData[selectedSeason].episodes) {
+      return [];
+    }
+    return media.seasonData[selectedSeason].episodes;
   };
 
   return (
@@ -226,29 +235,98 @@ const MoreInfo = ({ open, onClose, media }) => {
           </Grid>
 
           {/* Episodes section (for TV shows only) */}
-          {media.type === 'tv' && (
+          {media.type === 'tv' && media.seasonData && media.seasonData.length > 0 && (
             <Box sx={{ mt: 4 }}>
-              <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
-                Episodes
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                  Episodes
+                </Typography>
+                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                  {media.title}
+                </Typography>
+              </Box>
 
-              <List sx={{ bgcolor: '#333', borderRadius: '4px' }}>
-                {/* This is a placeholder. In a real implementation, you would fetch and display actual episodes */}
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
-                  <React.Fragment key={num}>
-                    <ListItem sx={{ py: 2 }}>
-                      <Typography sx={{ mr: 2, color: '#777' }}>{num}</Typography>
-                      <Box sx={{ width: '130px', height: '80px', bgcolor: '#555', mr: 2, borderRadius: '4px' }} />
-                      <ListItemText
-                        primary={`Episode ${num}`}
-                        secondary={
-                          <Typography variant="body2" sx={{ color: '#777' }}>
-                            {`${Math.floor(Math.random() * 20 + 30)}m`}
+              <List sx={{ bgcolor: '#2F2F2F', borderRadius: '4px', p: 0 }}>
+                {getEpisodes().map((episode, index) => (
+                  <React.Fragment key={index}>
+                    <ListItem 
+                      sx={{ 
+                        py: 3, 
+                        px: 3,
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 2
+                      }}
+                    >
+                      <Typography 
+                        sx={{ 
+                          fontSize: '24px', 
+                          fontWeight: 'bold',
+                          color: '#fff',
+                          width: '30px',
+                          textAlign: 'center',
+                          mt: 3
+                        }}
+                      >
+                        {episode.episodeNumber}
+                      </Typography>
+                      
+                      <Box 
+                        sx={{ 
+                          position: 'relative',
+                          width: '130px', 
+                          height: '80px', 
+                          borderRadius: '4px',
+                          overflow: 'hidden',
+                          flexShrink: 0,
+                          mt: 1
+                        }}
+                      >
+                        <Box
+                          component="img"
+                          src={episode.stillPath || media.backdropPath}
+                          alt={episode.name}
+                          sx={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }}
+                        />
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            bgcolor: 'rgba(0,0,0,0.5)',
+                            borderRadius: '50%',
+                            width: '40px',
+                            height: '40px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <PlayArrowIcon fontSize="small" />
+                        </Box>
+                      </Box>
+                      
+                      <Box sx={{ flex: 1, mt: 1 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                            {episode.name}
                           </Typography>
-                        }
-                      />
+                          <Typography sx={{ color: '#fff' }}>
+                            {episode.runtime ? `${episode.runtime}m` : ''}
+                          </Typography>
+                        </Box>
+                        <Typography variant="body2" sx={{ color: '#D2D2D2', lineHeight: 1.4, fontSize: '0.9rem' }}>
+                          {episode.overview}
+                        </Typography>
+                      </Box>
                     </ListItem>
-                    {num < 8 && <Divider sx={{ bgcolor: '#444' }} />}
+                    {index < getEpisodes().length - 1 && <Divider sx={{ bgcolor: '#444' }} />}
                   </React.Fragment>
                 ))}
               </List>
@@ -360,8 +438,6 @@ const MoreInfo = ({ open, onClose, media }) => {
                 </Box>
               )}
             </Box>
-
-
           </Box>
         </DialogContent>
       </Box>
