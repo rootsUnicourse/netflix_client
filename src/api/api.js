@@ -40,12 +40,9 @@ export const getNewReleases = async (limit = 10) => api.get('/media', {
   }
 });
 
-// Get popular content in Israel
-export const getPopularInIsrael = async (limit = 10) => api.get('/media/popular-in-israel', {
-  params: { 
-    mediaType: 'all',
-    limit
-  }
+// Get top shows in Israel
+export const getTopShowsInIsrael = async (limit = 10) => api.get('/media/top-shows-israel', {
+  params: { limit }
 });
 
 // Get mixed media with different criteria to ensure we get enough items
@@ -113,7 +110,7 @@ const ApiService = {
   getMedia,
   getFeaturedMedia,
   getNewReleases,
-  getPopularInIsrael,
+  getTopShowsInIsrael,
   getMixedMedia,
 };
 

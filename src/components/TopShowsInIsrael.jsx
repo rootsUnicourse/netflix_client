@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Box, Typography, Skeleton, IconButton } from '@mui/material';
 import MoreInfo from './MoreInfo';
-import ApiService, { getPopularInIsrael } from '../api/api';
+import { getTopShowsInIsrael } from '../api/api';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
-const PopularInIsrael = () => {
-  const [shows, setShows] = useState([]);
+const TopShowsInIsrael = () => {
+  const [topShows, setTopShows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [moreInfoOpen, setMoreInfoOpen] = useState(false);
@@ -15,23 +15,23 @@ const PopularInIsrael = () => {
   const rowRef = useRef(null);
 
   useEffect(() => {
-    const fetchShows = async () => {
+    const fetchTopShows = async () => {
       try {
         setLoading(true);
-        const response = await getPopularInIsrael(10);
+        const response = await getTopShowsInIsrael(10);
         
-        setShows(response.data.results);
+        setTopShows(response.data.results);
         setLoading(false);
         
         // Check if we can scroll right after content is loaded
         setTimeout(checkScrollability, 100);
       } catch (error) {
-        console.error('Error fetching popular shows in Israel:', error);
+        console.error('Error fetching top shows in Israel:', error);
         setLoading(false);
       }
     };
 
-    fetchShows();
+    fetchTopShows();
   }, []);
 
   // Check if we can scroll right
@@ -86,7 +86,7 @@ const PopularInIsrael = () => {
           color: 'white' 
         }}
       >
-        Popular in Israel
+        Top 10 in Israel Today
       </Typography>
 
       <Box sx={{ position: 'relative' }}>
@@ -162,16 +162,16 @@ const PopularInIsrael = () => {
                 />
               </Box>
             ))
-          ) : shows.length === 0 ? (
-            // No shows found
+          ) : topShows.length === 0 ? (
+            // No top shows found
             <Typography sx={{ color: '#777', fontStyle: 'italic', py: 4 }}>
-              No popular shows in Israel found. Check back later!
+              No top shows found. Check back later!
             </Typography>
           ) : (
             // Actual content
-            shows.map((show) => (
+            topShows.map((show, index) => (
               <Box 
-                key={show.id} 
+                key={show._id} 
                 sx={{ 
                   position: 'relative',
                   minWidth: '200px',
@@ -186,8 +186,8 @@ const PopularInIsrael = () => {
               >
                 <Box 
                   component="img"
-                  src={`https://image.tmdb.org/t/p/w500${show.backdrop_path || show.poster_path}`}
-                  alt={show.title || show.name}
+                  src={show.backdropPath || show.posterPath}
+                  alt={show.title}
                   sx={{ 
                     width: '200px',
                     height: '120px',
@@ -196,12 +196,40 @@ const PopularInIsrael = () => {
                   }}
                 />
                 
-                {/* Top 10 Badge */}
-                {show.popularity > 1000 && (
+                {/* Top 10 Ranking Badge */}
+                <Box 
+                  sx={{ 
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    bgcolor: 'rgba(0,0,0,0.7)',
+                    color: 'white',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    py: 0.5,
+                    px: 1,
+                    borderBottomRightRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}
+                >
+                  <Typography 
+                    variant="body1" 
+                    sx={{ 
+                      color: '#E50914', 
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    #{index + 1}
+                  </Typography>
+                </Box>
+
+                {/* Show Season Info - Only for TV shows with multiple seasons */}
+                {show.seasons > 1 && (
                   <Box 
                     sx={{ 
                       position: 'absolute',
-                      top: 0,
+                      bottom: 0,
                       right: 0,
                       bgcolor: 'rgba(0,0,0,0.7)',
                       color: 'white',
@@ -209,44 +237,10 @@ const PopularInIsrael = () => {
                       fontWeight: 'bold',
                       py: 0.5,
                       px: 1,
-                      borderBottomLeftRadius: '4px',
-                      display: 'flex',
-                      alignItems: 'center'
+                      borderTopLeftRadius: '4px'
                     }}
                   >
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
-                        color: '#E50914', 
-                        fontWeight: 'bold', 
-                        mr: 0.5 
-                      }}
-                    >
-                      TOP
-                    </Typography>
-                    <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
-                      10
-                    </Typography>
-                  </Box>
-                )}
-
-                {/* New Season Badge - Only for TV shows with multiple seasons */}
-                {show.media_type === 'tv' && (
-                  <Box 
-                    sx={{ 
-                      position: 'absolute',
-                      bottom: 0,
-                      left: 0,
-                      bgcolor: '#E50914',
-                      color: 'white',
-                      fontSize: '12px',
-                      fontWeight: 'bold',
-                      py: 0.5,
-                      px: 1,
-                      borderTopRightRadius: '4px'
-                    }}
-                  >
-                    TV Series
+                    {show.seasons} Seasons
                   </Box>
                 )}
               </Box>
@@ -265,4 +259,4 @@ const PopularInIsrael = () => {
   );
 };
 
-export default PopularInIsrael; 
+export default TopShowsInIsrael; 
