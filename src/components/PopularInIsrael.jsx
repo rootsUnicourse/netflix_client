@@ -1,0 +1,268 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Box, Typography, Skeleton, IconButton } from '@mui/material';
+import MoreInfo from './MoreInfo';
+import ApiService, { getPopularInIsrael } from '../api/api';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+
+const PopularInIsrael = () => {
+  const [shows, setShows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedMedia, setSelectedMedia] = useState(null);
+  const [moreInfoOpen, setMoreInfoOpen] = useState(false);
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const rowRef = useRef(null);
+
+  useEffect(() => {
+    const fetchShows = async () => {
+      try {
+        setLoading(true);
+        const response = await getPopularInIsrael(10);
+        
+        setShows(response.data.results);
+        setLoading(false);
+        
+        // Check if we can scroll right after content is loaded
+        setTimeout(checkScrollability, 100);
+      } catch (error) {
+        console.error('Error fetching popular shows in Israel:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchShows();
+  }, []);
+
+  // Check if we can scroll right
+  const checkScrollability = () => {
+    if (rowRef.current) {
+      const { scrollWidth, clientWidth, scrollLeft } = rowRef.current;
+      setCanScrollRight(scrollWidth > clientWidth + scrollLeft);
+    }
+  };
+
+  const handleShowClick = (media) => {
+    setSelectedMedia(media);
+    setMoreInfoOpen(true);
+  };
+
+  const handleMoreInfoClose = () => {
+    setMoreInfoOpen(false);
+  };
+
+  const handleScrollLeft = () => {
+    if (rowRef.current) {
+      const newPosition = Math.max(0, scrollPosition - 800);
+      rowRef.current.scrollTo({ left: newPosition, behavior: 'smooth' });
+      setScrollPosition(newPosition);
+    }
+  };
+
+  const handleScrollRight = () => {
+    if (rowRef.current) {
+      const newPosition = scrollPosition + 800;
+      rowRef.current.scrollTo({ left: newPosition, behavior: 'smooth' });
+      setScrollPosition(newPosition);
+    }
+  };
+
+  // Handle scroll events to update scroll position state
+  const handleScroll = () => {
+    if (rowRef.current) {
+      const { scrollWidth, clientWidth, scrollLeft } = rowRef.current;
+      setScrollPosition(scrollLeft);
+      setCanScrollRight(scrollWidth > clientWidth + scrollLeft);
+    }
+  };
+
+  return (
+    <Box sx={{ mt: 4, mb: 4, px: 4, position: 'relative' }}>
+      <Typography 
+        variant="h5" 
+        sx={{ 
+          fontWeight: 'bold', 
+          mb: 2, 
+          color: 'white' 
+        }}
+      >
+        Popular in Israel
+      </Typography>
+
+      <Box sx={{ position: 'relative' }}>
+        {/* Left Arrow */}
+        {scrollPosition > 0 && (
+          <IconButton
+            onClick={handleScrollLeft}
+            sx={{
+              position: 'absolute',
+              left: -20,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              bgcolor: 'rgba(0,0,0,0.5)',
+              color: 'white',
+              zIndex: 2,
+              '&:hover': {
+                bgcolor: 'rgba(0,0,0,0.7)',
+              },
+            }}
+          >
+            <ChevronLeftIcon fontSize="large" />
+          </IconButton>
+        )}
+
+        {/* Right Arrow */}
+        {canScrollRight && (
+          <IconButton
+            onClick={handleScrollRight}
+            sx={{
+              position: 'absolute',
+              right: -20,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              bgcolor: 'rgba(0,0,0,0.5)',
+              color: 'white',
+              zIndex: 2,
+              '&:hover': {
+                bgcolor: 'rgba(0,0,0,0.7)',
+              },
+            }}
+          >
+            <ChevronRightIcon fontSize="large" />
+          </IconButton>
+        )}
+
+        {/* Content Row */}
+        <Box 
+          ref={rowRef}
+          onScroll={handleScroll}
+          sx={{ 
+            display: 'flex', 
+            overflowX: 'hidden',
+            gap: 2,
+            pb: 2,
+            scrollBehavior: 'smooth',
+            '&::-webkit-scrollbar': {
+              display: 'none',
+            },
+            msOverflowStyle: 'none',
+            scrollbarWidth: 'none',
+          }}
+        >
+          {loading ? (
+            // Skeleton loaders while content is loading
+            Array.from(new Array(10)).map((_, index) => (
+              <Box key={index} sx={{ position: 'relative', minWidth: '200px' }}>
+                <Skeleton 
+                  variant="rectangular" 
+                  width={200} 
+                  height={120} 
+                  animation="wave" 
+                  sx={{ bgcolor: '#333', borderRadius: '4px' }} 
+                />
+              </Box>
+            ))
+          ) : shows.length === 0 ? (
+            // No shows found
+            <Typography sx={{ color: '#777', fontStyle: 'italic', py: 4 }}>
+              No popular shows in Israel found. Check back later!
+            </Typography>
+          ) : (
+            // Actual content
+            shows.map((show) => (
+              <Box 
+                key={show.id} 
+                sx={{ 
+                  position: 'relative',
+                  minWidth: '200px',
+                  cursor: 'pointer',
+                  transition: 'transform 0.3s',
+                  '&:hover': {
+                    transform: 'scale(1.05)',
+                    zIndex: 1
+                  }
+                }}
+                onClick={() => handleShowClick(show)}
+              >
+                <Box 
+                  component="img"
+                  src={`https://image.tmdb.org/t/p/w500${show.backdrop_path || show.poster_path}`}
+                  alt={show.title || show.name}
+                  sx={{ 
+                    width: '200px',
+                    height: '120px',
+                    objectFit: 'cover',
+                    borderRadius: '4px'
+                  }}
+                />
+                
+                {/* Top 10 Badge */}
+                {show.popularity > 1000 && (
+                  <Box 
+                    sx={{ 
+                      position: 'absolute',
+                      top: 0,
+                      right: 0,
+                      bgcolor: 'rgba(0,0,0,0.7)',
+                      color: 'white',
+                      fontSize: '12px',
+                      fontWeight: 'bold',
+                      py: 0.5,
+                      px: 1,
+                      borderBottomLeftRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <Typography 
+                      variant="caption" 
+                      sx={{ 
+                        color: '#E50914', 
+                        fontWeight: 'bold', 
+                        mr: 0.5 
+                      }}
+                    >
+                      TOP
+                    </Typography>
+                    <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
+                      10
+                    </Typography>
+                  </Box>
+                )}
+
+                {/* New Season Badge - Only for TV shows with multiple seasons */}
+                {show.media_type === 'tv' && (
+                  <Box 
+                    sx={{ 
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      bgcolor: '#E50914',
+                      color: 'white',
+                      fontSize: '12px',
+                      fontWeight: 'bold',
+                      py: 0.5,
+                      px: 1,
+                      borderTopRightRadius: '4px'
+                    }}
+                  >
+                    TV Series
+                  </Box>
+                )}
+              </Box>
+            ))
+          )}
+        </Box>
+      </Box>
+      
+      {/* MoreInfo Dialog */}
+      <MoreInfo 
+        open={moreInfoOpen} 
+        onClose={handleMoreInfoClose} 
+        media={selectedMedia} 
+      />
+    </Box>
+  );
+};
+
+export default PopularInIsrael; 
