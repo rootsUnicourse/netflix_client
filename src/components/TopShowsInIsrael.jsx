@@ -79,7 +79,7 @@ const TopShowsInIsrael = () => {
   return (
     <Box sx={{ mt: 4, px: 4, position: 'relative' }}>
       <Typography
-        variant="h4"
+        variant="h5"
         sx={{
           fontWeight: 'bold',
           color: 'white'
