@@ -170,7 +170,7 @@ const NewOnNetflix = () => {
               >
                 <Box 
                   component="img"
-                  src={show.posterPath}
+                  src={show.backdropPath || show.posterPath}
                   alt={show.title}
                   sx={{ 
                     width: '200px',
