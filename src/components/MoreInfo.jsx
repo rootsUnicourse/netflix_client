@@ -111,7 +111,8 @@ const MoreInfo = ({ open, onClose, media }) => {
             <Box sx={{ display: 'flex', gap: 2 }}>
               <Button
                 variant="contained"
-                startIcon={<PlayArrowIcon />}
+                startIcon={<ThumbUpAltOutlinedIcon />}
+                onClick={handleReviewClick}
                 sx={{
                   bgcolor: 'white',
                   color: 'black',
@@ -119,20 +120,6 @@ const MoreInfo = ({ open, onClose, media }) => {
                   fontWeight: 'bold',
                   px: 4,
                   py: 1,
-                }}
-              >
-                Play
-              </Button>
-
-              <Button
-                variant="contained"
-                startIcon={<ThumbUpAltOutlinedIcon />}
-                onClick={handleReviewClick}
-                sx={{
-                  bgcolor: 'rgba(109, 109, 110, 0.7)',
-                  color: 'white',
-                  '&:hover': { bgcolor: 'rgba(109, 109, 110, 0.9)' },
-                  px: 3,
                 }}
               >
                 Review
