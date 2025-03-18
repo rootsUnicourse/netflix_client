@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { Box, Typography, Skeleton, IconButton, Button } from '@mui/material';
 import MoreInfo from './MoreInfo';
-import ApiService, { getUserReviews } from '../api/api';
+import ApiService, { getUserReviews, getMediaById } from '../api/api';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import UserContext from '../context/UserContext';
@@ -12,6 +12,7 @@ const UserReviews = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedMedia, setSelectedMedia] = useState(null);
+  const [mediaDetailsLoading, setMediaDetailsLoading] = useState(false);
   const [moreInfoOpen, setMoreInfoOpen] = useState(false);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -71,9 +72,32 @@ const UserReviews = () => {
     }
   };
 
-  const handleShowClick = (media) => {
-    setSelectedMedia(media);
-    setMoreInfoOpen(true);
+  const handleShowClick = async (media) => {
+    try {
+      // Set loading state for media details
+      setMediaDetailsLoading(true);
+      
+      // Remove any suffix that might have been added (like -featured or -trending)
+      const cleanId = media._id.split('-')[0];
+      console.log('Fetching full media details for:', cleanId);
+      
+      // Fetch full media details
+      const response = await getMediaById(cleanId);
+      const fullMediaData = response.data;
+      
+      console.log('Full media details received:', fullMediaData);
+      
+      // Set the selected media with full details and open modal
+      setSelectedMedia(fullMediaData);
+      setMoreInfoOpen(true);
+      setMediaDetailsLoading(false);
+    } catch (error) {
+      console.error('Error fetching full media details:', error);
+      // If there's an error, just use the basic media data we already have
+      setSelectedMedia(media);
+      setMoreInfoOpen(true);
+      setMediaDetailsLoading(false);
+    }
   };
 
   const handleMoreInfoClose = () => {
@@ -231,7 +255,8 @@ const UserReviews = () => {
                   '&:hover': {
                     transform: 'scale(1.05)',
                     zIndex: 1
-                  }
+                  },
+                  opacity: mediaDetailsLoading ? 0.7 : 1,
                 }}
                 onClick={() => handleShowClick(media)}
               >
