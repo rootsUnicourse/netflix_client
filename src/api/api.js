@@ -57,6 +57,25 @@ export const getTopShowsInIsrael = async (limit = 10) => api.get('/media/top-sho
   params: { limit }
 });
 
+// Get top rated media by users
+export const getTopRatedMedia = async (limit = 10, mediaType = null) => {
+  console.log(`Calling top-rated-by-users endpoint with limit=${limit}, mediaType=${mediaType}`);
+  try {
+    // First try the primary endpoint
+    return await api.get('/media/top-rated-by-users', {
+      params: { limit, mediaType }
+    });
+  } catch (error) {
+    console.error('Error with top-rated-by-users endpoint:', error.message);
+    
+    // Fallback to the reviews top-rated endpoint if the first one fails
+    console.log('Trying fallback to /reviews/top-rated endpoint');
+    return await api.get('/reviews/top-rated', {
+      params: { limit, mediaType }
+    });
+  }
+};
+
 // Get mixed media with different criteria to ensure we get enough items
 export const getMixedMedia = async (count = 4) => {
   // First try to get all available media
@@ -130,6 +149,7 @@ const ApiService = {
   getUserReviews,
   updateReview,
   deleteReview,
+  getTopRatedMedia,
 };
 
 export default ApiService;
