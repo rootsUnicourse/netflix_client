@@ -15,17 +15,22 @@ import {
   Divider,
   Pagination,
   Avatar,
-  Chip
+  Chip,
+  Dialog,
+  DialogContent
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import CloseIcon from '@mui/icons-material/Close';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ApiService, { createReview, getMediaReviews, updateReview } from '../api/api';
 import UserContext from '../context/UserContext';
 
-const Review = () => {
-  const { mediaId } = useParams();
+const Review = ({ open, onClose, mediaIdProp }) => {
+  const { mediaId: mediaIdParam } = useParams();
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
+  // Use the mediaId from props if provided, otherwise use from URL params
+  const mediaId = mediaIdProp || mediaIdParam;
   const [media, setMedia] = useState(null);
   const [loading, setLoading] = useState(true);
   const [review, setReview] = useState({
@@ -41,6 +46,21 @@ const Review = () => {
   const [userReview, setUserReview] = useState(null);
   const [averageRating, setAverageRating] = useState(0);
   const [totalReviews, setTotalReviews] = useState(0);
+
+  // Reset all the state when the mediaId changes or the modal opens/closes
+  useEffect(() => {
+    if (open || (!open && !onClose)) { // Execute if it's a modal and open, or if it's a regular page
+      setLoading(true);
+      setReview({
+        rating: 0,
+        content: '',
+        isPublic: true
+      });
+      setUserReview(null);
+      setError('');
+      setSuccess('');
+    }
+  }, [mediaId, open]);
 
   useEffect(() => {
     const fetchMedia = async () => {
@@ -70,8 +90,10 @@ const Review = () => {
       }
     };
 
-    fetchMedia();
-  }, [mediaId]);
+    if (mediaId && (open || (!open && !onClose))) {
+      fetchMedia();
+    }
+  }, [mediaId, open]);
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -111,8 +133,10 @@ const Review = () => {
       }
     };
 
-    fetchReviews();
-  }, [mediaId, page, user?.userId]);
+    if (mediaId && (open || (!open && !onClose))) {
+      fetchReviews();
+    }
+  }, [mediaId, page, user?.userId, open]);
 
   const handleInputChange = (e) => {
     const { name, value, checked } = e.target;
@@ -217,6 +241,13 @@ const Review = () => {
       if (updatedUserReview) {
         setUserReview(updatedUserReview);
       }
+
+      // If in dialog mode, close the dialog after successful submission
+      if (onClose) {
+        setTimeout(() => {
+          onClose();
+        }, 1500);
+      }
     } catch (err) {
       console.error('Error submitting review:', err);
       setError(err.response?.data?.message || 'Failed to submit review');
@@ -227,8 +258,34 @@ const Review = () => {
     setPage(value);
   };
 
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+    } else {
+      navigate('/home');
+    }
+  };
+
   if (loading) {
-    return (
+    return onClose ? (
+      <Dialog 
+        open={open} 
+        onClose={onClose}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: '#181818',
+            color: 'white',
+            borderRadius: '8px'
+          }
+        }}
+      >
+        <DialogContent>
+          <Typography>Loading...</Typography>
+        </DialogContent>
+      </Dialog>
+    ) : (
       <Container maxWidth="md" sx={{ mt: 4 }}>
         <Typography>Loading...</Typography>
       </Container>
@@ -236,7 +293,28 @@ const Review = () => {
   }
 
   if (!media) {
-    return (
+    return onClose ? (
+      <Dialog 
+        open={open} 
+        onClose={onClose}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: '#181818',
+            color: 'white',
+            borderRadius: '8px'
+          }
+        }}
+      >
+        <DialogContent>
+          <Typography color="error">Media not found</Typography>
+          <Button variant="contained" onClick={onClose} sx={{ mt: 2 }}>
+            Close
+          </Button>
+        </DialogContent>
+      </Dialog>
+    ) : (
       <Container maxWidth="md" sx={{ mt: 4 }}>
         <Typography color="error">Media not found</Typography>
         <Button variant="contained" onClick={() => navigate('/home')} sx={{ mt: 2 }}>
@@ -246,232 +324,249 @@ const Review = () => {
     );
   }
 
-  return (
-    <Container maxWidth="md" sx={{ mt: 4, mb: 8 }}>
-      <Paper 
-        elevation={3} 
+  const content = (
+    <Paper 
+      elevation={3} 
+      sx={{ 
+        p: 4, 
+        borderRadius: 2,
+        bgcolor: '#181818',
+        color: 'white',
+        position: 'relative'
+      }}
+    >
+      <IconButton 
+        onClick={handleClose} 
         sx={{ 
-          p: 4, 
-          borderRadius: 2,
-          bgcolor: '#181818',
-          color: 'white'
+          color: 'white',
+          position: 'absolute',
+          top: 10,
+          right: 10
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-          <IconButton 
-            onClick={() => navigate('/home')} 
-            sx={{ color: 'white', mr: 2 }}
-          >
-            <ArrowBackIcon />
-          </IconButton>
-          <Typography variant="h4" component="h1">
-            Review: {media.title}
+        {onClose ? <CloseIcon /> : <ArrowBackIcon />}
+      </IconButton>
+
+      <Grid container spacing={4} sx={{ mt: 1 }}>
+        <Grid item xs={12} md={4}>
+          <Box
+            component="img"
+            src={media.posterPath}
+            alt={media.title}
+            sx={{
+              width: '100%',
+              borderRadius: 1,
+              mb: 2
+            }}
+          />
+          <Typography variant="h6" gutterBottom>
+            {media.title}
           </Typography>
-        </Box>
-
-        <Divider sx={{ mb: 4, bgcolor: 'rgba(255,255,255,0.1)' }} />
-
-        <Grid container spacing={4}>
-          <Grid item xs={12} md={4}>
-            <Box
-              component="img"
-              src={media.posterPath}
-              alt={media.title}
-              sx={{
-                width: '100%',
-                borderRadius: 1,
-                mb: 2
-              }}
-            />
-            <Typography variant="h6" gutterBottom>
-              {media.title}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ color: '#aaa' }}>
-              {media.type === 'movie' ? 'Movie' : 'TV Series'} • {new Date(media.releaseDate).getFullYear()}
-            </Typography>
-          </Grid>
-
-          <Grid item xs={12} md={8}>
-            <Box component="form" onSubmit={handleSubmit}>
-              <Typography variant="h6" gutterBottom>
-                Your Rating
-              </Typography>
-              <Rating
-                name="rating"
-                value={review.rating}
-                onChange={handleRatingChange}
-                size="large"
-                sx={{ mb: 3, '& .MuiRating-iconFilled': { color: '#E50914' } }}
-              />
-
-              <Typography variant="h6" gutterBottom>
-                Your Review
-              </Typography>
-              <TextField
-                name="content"
-                value={review.content}
-                onChange={handleInputChange}
-                multiline
-                rows={6}
-                fullWidth
-                placeholder="Share your thoughts about this title..."
-                sx={{ 
-                  mb: 3,
-                  '& .MuiOutlinedInput-root': {
-                    '& fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
-                    '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.5)' },
-                    '&.Mui-focused fieldset': { borderColor: '#E50914' },
-                  },
-                  '& .MuiInputBase-input': { color: 'white' }
-                }}
-              />
-
-              <FormControlLabel
-                control={
-                  <Switch 
-                    checked={review.isPublic}
-                    onChange={handleInputChange}
-                    name="isPublic"
-                    color="primary"
-                  />
-                }
-                label="Make this review public"
-                sx={{ mb: 3 }}
-              />
-
-              {error && (
-                <Typography color="error" sx={{ mb: 2 }}>
-                  {error}
-                </Typography>
-              )}
-
-              {success && (
-                <Typography color="primary" sx={{ mb: 2 }}>
-                  {success}
-                </Typography>
-              )}
-
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                size="large"
-                sx={{ 
-                  bgcolor: '#E50914',
-                  '&:hover': { bgcolor: '#B20710' },
-                  px: 4
-                }}
-              >
-                {userReview ? 'Update Review' : 'Submit Review'}
-              </Button>
-            </Box>
-          </Grid>
+          <Typography variant="body2" color="text.secondary" sx={{ color: '#aaa' }}>
+            {media.type === 'movie' ? 'Movie' : 'TV Series'} • {new Date(media.releaseDate).getFullYear()}
+          </Typography>
         </Grid>
 
-        {/* Reviews Section */}
-        <Box sx={{ mt: 6 }}>
-          <Typography variant="h5" gutterBottom>
-            Reviews ({totalReviews})
-          </Typography>
-          
-          {/* Average Rating */}
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-            <Rating
-              value={averageRating}
-              precision={0.1}
-              readOnly
-              size="large"
-              sx={{ mr: 2, '& .MuiRating-iconFilled': { color: '#E50914' } }}
-            />
-            <Typography variant="h6">
-              {averageRating.toFixed(1)} / 5 ({totalReviews} reviews)
+        <Grid item xs={12} md={8}>
+          <Box component="form" onSubmit={handleSubmit}>
+            <Typography variant="h6" gutterBottom>
+              Your Rating
             </Typography>
-          </Box>
+            <Rating
+              name="rating"
+              value={review.rating}
+              onChange={handleRatingChange}
+              size="large"
+              sx={{ mb: 3, '& .MuiRating-iconFilled': { color: '#E50914' } }}
+            />
 
-          {/* Reviews List */}
-          {reviews.map((review) => (
-            <Paper
-              key={review._id}
-              sx={{
-                p: 3,
-                mb: 2,
-                bgcolor: 'rgba(255,255,255,0.05)',
-                borderRadius: 2
+            <Typography variant="h6" gutterBottom>
+              Your Review
+            </Typography>
+            <TextField
+              name="content"
+              value={review.content}
+              onChange={handleInputChange}
+              multiline
+              rows={6}
+              fullWidth
+              placeholder="Share your thoughts about this title..."
+              sx={{ 
+                mb: 3,
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
+                  '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.5)' },
+                  '&.Mui-focused fieldset': { borderColor: '#E50914' },
+                },
+                '& .MuiInputBase-input': { color: 'white' }
+              }}
+            />
+
+            <FormControlLabel
+              control={
+                <Switch 
+                  checked={review.isPublic}
+                  onChange={handleInputChange}
+                  name="isPublic"
+                  color="primary"
+                />
+              }
+              label="Make this review public"
+              sx={{ mb: 3 }}
+            />
+
+            {error && (
+              <Typography color="error" sx={{ mb: 2 }}>
+                {error}
+              </Typography>
+            )}
+
+            {success && (
+              <Typography color="primary" sx={{ mb: 2 }}>
+                {success}
+              </Typography>
+            )}
+
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              size="large"
+              sx={{ 
+                bgcolor: '#E50914',
+                '&:hover': { bgcolor: '#B20710' },
+                px: 4
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Avatar
-                  src={review.profile?.avatar || '/default-avatar.png'}
-                  alt={review.profile?.name || 'User'}
-                  sx={{ mr: 2 }}
-                />
-                <Box>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                    {review.profile?.name || 'Anonymous User'}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#aaa' }}>
-                    {new Date(review.createdAt).toLocaleDateString()}
-                  </Typography>
-                </Box>
-              </Box>
+              {userReview ? 'Update Review' : 'Submit Review'}
+            </Button>
+          </Box>
+        </Grid>
+      </Grid>
 
-              <Rating
-                value={review.rating}
-                readOnly
-                size="small"
-                sx={{ mb: 1, '& .MuiRating-iconFilled': { color: '#E50914' } }}
+      {/* Reviews Section */}
+      <Box sx={{ mt: 6 }}>
+        <Typography variant="h5" gutterBottom>
+          Reviews ({totalReviews})
+        </Typography>
+        
+        {/* Average Rating */}
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+          <Rating
+            value={averageRating}
+            precision={0.1}
+            readOnly
+            size="large"
+            sx={{ mr: 2, '& .MuiRating-iconFilled': { color: '#E50914' } }}
+          />
+          <Typography variant="h6">
+            {averageRating.toFixed(1)} / 5 ({totalReviews} reviews)
+          </Typography>
+        </Box>
+
+        {/* Reviews List */}
+        {reviews.map((review) => (
+          <Paper
+            key={review._id}
+            sx={{
+              p: 3,
+              mb: 2,
+              bgcolor: 'rgba(255,255,255,0.05)',
+              borderRadius: 2
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <Avatar
+                src={review.profile?.avatar || '/default-avatar.png'}
+                alt={review.profile?.name || 'User'}
+                sx={{ mr: 2 }}
               />
-
-              <Typography variant="body1" sx={{ mb: 2 }}>
-                {review.content}
-              </Typography>
-
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <IconButton size="small" sx={{ color: '#aaa' }}>
-                  <ThumbUpIcon fontSize="small" />
-                </IconButton>
-                <Typography variant="body2" sx={{ color: '#aaa' }}>
-                  {review.likes} Helpful
+              <Box>
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: 'white' }}>
+                  {review.profile?.name || 'Anonymous User'}
                 </Typography>
-                {review.spoiler && (
-                  <Chip
-                    label="Contains Spoilers"
-                    size="small"
-                    sx={{
-                      bgcolor: 'rgba(229,9,20,0.1)',
-                      color: '#E50914',
-                      border: '1px solid #E50914'
-                    }}
-                  />
-                )}
+                <Typography variant="body2" sx={{ color: '#aaa' }}>
+                  {new Date(review.createdAt).toLocaleDateString()}
+                </Typography>
               </Box>
-            </Paper>
-          ))}
+            </Box>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-              <Pagination
-                count={totalPages}
-                page={page}
-                onChange={handlePageChange}
-                color="primary"
-                sx={{
-                  '& .MuiPaginationItem-root': {
-                    color: 'white',
-                    '&.Mui-selected': {
-                      bgcolor: '#E50914',
-                      '&:hover': {
-                        bgcolor: '#B20710'
-                      }
+            <Rating
+              value={review.rating}
+              readOnly
+              size="small"
+              sx={{ mb: 1, '& .MuiRating-iconFilled': { color: '#E50914' } }}
+            />
+
+            <Typography variant="body1" sx={{ mb: 2, color: 'white' }}>
+              {review.content}
+            </Typography>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {review.spoiler && (
+                <Chip
+                  label="Contains Spoilers"
+                  size="small"
+                  sx={{
+                    bgcolor: 'rgba(229,9,20,0.1)',
+                    color: '#E50914',
+                    border: '1px solid #E50914'
+                  }}
+                />
+              )}
+            </Box>
+          </Paper>
+        ))}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+            <Pagination
+              count={totalPages}
+              page={page}
+              onChange={handlePageChange}
+              color="primary"
+              sx={{
+                '& .MuiPaginationItem-root': {
+                  color: 'white',
+                  '&.Mui-selected': {
+                    bgcolor: '#E50914',
+                    '&:hover': {
+                      bgcolor: '#B20710'
                     }
                   }
-                }}
-              />
-            </Box>
-          )}
-        </Box>
-      </Paper>
+                }
+              }}
+            />
+          </Box>
+        )}
+      </Box>
+    </Paper>
+  );
+
+  return onClose ? (
+    <Dialog 
+      open={open} 
+      onClose={onClose}
+      maxWidth="lg"
+      fullWidth
+      scroll="paper"
+      PaperProps={{
+        sx: {
+          bgcolor: 'transparent',
+          boxShadow: 'none',
+          overflow: 'hidden',
+          maxHeight: '90vh'
+        }
+      }}
+    >
+      <DialogContent sx={{ p: 2, bgcolor: 'transparent' }}>
+        {content}
+      </DialogContent>
+    </Dialog>
+  ) : (
+    <Container maxWidth="md" sx={{ mt: 4, mb: 8 }}>
+      {content}
     </Container>
   );
 };
