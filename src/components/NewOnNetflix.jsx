@@ -5,7 +5,7 @@ import ApiService, { getNewReleases } from '../api/api';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
-const NewOnNetflix = ({ tvOnly }) => {
+const NewOnNetflix = ({ tvOnly, mediaType }) => {
   const [newShows, setNewShows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedMedia, setSelectedMedia] = useState(null);
@@ -18,13 +18,16 @@ const NewOnNetflix = ({ tvOnly }) => {
     const fetchNewShows = async () => {
       try {
         setLoading(true);
-        // If tvOnly is true, add the type parameter to the request
-        const response = await getNewReleases(10, tvOnly ? 'tv' : null);
+        // Determine the type of media to fetch
+        // mediaType takes precedence if provided, otherwise use tvOnly
+        const type = mediaType || (tvOnly ? 'tv' : null);
         
-        // If tvOnly is true but the API doesn't support type filtering,
-        // filter the results here
+        const response = await getNewReleases(10, type);
+        
+        // Filter results if necessary
         let filteredResults = response.data.results;
-        if (tvOnly && !response.config?.params?.type) {
+        if (!mediaType && tvOnly && !response.config?.params?.type) {
+          // If using legacy tvOnly prop and API doesn't support filtering
           filteredResults = filteredResults.filter(show => show.type === 'tv');
         }
         
@@ -40,7 +43,7 @@ const NewOnNetflix = ({ tvOnly }) => {
     };
 
     fetchNewShows();
-  }, [tvOnly]);
+  }, [tvOnly, mediaType]);
 
   // Check if we can scroll right
   const checkScrollability = () => {

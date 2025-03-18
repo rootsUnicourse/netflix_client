@@ -165,7 +165,7 @@ export default function TVShows() {
                     <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
                         <NavButton onClick={() => navigate('/home')}>Home</NavButton>
                         <NavButton onClick={() => navigate('/tvshows')} sx={{ fontWeight: 'bold', color: 'white' }}>TV Shows</NavButton>
-                        <NavButton>Movies</NavButton>
+                        <NavButton onClick={() => navigate('/movies')}>Movies</NavButton>
                         <NavButton>New & Popular</NavButton>
                         <NavButton onClick={() => document.getElementById('watchlist-section').scrollIntoView({ behavior: 'smooth' })}>
                             My List
