@@ -33,7 +33,9 @@ export const getFeaturedMedia = async (limit = 8) => api.get('/media', {
 
 // Review operations
 export const createReview = async (reviewData) => api.post('/reviews', reviewData);
-export const getMediaReviews = async (mediaId) => api.get(`/reviews/media/${mediaId}`);
+export const getMediaReviews = async (mediaId, page = 1, limit = 10) => api.get(`/reviews/media/${mediaId}`, {
+  params: { page, limit }
+});
 export const getUserReviews = async () => api.get('/reviews/my-reviews');
 export const updateReview = async (reviewId, reviewData) => api.put(`/reviews/${reviewId}`, reviewData);
 export const deleteReview = async (reviewId) => api.delete(`/reviews/${reviewId}`);

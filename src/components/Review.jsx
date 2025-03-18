@@ -12,10 +12,14 @@ import {
   Container,
   Grid,
   IconButton,
-  Divider
+  Divider,
+  Pagination,
+  Avatar,
+  Chip
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ApiService, { createReview } from '../api/api';
+import ThumbUpIcon from '@mui/icons-material/ThumbUp';
+import ApiService, { createReview, getMediaReviews, updateReview } from '../api/api';
 import UserContext from '../context/UserContext';
 
 const Review = () => {
@@ -31,6 +35,12 @@ const Review = () => {
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [reviews, setReviews] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [userReview, setUserReview] = useState(null);
+  const [averageRating, setAverageRating] = useState(0);
+  const [totalReviews, setTotalReviews] = useState(0);
 
   useEffect(() => {
     const fetchMedia = async () => {
@@ -62,6 +72,41 @@ const Review = () => {
 
     fetchMedia();
   }, [mediaId]);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        if (!mediaId) return;
+        
+        const cleanId = mediaId.split('-')[0];
+        const response = await getMediaReviews(cleanId, page);
+        
+        setReviews(response.data.reviews);
+        setTotalPages(response.data.totalPages);
+        setAverageRating(response.data.averageRating);
+        setTotalReviews(response.data.totalReviews);
+        
+        // Check if user has already reviewed this media
+        const userReview = response.data.reviews.find(
+          r => r.user._id === user?.userId
+        );
+        
+        if (userReview) {
+          setUserReview(userReview);
+          setReview({
+            rating: userReview.rating,
+            content: userReview.content,
+            isPublic: userReview.isPublic
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching reviews:', err);
+        setError('Failed to load reviews. Please try again later.');
+      }
+    };
+
+    fetchReviews();
+  }, [mediaId, page, user?.userId]);
 
   const handleInputChange = (e) => {
     const { name, value, checked } = e.target;
@@ -140,17 +185,40 @@ const Review = () => {
         return;
       }
 
-      await createReview(reviewData);
+      if (userReview) {
+        // Update existing review
+        await updateReview(userReview._id, reviewData);
+      } else {
+        // Create new review
+        await createReview(reviewData);
+      }
+
       console.log('Review submitted successfully');
 
       setSuccess('Review submitted successfully!');
-      setTimeout(() => {
-        navigate('/home');
-      }, 2000);
+      
+      // Refresh reviews
+      const response = await getMediaReviews(cleanId, page);
+      setReviews(response.data.reviews);
+      setTotalPages(response.data.totalPages);
+      setAverageRating(response.data.averageRating);
+      setTotalReviews(response.data.totalReviews);
+      
+      // Update user review
+      const updatedUserReview = response.data.reviews.find(
+        r => r.user._id === user?.userId
+      );
+      if (updatedUserReview) {
+        setUserReview(updatedUserReview);
+      }
     } catch (err) {
       console.error('Error submitting review:', err);
       setError(err.response?.data?.message || 'Failed to submit review');
     }
+  };
+
+  const handlePageChange = (event, value) => {
+    setPage(value);
   };
 
   if (loading) {
@@ -288,11 +356,115 @@ const Review = () => {
                   px: 4
                 }}
               >
-                Submit Review
+                {userReview ? 'Update Review' : 'Submit Review'}
               </Button>
             </Box>
           </Grid>
         </Grid>
+
+        {/* Reviews Section */}
+        <Box sx={{ mt: 6 }}>
+          <Typography variant="h5" gutterBottom>
+            Reviews ({totalReviews})
+          </Typography>
+          
+          {/* Average Rating */}
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+            <Rating
+              value={averageRating}
+              precision={0.1}
+              readOnly
+              size="large"
+              sx={{ mr: 2, '& .MuiRating-iconFilled': { color: '#E50914' } }}
+            />
+            <Typography variant="h6">
+              {averageRating.toFixed(1)} / 5 ({totalReviews} reviews)
+            </Typography>
+          </Box>
+
+          {/* Reviews List */}
+          {reviews.map((review) => (
+            <Paper
+              key={review._id}
+              sx={{
+                p: 3,
+                mb: 2,
+                bgcolor: 'rgba(255,255,255,0.05)',
+                borderRadius: 2
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Avatar
+                  src={review.profile?.avatar || '/default-avatar.png'}
+                  alt={review.profile?.name || 'User'}
+                  sx={{ mr: 2 }}
+                />
+                <Box>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                    {review.profile?.name || 'Anonymous User'}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#aaa' }}>
+                    {new Date(review.createdAt).toLocaleDateString()}
+                  </Typography>
+                </Box>
+              </Box>
+
+              <Rating
+                value={review.rating}
+                readOnly
+                size="small"
+                sx={{ mb: 1, '& .MuiRating-iconFilled': { color: '#E50914' } }}
+              />
+
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                {review.content}
+              </Typography>
+
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <IconButton size="small" sx={{ color: '#aaa' }}>
+                  <ThumbUpIcon fontSize="small" />
+                </IconButton>
+                <Typography variant="body2" sx={{ color: '#aaa' }}>
+                  {review.likes} Helpful
+                </Typography>
+                {review.spoiler && (
+                  <Chip
+                    label="Contains Spoilers"
+                    size="small"
+                    sx={{
+                      bgcolor: 'rgba(229,9,20,0.1)',
+                      color: '#E50914',
+                      border: '1px solid #E50914'
+                    }}
+                  />
+                )}
+              </Box>
+            </Paper>
+          ))}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+              <Pagination
+                count={totalPages}
+                page={page}
+                onChange={handlePageChange}
+                color="primary"
+                sx={{
+                  '& .MuiPaginationItem-root': {
+                    color: 'white',
+                    '&.Mui-selected': {
+                      bgcolor: '#E50914',
+                      '&:hover': {
+                        bgcolor: '#B20710'
+                      }
+                    }
+                  }
+                }}
+              />
+            </Box>
+          )}
+        </Box>
       </Paper>
     </Container>
   );
