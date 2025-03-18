@@ -22,6 +22,7 @@ import axios from 'axios';
 import CoverPhotoSection from '../components/CoverPhotoSection';
 import NewOnNetflix from '../components/NewOnNetflix';
 import TopShowsInIsrael from '../components/TopShowsInIsrael';
+import UserReviews from '../components/UserReviews';
 
 // Netflix logo will be provided by the user
 import NetflixLogo from '../assets/images/netflixlogo.png'; // Updated path to use existing logo
@@ -260,6 +261,9 @@ export default function Home() {
             
             {/* Top Shows in Israel Section */}
             <TopShowsInIsrael />
+            
+            {/* User Reviews Section */}
+            <UserReviews />
             
             {/* Main Content Area */}
             <Container maxWidth="xl" sx={{ mt: 4, overflowX: 'hidden' }}>
