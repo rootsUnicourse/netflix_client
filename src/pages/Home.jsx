@@ -25,6 +25,7 @@ import TopShowsInIsrael from '../components/TopShowsInIsrael';
 import UserReviews from '../components/UserReviews';
 import TopRatedMedia from '../components/TopRatedMedia';
 import AnimationMedia from '../components/AnimationMedia';
+import ActionMedia from '../components/ActionMedia';
 
 // Netflix logo will be provided by the user
 import NetflixLogo from '../assets/images/netflixlogo.png'; // Updated path to use existing logo
@@ -272,6 +273,9 @@ export default function Home() {
             
             {/* Animation Media Section */}
             <AnimationMedia />
+            
+            {/* Action Media Section */}
+            <ActionMedia />
             
             {/* Main Content Area */}
             <Container maxWidth="xl" sx={{ mt: 4, overflowX: 'hidden' }}>

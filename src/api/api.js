@@ -63,7 +63,10 @@ export const getAnimationMedia = async (limit = 15) => api.get('/media/animation
 });
 
 // Get media by specific TMDB IDs
-export const getMediaByTmdbIds = async (ids) => api.post('/media/by-tmdb-ids', { ids });
+export const getMediaByTmdbIds = async (ids) => {
+  console.log('Fetching media with TMDB IDs:', ids);
+  return api.post('/media/by-tmdb-ids', { ids });
+};
 
 // Get top rated media by users
 export const getTopRatedMedia = async (limit = 10, mediaType = null) => {
@@ -139,6 +142,17 @@ export const getMixedMedia = async (count = 4) => {
   };
 };
 
+// Get action media
+export const getActionMedia = async (limit = 10) => {
+  console.log(`Calling action genre endpoint with limit=${limit}`);
+  return api.get('/media', {
+    params: { 
+      genre: 'Action',
+      limit
+    }
+  });
+};
+
 const ApiService = {
   signUp,
   login,
@@ -152,6 +166,7 @@ const ApiService = {
   getNewReleases,
   getTopShowsInIsrael,
   getAnimationMedia,
+  getActionMedia,
   getMediaByTmdbIds,
   getMixedMedia,
   createReview,
