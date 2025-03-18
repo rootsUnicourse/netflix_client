@@ -57,6 +57,14 @@ export const getTopShowsInIsrael = async (limit = 10) => api.get('/media/top-sho
   params: { limit }
 });
 
+// Get animation media
+export const getAnimationMedia = async (limit = 15) => api.get('/media/animation', {
+  params: { limit }
+});
+
+// Get media by specific TMDB IDs
+export const getMediaByTmdbIds = async (ids) => api.post('/media/by-tmdb-ids', { ids });
+
 // Get top rated media by users
 export const getTopRatedMedia = async (limit = 10, mediaType = null) => {
   console.log(`Calling top-rated-by-users endpoint with limit=${limit}, mediaType=${mediaType}`);
@@ -143,6 +151,8 @@ const ApiService = {
   getFeaturedMedia,
   getNewReleases,
   getTopShowsInIsrael,
+  getAnimationMedia,
+  getMediaByTmdbIds,
   getMixedMedia,
   createReview,
   getMediaReviews,

@@ -1,14 +1,30 @@
-import React, { useState, useEffect, useRef, useContext } from 'react';
-import { Box, Typography, Skeleton, IconButton, Button } from '@mui/material';
-import MoreInfo from './MoreInfo';
-import ApiService, { getUserReviews, getMediaById } from '../api/api';
+import React, { useState, useEffect, useRef } from 'react';
+import { Box, Typography, Skeleton, IconButton } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import UserContext from '../context/UserContext';
-import { useNavigate } from 'react-router-dom';
+import MoreInfo from './MoreInfo';
+import { getMediaByTmdbIds, getMediaById } from '../api/api';
 
-const UserReviews = () => {
-  const [userReviewedMedia, setUserReviewedMedia] = useState([]);
+// Helper function to ensure image URLs are properly formatted
+const getImagePath = (path) => {
+  if (!path) return 'https://via.placeholder.com/200x120?text=No+Image';
+  
+  // If the path is already a full URL, return it as is
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+  
+  // If it's a TMDB path, add the base URL
+  if (path.startsWith('/')) {
+    return `https://image.tmdb.org/t/p/w500${path}`;
+  }
+  
+  // Otherwise, return as is (might be a relative path to our own server)
+  return path;
+};
+
+const AnimationMedia = () => {
+  const [animationMedia, setAnimationMedia] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedMedia, setSelectedMedia] = useState(null);
@@ -17,49 +33,60 @@ const UserReviews = () => {
   const [scrollPosition, setScrollPosition] = useState(0);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const rowRef = useRef(null);
-  const { user } = useContext(UserContext);
-  const navigate = useNavigate();
+
+  // Specific TMDB IDs we want to display (in order)
+  const specificTmdbIds = [
+    11544,
+    425,
+    10681,
+    635302,
+    808,
+    809,
+    82702,
+    519182,
+    1357633,
+    1104845
+  ];
 
   useEffect(() => {
-    // Only fetch reviews if user is logged in
-    if (user) {
-      fetchUserReviewedMedia();
-    } else {
-      setLoading(false);
-    }
-  }, [user]);
+    fetchSpecificAnimationMedia();
+  }, []);
 
-  const fetchUserReviewedMedia = async () => {
+  const fetchSpecificAnimationMedia = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await getUserReviews();
       
-      console.log('User reviews response:', response.data);
+      console.log('Fetching specific animation media with IDs:', specificTmdbIds);
+      const response = await getMediaByTmdbIds(specificTmdbIds);
       
-      // Check if we have data and results
-      if (!response.data || !response.data.results || !Array.isArray(response.data.results)) {
+      console.log('Specific animation media response:', response);
+      
+      // Check if we have valid data
+      if (!response.data || !response.data.results) {
         console.error('Unexpected response format:', response.data);
         setError('Unexpected data format received');
         setLoading(false);
         return;
       }
       
-      // Make sure we handle reviews that have null or undefined media
-      const reviewedMedia = response.data.results
-        .filter(review => review && review.media) // Filter out reviews with no media
-        .map(review => review.media);
+      // Log which IDs were found and which were missing
+      const foundIds = response.data.results.map(media => parseInt(media.tmdbId));
+      const missingIds = specificTmdbIds.filter(id => !foundIds.includes(id));
       
-      console.log('Extracted media from reviews:', reviewedMedia);
+      console.log('Found TMDB IDs:', foundIds);
+      if (missingIds.length > 0) {
+        console.warn('Missing TMDB IDs:', missingIds);
+      }
       
-      setUserReviewedMedia(reviewedMedia);
+      setAnimationMedia(response.data.results);
       setLoading(false);
       
       // Check if we can scroll right after content is loaded
       setTimeout(checkScrollability, 100);
     } catch (error) {
-      console.error('Error fetching user reviewed media:', error);
-      setError(error.message || 'Failed to load your reviews');
+      console.error('Error fetching specific animation media:', error);
+      setError(error.message || 'Failed to load animation content');
       setLoading(false);
     }
   };
@@ -77,12 +104,10 @@ const UserReviews = () => {
       // Set loading state for media details
       setMediaDetailsLoading(true);
       
-      // Remove any suffix that might have been added (like -featured or -trending)
-      const cleanId = media._id.split('-')[0];
-      console.log('Fetching full media details for:', cleanId);
+      console.log('Fetching full media details for:', media._id);
       
       // Fetch full media details
-      const response = await getMediaById(cleanId);
+      const response = await getMediaById(media._id);
       const fullMediaData = response.data;
       
       console.log('Full media details received:', fullMediaData);
@@ -129,11 +154,6 @@ const UserReviews = () => {
     }
   };
 
-  // If user is not logged in, don't show this section
-  if (!user) {
-    return null;
-  }
-
   return (
     <Box sx={{ mt: 4, px: 4, position: 'relative' }}>
       <Typography
@@ -143,7 +163,7 @@ const UserReviews = () => {
           color: 'white'
         }}
       >
-        Your Reviews
+        Curated Animation
       </Typography>
 
       <Box sx={{ position: 'relative' }}>
@@ -224,27 +244,14 @@ const UserReviews = () => {
             <Typography sx={{ color: '#ff5252', fontStyle: 'italic', py: 4 }}>
               {error}
             </Typography>
-          ) : userReviewedMedia.length === 0 ? (
-            // No reviews found
-            <Box sx={{ py: 4, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-              <Typography sx={{ color: '#777', fontStyle: 'italic', mb: 2 }}>
-                You haven't reviewed any shows yet. Start watching and share your thoughts!
-              </Typography>
-              <Button 
-                variant="contained" 
-                color="primary" 
-                onClick={() => navigate('/home')}
-                sx={{ 
-                  bgcolor: '#E50914', 
-                  '&:hover': { bgcolor: '#B20710' } 
-                }}
-              >
-                Explore Content
-              </Button>
-            </Box>
+          ) : animationMedia.length === 0 ? (
+            // No animation media found
+            <Typography sx={{ color: '#777', fontStyle: 'italic', py: 4 }}>
+              No animation content found. Check back later!
+            </Typography>
           ) : (
             // Actual content
-            userReviewedMedia.map((media) => (
+            animationMedia.map((media) => (
               <Box 
                 key={media._id} 
                 sx={{ 
@@ -262,8 +269,8 @@ const UserReviews = () => {
               >
                 <Box 
                   component="img"
-                  src={media.backdropPath || media.posterPath}
-                  alt={media.title}
+                  src={getImagePath(media.backdropPath || media.posterPath)}
+                  alt={media.title || media.name}
                   sx={{ 
                     width: '200px',
                     height: '120px',
@@ -289,4 +296,4 @@ const UserReviews = () => {
   );
 };
 
-export default UserReviews; 
+export default AnimationMedia; 
