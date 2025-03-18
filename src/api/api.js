@@ -62,12 +62,13 @@ export const updateReview = async (reviewId, reviewData) => api.put(`/reviews/${
 export const deleteReview = async (reviewId) => api.delete(`/reviews/${reviewId}`);
 
 // Get new releases
-export const getNewReleases = async (limit = 10) => api.get('/media', {
+export const getNewReleases = async (limit = 10, mediaType = null) => api.get('/media', {
   params: { 
     sort: 'releaseDate', 
     order: 'desc', 
     limit,
-    newRelease: true
+    newRelease: true,
+    type: mediaType
   }
 });
 

@@ -5,6 +5,7 @@ import SignUpPage from './pages/SignUpPage';
 import SignInPage from './pages/SignInPage';
 import ProfileSelection from './pages/ProfileSelection';
 import Home from './pages/Home';
+import TVShows from './pages/TVShows';
 import Review from './components/Review';
 import { UserProvider } from './context/UserContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -20,6 +21,7 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/profiles" element={<ProfileSelection />} />
             <Route path="/home" element={<Home />} />
+            <Route path="/tvshows" element={<TVShows />} />
             <Route path="/review/:mediaId" element={<Review />} />
           </Route>
         </Routes>

@@ -23,7 +23,7 @@ const getImagePath = (path) => {
   return path;
 };
 
-const AnimationMedia = () => {
+const AnimationMedia = ({ mediaType }) => {
   const [animationMedia, setAnimationMedia] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -35,29 +35,49 @@ const AnimationMedia = () => {
   const rowRef = useRef(null);
 
   // Specific TMDB IDs we want to display (in order)
-  const specificTmdbIds = [
-    11544,
-    425,
-    10681,
-    635302,
-    808,
-    809,
-    82702,
-    519182,
-    1357633,
-    1104845
+  // TV shows
+  const tvAnimationIds = [
+    1396,    // Breaking Bad (just as fallback)
+    60625,   // Rick and Morty
+    46260,   // Naruto
+    37854,   // One Piece
+    1429,    // Attack on Titan
+    65930,   // My Hero Academia
+    60863,   // The Dragon Prince
+    61374,   // Last Airbender
+    1877,    // Arcane
+    80020    // Dragon Ball
   ];
+  
+  // Movies
+  const movieAnimationIds = [
+    11544,   // Inside Out
+    425,     // Ice Age
+    10681,   // WALL-E
+    635302,  // Moana
+    808,     // Toy Story
+    809,     // Shrek
+    82702,   // How to Train Your Dragon
+    519182,  // Encanto
+    1357633, // Toy Story 4
+    1104845  // Incredibles
+  ];
+  
+  // Select the right set of IDs based on mediaType
+  const specificTmdbIds = mediaType === 'tv' ? tvAnimationIds : 
+                          mediaType === 'movie' ? movieAnimationIds : 
+                          [...tvAnimationIds, ...movieAnimationIds].slice(0, 10);
 
   useEffect(() => {
     fetchSpecificAnimationMedia();
-  }, []);
+  }, [mediaType]);
 
   const fetchSpecificAnimationMedia = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      console.log('Fetching specific animation media with IDs:', specificTmdbIds);
+      console.log(`Fetching specific ${mediaType || 'all'} animation media with IDs:`, specificTmdbIds);
       const response = await getMediaByTmdbIds(specificTmdbIds);
       
       console.log('Specific animation media response:', response);
@@ -70,8 +90,15 @@ const AnimationMedia = () => {
         return;
       }
       
+      let mediaData = response.data.results;
+      
+      // If mediaType is specified but the API doesn't filter by it, filter here
+      if (mediaType) {
+        mediaData = mediaData.filter(media => media.type === mediaType);
+      }
+      
       // Log which IDs were found and which were missing
-      const foundIds = response.data.results.map(media => parseInt(media.tmdbId));
+      const foundIds = mediaData.map(media => parseInt(media.tmdbId));
       const missingIds = specificTmdbIds.filter(id => !foundIds.includes(id));
       
       console.log('Found TMDB IDs:', foundIds);
@@ -79,7 +106,7 @@ const AnimationMedia = () => {
         console.warn('Missing TMDB IDs:', missingIds);
       }
       
-      setAnimationMedia(response.data.results);
+      setAnimationMedia(mediaData);
       setLoading(false);
       
       // Check if we can scroll right after content is loaded

@@ -25,12 +25,11 @@ import TopShowsInIsrael from '../components/TopShowsInIsrael';
 import UserReviews from '../components/UserReviews';
 import TopRatedMedia from '../components/TopRatedMedia';
 import AnimationMedia from '../components/AnimationMedia';
-import ActionMedia from '../components/ActionMedia';
 import WatchlistMedia from '../components/WatchlistMedia';
 import Footer from '../components/Footer';
 
 // Netflix logo will be provided by the user
-import NetflixLogo from '../assets/images/netflixlogo.png'; // Updated path to use existing logo
+import NetflixLogo from '../assets/images/netflixlogo.png';
 
 const NavButton = styled(Button)(({ theme }) => ({
     color: '#e5e5e5',
@@ -45,7 +44,7 @@ const NavButton = styled(Button)(({ theme }) => ({
     padding: '4px 8px',
 }));
 
-export default function Home() {
+export default function TVShows() {
     const { user, profiles } = useContext(UserContext);
     const navigate = useNavigate();
     const [anchorEl, setAnchorEl] = useState(null);
@@ -64,27 +63,28 @@ export default function Home() {
         }
     }, [profiles]);
 
-    // Fetch featured media for the cover section
+    // Fetch featured TV Shows for the cover section
     useEffect(() => {
         const fetchFeaturedMedia = async () => {
             try {
                 setIsLoading(true);
-                // Fetch newest media items
+                // Fetch newest TV shows - add type=tv parameter to only get TV shows
                 const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/media`, {
                     params: {
                         limit: 4,
-                        sort: 'releaseDate',  // Sort by release date instead of popularity
-                        order: 'desc'         // Descending order (newest first)
+                        sort: 'releaseDate',
+                        order: 'desc',
+                        type: 'tv'  // Filter to only get TV shows
                     }
                 });
 
                 if (response.data.results && response.data.results.length > 0) {
                     setFeaturedMedia(response.data.results);
-                    console.log('Fetched newest media:', response.data.results);
+                    console.log('Fetched newest TV shows:', response.data.results);
                 }
                 setIsLoading(false);
             } catch (error) {
-                console.error('Error fetching featured media:', error);
+                console.error('Error fetching featured TV shows:', error);
                 setIsLoading(false);
             }
         };
@@ -163,8 +163,8 @@ export default function Home() {
 
                     {/* Navigation Links - Desktop */}
                     <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
-                        <NavButton sx={{ fontWeight: 'bold', color: 'white' }}>Home</NavButton>
-                        <NavButton onClick={() => navigate('/tvshows')}>TV Shows</NavButton>
+                        <NavButton onClick={() => navigate('/home')}>Home</NavButton>
+                        <NavButton onClick={() => navigate('/tvshows')} sx={{ fontWeight: 'bold', color: 'white' }}>TV Shows</NavButton>
                         <NavButton>Movies</NavButton>
                         <NavButton>New & Popular</NavButton>
                         <NavButton onClick={() => document.getElementById('watchlist-section').scrollIntoView({ behavior: 'smooth' })}>
@@ -266,15 +266,27 @@ export default function Home() {
             {/* Main Content Container */}
             <Container maxWidth={false} sx={{ pt: 0, px: { xs: 0 }, overflowX: 'hidden' }}>
                 {/* Rows */}
-                <NewOnNetflix />
+                <Box sx={{ mt: 4, mb: 2, px: 4 }}>
+                    <Typography 
+                        variant="h4" 
+                        sx={{ 
+                            fontWeight: 'bold', 
+                            color: 'white' 
+                        }}
+                    >
+                        TV Shows
+                    </Typography>
+                </Box>
+                
+                {/* Modified components to only show TV shows */}
+                <NewOnNetflix tvOnly={true} />
                 <TopShowsInIsrael />
-                <TopRatedMedia />
-                <UserReviews />
-                <AnimationMedia />
-                <ActionMedia />
-                {/* Watchlist Section */}
+                <TopRatedMedia mediaType="tv" />
+                <UserReviews mediaType="tv" />
+                <AnimationMedia mediaType="tv" />
+                {/* Watchlist Section - filtered for TV shows */}
                 <Box id="watchlist-section">
-                    <WatchlistMedia />
+                    <WatchlistMedia mediaType="tv" />
                 </Box>
             </Container>
             

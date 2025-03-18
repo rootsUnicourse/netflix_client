@@ -7,7 +7,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import UserContext from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
 
-const UserReviews = () => {
+const UserReviews = ({ mediaType }) => {
   const [userReviewedMedia, setUserReviewedMedia] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -27,7 +27,7 @@ const UserReviews = () => {
     } else {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, mediaType]);
 
   const fetchUserReviewedMedia = async () => {
     try {
@@ -46,11 +46,16 @@ const UserReviews = () => {
       }
       
       // Make sure we handle reviews that have null or undefined media
-      const reviewedMedia = response.data.results
+      let reviewedMedia = response.data.results
         .filter(review => review && review.media) // Filter out reviews with no media
         .map(review => review.media);
       
-      console.log('Extracted media from reviews:', reviewedMedia);
+      // Filter by mediaType if provided
+      if (mediaType) {
+        reviewedMedia = reviewedMedia.filter(media => media.type === mediaType);
+      }
+      
+      console.log(`Extracted ${mediaType || 'all'} media from reviews:`, reviewedMedia);
       
       setUserReviewedMedia(reviewedMedia);
       setLoading(false);

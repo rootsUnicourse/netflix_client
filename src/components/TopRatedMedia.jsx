@@ -44,7 +44,7 @@ const getRatingData = (media) => {
   };
 };
 
-const TopRatedMedia = () => {
+const TopRatedMedia = ({ mediaType }) => {
   const [topRatedMedia, setTopRatedMedia] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -57,15 +57,15 @@ const TopRatedMedia = () => {
 
   useEffect(() => {
     fetchTopRatedMedia();
-  }, []);
+  }, [mediaType]);
 
   const fetchTopRatedMedia = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      console.log('Fetching top rated media...');
-      const response = await getTopRatedMedia(15); // Fetch top 15 rated media
+      console.log('Fetching top rated media with type:', mediaType);
+      const response = await getTopRatedMedia(15, mediaType); // Pass the media type
       
       console.log('Top rated media response:', response);
       console.log('Top rated media response data:', response.data);
@@ -85,6 +85,11 @@ const TopRatedMedia = () => {
         setError('Unexpected data format received');
         setLoading(false);
         return;
+      }
+      
+      // If mediaType is specified but not filtered by the API, filter locally
+      if (mediaType && !response.config?.params?.mediaType) {
+        mediaData = mediaData.filter(item => item.type === mediaType);
       }
       
       console.log('Processed media data:', mediaData);

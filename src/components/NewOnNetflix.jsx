@@ -5,7 +5,7 @@ import ApiService, { getNewReleases } from '../api/api';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
-const NewOnNetflix = () => {
+const NewOnNetflix = ({ tvOnly }) => {
   const [newShows, setNewShows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedMedia, setSelectedMedia] = useState(null);
@@ -18,9 +18,17 @@ const NewOnNetflix = () => {
     const fetchNewShows = async () => {
       try {
         setLoading(true);
-        const response = await getNewReleases(10);
+        // If tvOnly is true, add the type parameter to the request
+        const response = await getNewReleases(10, tvOnly ? 'tv' : null);
         
-        setNewShows(response.data.results);
+        // If tvOnly is true but the API doesn't support type filtering,
+        // filter the results here
+        let filteredResults = response.data.results;
+        if (tvOnly && !response.config?.params?.type) {
+          filteredResults = filteredResults.filter(show => show.type === 'tv');
+        }
+        
+        setNewShows(filteredResults);
         setLoading(false);
         
         // Check if we can scroll right after content is loaded
@@ -32,7 +40,7 @@ const NewOnNetflix = () => {
     };
 
     fetchNewShows();
-  }, []);
+  }, [tvOnly]);
 
   // Check if we can scroll right
   const checkScrollability = () => {

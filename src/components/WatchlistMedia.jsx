@@ -7,11 +7,16 @@ import {
 import MoreInfo from './MoreInfo';
 import UserContext from '../context/UserContext';
 
-const WatchlistMedia = () => {
+const WatchlistMedia = ({ mediaType }) => {
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [moreInfoOpen, setMoreInfoOpen] = useState(false);
 
   const { watchlist } = useContext(UserContext);
+  
+  // Filter the watchlist by mediaType if provided
+  const filteredWatchlist = mediaType 
+    ? watchlist?.filter(item => item.type === mediaType) 
+    : watchlist;
 
   const handleInfoClick = (media) => {
     setSelectedMedia(media);
@@ -23,14 +28,16 @@ const WatchlistMedia = () => {
   };
 
   // If no items in watchlist
-  if (!watchlist || watchlist.length === 0) {
+  if (!filteredWatchlist || filteredWatchlist.length === 0) {
     return (
       <Box sx={{ my: 4, px: 4 }}>
         <Typography variant="h5" sx={{ color: 'white', mb: 2 }}>
-          My List
+          My List {mediaType === 'tv' ? '(TV Shows)' : mediaType === 'movie' ? '(Movies)' : ''}
         </Typography>
         <Typography variant="body1" sx={{ color: '#aaa' }}>
-          You haven't added any titles to your list yet.
+          {watchlist && watchlist.length > 0 
+            ? `You don't have any ${mediaType === 'tv' ? 'TV shows' : 'movies'} in your list yet.`
+            : "You haven't added any titles to your list yet."}
         </Typography>
       </Box>
     );
@@ -39,12 +46,12 @@ const WatchlistMedia = () => {
   return (
     <Box sx={{ my: 4, px: 4 }}>
       <Typography variant="h5" sx={{ color: 'white', mb: 2 }}>
-        My List
+        My List {mediaType === 'tv' ? '(TV Shows)' : mediaType === 'movie' ? '(Movies)' : ''}
       </Typography>
 
       <Box sx={{ position: 'relative', overflowX: 'hidden' }}>
         <Box sx={{ display: 'flex', flexWrap: 'nowrap', overflowX: 'auto', pl: 0.5, pb: 2 }}>
-          {watchlist.map((media) => (
+          {filteredWatchlist.map((media) => (
             <Box
               key={media._id}
               sx={{
