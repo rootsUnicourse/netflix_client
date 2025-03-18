@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -12,19 +12,32 @@ import {
   List,
   ListItem,
   ListItemText,
-  Avatar
+  Avatar,
+  Tooltip
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AddIcon from '@mui/icons-material/Add';
 import ThumbUpAltOutlinedIcon from '@mui/icons-material/ThumbUpAltOutlined';
+import CheckIcon from '@mui/icons-material/Check';
 import { useNavigate } from 'react-router-dom';
 import Review from './Review';
+import UserContext from '../context/UserContext';
 
 const MoreInfo = ({ open, onClose, media }) => {
   const navigate = useNavigate();
   const [selectedSeason, setSelectedSeason] = useState(0);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [localInWatchlist, setLocalInWatchlist] = useState(false);
+  const { user, addToWatchlist, removeFromWatchlist, isInWatchlist, watchlist } = useContext(UserContext);
+
+  // Update local watchlist status when media or watchlist changes
+  useEffect(() => {
+    if (media && media._id) {
+      const inList = isInWatchlist(media._id);
+      setLocalInWatchlist(inList);
+    }
+  }, [media, watchlist, isInWatchlist]);
 
   console.log('MoreInfo media:', media);
 
@@ -47,9 +60,43 @@ const MoreInfo = ({ open, onClose, media }) => {
     setReviewModalOpen(false);
   };
 
-  const handleAddToWatchlist = () => {
-    // Will add to watchlist in the future
-    console.log('Add to watchlist');
+  const handleWatchlistToggle = async () => {
+    if (!user) {
+      // Handle not logged in scenario
+      console.log('User needs to be logged in to use watchlist');
+      return;
+    }
+
+    const mediaId = media._id;
+    
+    if (!mediaId) {
+      console.error('Media ID is missing or invalid');
+      return;
+    }
+    
+    try {
+      console.log('Watchlist toggle for media:', mediaId);
+      
+      if (localInWatchlist) {
+        const success = await removeFromWatchlist(mediaId);
+        if (success) {
+          setLocalInWatchlist(false);
+          console.log('Successfully removed from watchlist');
+        } else {
+          console.error('Failed to remove from watchlist');
+        }
+      } else {
+        const success = await addToWatchlist(mediaId);
+        if (success) {
+          setLocalInWatchlist(true);
+          console.log('Successfully added to watchlist');
+        } else {
+          console.error('Failed to add to watchlist');
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling watchlist:', error);
+    }
   };
 
   // Format runtime from minutes to hours and minutes
@@ -150,17 +197,19 @@ const MoreInfo = ({ open, onClose, media }) => {
                   Review
                 </Button>
 
-                <IconButton
-                  onClick={handleAddToWatchlist}
-                  sx={{
-                    bgcolor: 'rgba(42, 42, 42, 0.7)',
-                    color: 'white',
-                    border: '2px solid rgba(255, 255, 255, 0.5)',
-                    '&:hover': { bgcolor: 'rgba(42, 42, 42, 0.9)' },
-                  }}
-                >
-                  <AddIcon />
-                </IconButton>
+                <Tooltip title={localInWatchlist ? "Remove from My List" : "Add to My List"}>
+                  <IconButton
+                    onClick={handleWatchlistToggle}
+                    sx={{
+                      bgcolor: 'rgba(42, 42, 42, 0.7)',
+                      color: 'white',
+                      border: '2px solid rgba(255, 255, 255, 0.5)',
+                      '&:hover': { bgcolor: 'rgba(42, 42, 42, 0.9)' },
+                    }}
+                  >
+                    {localInWatchlist ? <CheckIcon /> : <AddIcon />}
+                  </IconButton>
+                </Tooltip>
               </Box>
             </Box>
           </Box>

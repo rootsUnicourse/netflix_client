@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useCallback } from 'react';
 import ApiService from '../api/api';
 
 const UserContext = createContext();
@@ -6,6 +6,24 @@ const UserContext = createContext();
 export const UserProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [profiles, setProfiles] = useState([]);
+    const [watchlist, setWatchlist] = useState([]);
+    const [watchlistLoaded, setWatchlistLoaded] = useState(false);
+
+    // Memoize fetchWatchlist to prevent recreation on every render
+    const fetchWatchlist = useCallback(async () => {
+        if (!user) return;
+        
+        try {
+            console.log('Fetching watchlist for user:', user._id);
+            const { data } = await ApiService.getWatchlist();
+            console.log('Watchlist data received:', data);
+            setWatchlist(data);
+            setWatchlistLoaded(true);
+        } catch (error) {
+            console.error('Error fetching watchlist:', error);
+            // Don't reset watchlist on error to keep any cached data
+        }
+    }, [user]);
 
     // Load user & profiles from local storage on initial mount
     useEffect(() => {
@@ -15,6 +33,7 @@ export const UserProvider = ({ children }) => {
         if (storedUser && token) {
             setUser(storedUser);
             fetchProfiles();
+            fetchWatchlist();
         }
     }, []);
 
@@ -24,6 +43,13 @@ export const UserProvider = ({ children }) => {
             fetchProfiles();
         }
     }, [user]);
+    
+    // Fetch watchlist only when user changes or after specific watchlist operations
+    useEffect(() => {
+        if (user && !watchlistLoaded) {
+            fetchWatchlist();
+        }
+    }, [user, fetchWatchlist, watchlistLoaded]);
 
     // Fetch profiles from API and store in localStorage
     const fetchProfiles = async () => {
@@ -73,6 +99,44 @@ export const UserProvider = ({ children }) => {
         }
     };
 
+    // Add to watchlist
+    const addToWatchlist = async (mediaId) => {
+        try {
+            console.log('Adding to watchlist:', mediaId);
+            const { data } = await ApiService.addToWatchlist(mediaId);
+            console.log('Updated watchlist:', data);
+            setWatchlist(data);
+            return true;
+        } catch (error) {
+            console.error('Error adding to watchlist:', error.response?.data || error);
+            return false;
+        }
+    };
+
+    // Remove from watchlist
+    const removeFromWatchlist = async (mediaId) => {
+        try {
+            console.log('Removing from watchlist:', mediaId);
+            const { data } = await ApiService.removeFromWatchlist(mediaId);
+            console.log('Updated watchlist after removal:', data);
+            setWatchlist(data);
+            return true;
+        } catch (error) {
+            console.error('Error removing from watchlist:', error.response?.data || error);
+            return false;
+        }
+    };
+
+    // Check if media is in watchlist
+    const isInWatchlist = (mediaId) => {
+        return watchlist.some(item => item._id === mediaId);
+    };
+
+    // Force refresh watchlist - use this when needed externally
+    const refetchWatchlist = () => {
+        setWatchlistLoaded(false); // This will trigger the useEffect to fetch again
+    };
+
     // Logout user (clears storage and resets state)
     const logout = () => {
         localStorage.removeItem('user');
@@ -80,6 +144,8 @@ export const UserProvider = ({ children }) => {
         localStorage.removeItem('profiles');
         setUser(null);
         setProfiles([]);
+        setWatchlist([]);
+        setWatchlistLoaded(false);
     };
 
     return (
@@ -87,7 +153,12 @@ export const UserProvider = ({ children }) => {
             user, 
             setUser, 
             profiles, 
-            setProfiles, 
+            setProfiles,
+            watchlist,
+            addToWatchlist,
+            removeFromWatchlist,
+            isInWatchlist,
+            refetchWatchlist,
             addNewProfile, 
             removeProfile, 
             renameProfile, 

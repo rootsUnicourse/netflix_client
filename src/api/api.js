@@ -7,12 +7,31 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
+    console.log('API Request to:', config.url, 'Token present:', token ? 'Yes' : 'No');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      console.warn('No token found in localStorage for API call to:', config.url);
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.error('API interceptor request error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor
+api.interceptors.response.use(
+  (response) => {
+    console.log('API Response from:', response.config.url, 'Status:', response.status);
+    return response;
+  },
+  (error) => {
+    console.error('API Response Error:', error.config?.url, 'Status:', error.response?.status);
+    console.error('Error details:', error.response?.data || error.message);
+    return Promise.reject(error);
+  }
 );
 
 export const signUp = async (payload) => api.post('/auth/signup', payload);
@@ -153,6 +172,43 @@ export const getActionMedia = async (limit = 10) => {
   });
 };
 
+// Watchlist operations
+export const addToWatchlist = async (mediaId) => {
+  console.log('API call: Adding to watchlist, mediaId:', mediaId);
+  try {
+    const response = await api.post('/profiles/watchlist', { mediaId });
+    console.log('API response for add to watchlist:', response.data);
+    return response;
+  } catch (error) {
+    console.error('API error adding to watchlist:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const removeFromWatchlist = async (mediaId) => {
+  console.log('API call: Removing from watchlist, mediaId:', mediaId);
+  try {
+    const response = await api.delete(`/profiles/watchlist/${mediaId}`);
+    console.log('API response for remove from watchlist:', response.data);
+    return response;
+  } catch (error) {
+    console.error('API error removing from watchlist:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const getWatchlist = async () => {
+  console.log('API call: Getting watchlist');
+  try {
+    const response = await api.get('/profiles/watchlist');
+    console.log('API response for get watchlist:', response.data);
+    return response;
+  } catch (error) {
+    console.error('API error getting watchlist:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
 const ApiService = {
   signUp,
   login,
@@ -175,6 +231,9 @@ const ApiService = {
   updateReview,
   deleteReview,
   getTopRatedMedia,
+  addToWatchlist,
+  removeFromWatchlist,
+  getWatchlist,
 };
 
 export default ApiService;

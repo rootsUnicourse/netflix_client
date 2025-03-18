@@ -1,10 +1,10 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { 
-    AppBar, 
-    Toolbar, 
-    Typography, 
-    Box, 
-    Button, 
+import {
+    AppBar,
+    Toolbar,
+    Typography,
+    Box,
+    Button,
     Container,
     IconButton,
     Menu,
@@ -26,6 +26,8 @@ import UserReviews from '../components/UserReviews';
 import TopRatedMedia from '../components/TopRatedMedia';
 import AnimationMedia from '../components/AnimationMedia';
 import ActionMedia from '../components/ActionMedia';
+import WatchlistMedia from '../components/WatchlistMedia';
+import Footer from '../components/Footer';
 
 // Netflix logo will be provided by the user
 import NetflixLogo from '../assets/images/netflixlogo.png'; // Updated path to use existing logo
@@ -75,7 +77,7 @@ export default function Home() {
                         order: 'desc'         // Descending order (newest first)
                     }
                 });
-                
+
                 if (response.data.results && response.data.results.length > 0) {
                     setFeaturedMedia(response.data.results);
                     console.log('Fetched newest media:', response.data.results);
@@ -95,11 +97,11 @@ export default function Home() {
         // Save original overflow style
         const originalOverflow = document.body.style.overflow;
         const originalOverflowX = document.body.style.overflowX;
-        
+
         // Disable horizontal scrolling
         document.body.style.overflow = 'auto';
         document.body.style.overflowX = 'hidden';
-        
+
         // Cleanup function to restore original styles when component unmounts
         return () => {
             document.body.style.overflow = originalOverflow;
@@ -127,19 +129,19 @@ export default function Home() {
     };
 
     return (
-        <Box sx={{ 
-            flexGrow: 1, 
-            bgcolor: '#141414', 
+        <Box sx={{
+            flexGrow: 1,
+            bgcolor: '#141414',
             minHeight: '100vh',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             overflowX: 'hidden', // Disable horizontal scrolling at the container level too
         }}>
             <CssBaseline /> {/* Ensures consistent styling and removes default margins */}
-            <AppBar 
-                position="fixed" 
-                sx={{ 
-                    bgcolor: 'transparent', 
+            <AppBar
+                position="fixed"
+                sx={{
+                    bgcolor: 'transparent',
                     boxShadow: 'none',
                     background: 'linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%)',
                     transition: 'background-color 0.3s',
@@ -151,21 +153,23 @@ export default function Home() {
                 <Toolbar sx={{ padding: { xs: '0 16px', sm: '0 40px' } }}>
                     {/* Netflix Logo */}
                     <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: { xs: 0, md: 0 }, mr: { xs: 2, md: 4 } }}>
-                        <img 
-                            src={NetflixLogo} 
-                            alt="Netflix" 
-                            style={{ height: '32px', cursor: 'pointer' }} 
+                        <img
+                            src={NetflixLogo}
+                            alt="Netflix"
+                            style={{ height: '32px', cursor: 'pointer' }}
                             onClick={() => navigate('/home')}
                         />
                     </Box>
-                    
+
                     {/* Navigation Links - Desktop */}
                     <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
                         <NavButton>Home</NavButton>
                         <NavButton>TV Shows</NavButton>
                         <NavButton>Movies</NavButton>
                         <NavButton>New & Popular</NavButton>
-                        <NavButton>My List</NavButton>
+                        <NavButton onClick={() => document.getElementById('watchlist-section').scrollIntoView({ behavior: 'smooth' })}>
+                            My List
+                        </NavButton>
                         <NavButton>Browse</NavButton>
                     </Box>
 
@@ -179,25 +183,25 @@ export default function Home() {
                         <IconButton color="inherit" sx={{ color: 'white' }}>
                             <SearchIcon />
                         </IconButton>
-                        
+
                         {/* Profile Avatar */}
                         {selectedProfile && (
-                            <IconButton 
+                            <IconButton
                                 onClick={handleProfileMenuOpen}
                                 sx={{ ml: 2 }}
                             >
-                                <Avatar 
-                                    src={selectedProfile.avatar} 
+                                <Avatar
+                                    src={selectedProfile.avatar}
                                     alt={selectedProfile.name}
-                                    sx={{ 
-                                        width: 32, 
+                                    sx={{
+                                        width: 32,
                                         height: 32,
-                                        border: '1px solid #333' 
+                                        border: '1px solid #333'
                                     }}
                                 />
                             </IconButton>
                         )}
-                        
+
                         {/* Profile Menu */}
                         <Menu
                             anchorEl={anchorEl}
@@ -219,27 +223,27 @@ export default function Home() {
                             anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                         >
                             {profiles && profiles.map(profile => (
-                                <MenuItem 
-                                    key={profile._id} 
+                                <MenuItem
+                                    key={profile._id}
                                     onClick={() => handleProfileSelect(profile)}
-                                    sx={{ 
-                                        display: 'flex', 
+                                    sx={{
+                                        display: 'flex',
                                         alignItems: 'center',
                                         padding: '8px 16px',
                                         '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' }
                                     }}
                                 >
-                                    <Avatar 
-                                        src={profile.avatar} 
+                                    <Avatar
+                                        src={profile.avatar}
                                         alt={profile.name}
                                         sx={{ width: 32, height: 32, mr: 2 }}
                                     />
                                     <Typography variant="body2">{profile.name}</Typography>
                                 </MenuItem>
                             ))}
-                            <MenuItem 
+                            <MenuItem
                                 onClick={handleSwitchProfiles}
-                                sx={{ 
+                                sx={{
                                     borderTop: '1px solid #333',
                                     mt: 1,
                                     pt: 1,
@@ -253,34 +257,29 @@ export default function Home() {
                     </Box>
                 </Toolbar>
             </AppBar>
-            
+
             {/* Cover Photo Section */}
             {!isLoading && featuredMedia.length > 0 && (
                 <CoverPhotoSection featuredMediaList={featuredMedia} />
             )}
-            
-            {/* New on Netflix Section */}
-            <NewOnNetflix />
-            
-            {/* Top Shows in Israel Section */}
-            <TopShowsInIsrael />
-            
-            {/* User Reviews Section */}
-            <UserReviews />
-            
-            {/* Top Rated Media Section */}
-            <TopRatedMedia />
-            
-            {/* Animation Media Section */}
-            <AnimationMedia />
-            
-            {/* Action Media Section */}
-            <ActionMedia />
-            
-            {/* Main Content Area */}
-            <Container maxWidth="xl" sx={{ mt: 4, overflowX: 'hidden' }}>
-                {/* Content rows will go here */}
+
+            {/* Main Content Container */}
+            <Container maxWidth={false} sx={{ pt: 0, px: { xs: 0 }, overflowX: 'hidden' }}>
+                {/* Rows */}
+                <NewOnNetflix />
+                <TopShowsInIsrael />
+                <TopRatedMedia />
+                <UserReviews />
+                <AnimationMedia />
+                <ActionMedia />
+                {/* Watchlist Section */}
+                <Box id="watchlist-section">
+                    <WatchlistMedia />
+                </Box>
             </Container>
+            
+            {/* Footer */}
+            <Footer />
         </Box>
     );
 } 
