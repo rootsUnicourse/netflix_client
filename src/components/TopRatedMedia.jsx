@@ -90,6 +90,11 @@ const TopRatedMedia = () => {
       console.log('Processed media data:', mediaData);
       console.log('Media data length:', mediaData.length);
       
+      // Log image paths for debugging
+      mediaData.forEach(item => {
+        console.log(`Media: ${item.title}, posterPath: ${item.posterPath}, backdropPath: ${item.backdropPath}`);
+      });
+      
       setTopRatedMedia(mediaData);
       setLoading(false);
       
@@ -281,7 +286,7 @@ const TopRatedMedia = () => {
               >
                 <Box 
                   component="img"
-                  src={getImagePath(media.posterPath || media.backdropPath)}
+                  src={getImagePath(media.backdropPath || media.posterPath)}
                   alt={media.title}
                   sx={{ 
                     width: '200px',
@@ -290,47 +295,6 @@ const TopRatedMedia = () => {
                     borderRadius: '4px'
                   }}
                 />
-                
-                {/* Media Type Badge */}
-                <Box 
-                  sx={{ 
-                    position: 'absolute',
-                    top: 0,
-                    right: 0,
-                    bgcolor: 'rgba(0,0,0,0.7)',
-                    color: 'white',
-                    fontSize: '12px',
-                    fontWeight: 'bold',
-                    py: 0.5,
-                    px: 1,
-                    borderBottomLeftRadius: '4px'
-                  }}
-                >
-                  {media.type === 'movie' ? 'Movie' : 'TV Show'}
-                </Box>
-
-                {/* Rating Badge */}
-                <Tooltip title={`${getRatingData(media).ratingValue} stars (${getRatingData(media).reviewCount} reviews)`}>
-                  <Box 
-                    sx={{ 
-                      position: 'absolute',
-                      bottom: 0,
-                      left: 0,
-                      bgcolor: 'rgba(0,0,0,0.7)',
-                      color: '#FFD700',
-                      fontSize: '14px',
-                      fontWeight: 'bold',
-                      py: 0.5,
-                      px: 1,
-                      borderTopRightRadius: '4px',
-                      display: 'flex',
-                      alignItems: 'center'
-                    }}
-                  >
-                    <StarIcon sx={{ fontSize: 16, mr: 0.5 }} />
-                    {getRatingData(media).ratingValue}
-                  </Box>
-                </Tooltip>
               </Box>
             ))
           )}
