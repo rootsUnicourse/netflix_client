@@ -166,11 +166,11 @@ export default function Movies() {
                         <NavButton onClick={() => navigate('/home')}>Home</NavButton>
                         <NavButton onClick={() => navigate('/tvshows')}>TV Shows</NavButton>
                         <NavButton onClick={() => navigate('/movies')} sx={{ fontWeight: 'bold', color: 'white' }}>Movies</NavButton>
+                        <NavButton onClick={() => navigate('/browse')}>Browse</NavButton>
                         <NavButton>New & Popular</NavButton>
                         <NavButton onClick={() => document.getElementById('watchlist-section').scrollIntoView({ behavior: 'smooth' })}>
                             My List
                         </NavButton>
-                        <NavButton>Browse</NavButton>
                     </Box>
 
                     {/* Navigation Links - Mobile (Dropdown) */}
