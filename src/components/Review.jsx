@@ -87,17 +87,23 @@ const Review = () => {
         setTotalReviews(response.data.totalReviews);
         
         // Check if user has already reviewed this media
-        const userReview = response.data.reviews.find(
-          r => r.user._id === user?.userId
-        );
+        const currentProfile = localStorage.getItem('currentProfile');
+        const profileData = currentProfile ? JSON.parse(currentProfile) : null;
+        const profileId = profileData?._id;
         
-        if (userReview) {
-          setUserReview(userReview);
-          setReview({
-            rating: userReview.rating,
-            content: userReview.content,
-            isPublic: userReview.isPublic
-          });
+        if (profileId) {
+          const userReview = response.data.reviews.find(
+            r => r.profile?._id === profileId
+          );
+          
+          if (userReview) {
+            setUserReview(userReview);
+            setReview({
+              rating: userReview.rating,
+              content: userReview.content,
+              isPublic: userReview.isPublic
+            });
+          }
         }
       } catch (err) {
         console.error('Error fetching reviews:', err);
@@ -206,7 +212,7 @@ const Review = () => {
       
       // Update user review
       const updatedUserReview = response.data.reviews.find(
-        r => r.user._id === user?.userId
+        r => r.profile?._id === profileId
       );
       if (updatedUserReview) {
         setUserReview(updatedUserReview);
