@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -16,10 +16,12 @@ import {
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ApiService, { createReview } from '../api/api';
+import UserContext from '../context/UserContext';
 
 const Review = () => {
   const { mediaId } = useParams();
   const navigate = useNavigate();
+  const { user } = useContext(UserContext);
   const [media, setMedia] = useState(null);
   const [loading, setLoading] = useState(true);
   const [review, setReview] = useState({
@@ -81,13 +83,27 @@ const Review = () => {
     setError('');
     setSuccess('');
 
+    // Check if user is authenticated
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError('You must be logged in to submit a review');
+      return;
+    }
+
     if (!review.content.trim()) {
       setError('Please enter your review');
       return;
     }
 
+    if (!review.rating) {
+      setError('Please provide a rating');
+      return;
+    }
+
     try {
-      const profileId = localStorage.getItem('currentProfileId');
+      const currentProfile = localStorage.getItem('currentProfile');
+      const profileData = currentProfile ? JSON.parse(currentProfile) : null;
+      const profileId = profileData?._id;
       
       if (!profileId) {
         setError('You must be logged in with a profile to submit a review');
@@ -105,12 +121,25 @@ const Review = () => {
       console.log('Using clean ID for review submission:', cleanId);
 
       const reviewData = {
-        ...review,
-        media: cleanId,
-        profile: profileId
+        mediaId: cleanId,
+        profileId: profileId,
+        rating: review.rating,
+        content: review.content.trim(),
+        isPublic: review.isPublic
       };
       
-      console.log('Submitting review:', reviewData);
+      console.log('Review data being submitted:', reviewData);
+      
+      // Validate required fields
+      if (!reviewData.mediaId || !reviewData.content) {
+        console.error('Missing required fields:', { 
+          hasMediaId: !!reviewData.mediaId, 
+          hasContent: !!reviewData.content
+        });
+        setError('Media ID and content are required');
+        return;
+      }
+
       await createReview(reviewData);
       console.log('Review submitted successfully');
 
