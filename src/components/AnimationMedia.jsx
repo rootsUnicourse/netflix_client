@@ -3,7 +3,8 @@ import { Box, Typography, Skeleton, IconButton } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import MoreInfo from './MoreInfo';
-import { getMediaByTmdbIds, getMediaById } from '../api/api';
+import { getMediaById } from '../api/api';
+import axios from 'axios';
 
 // Helper function to ensure image URLs are properly formatted
 const getImagePath = (path) => {
@@ -34,85 +35,99 @@ const AnimationMedia = ({ mediaType }) => {
   const [canScrollRight, setCanScrollRight] = useState(false);
   const rowRef = useRef(null);
 
-  // Specific TMDB IDs we want to display (in order)
-  // TV shows
-  const tvAnimationIds = [
-    1396,    // Breaking Bad (just as fallback)
-    60625,   // Rick and Morty
-    46260,   // Naruto
-    37854,   // One Piece
-    1429,    // Attack on Titan
-    65930,   // My Hero Academia
-    60863,   // The Dragon Prince
-    61374,   // Last Airbender
-    1877,    // Arcane
-    80020    // Dragon Ball
-  ];
-  
-  // Movies
-  const movieAnimationIds = [
-    11544,   // Inside Out
-    425,     // Ice Age
-    10681,   // WALL-E
-    635302,  // Moana
-    808,     // Toy Story
-    809,     // Shrek
-    82702,   // How to Train Your Dragon
-    519182,  // Encanto
-    1357633, // Toy Story 4
-    1104845  // Incredibles
-  ];
-  
-  // Select the right set of IDs based on mediaType
-  const specificTmdbIds = mediaType === 'tv' ? tvAnimationIds : 
-                          mediaType === 'movie' ? movieAnimationIds : 
-                          [...tvAnimationIds, ...movieAnimationIds].slice(0, 10);
-
   useEffect(() => {
-    fetchSpecificAnimationMedia();
+    fetchAnimationMedia();
   }, [mediaType]);
 
-  const fetchSpecificAnimationMedia = async () => {
+  const fetchAnimationMedia = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      console.log(`Fetching specific ${mediaType || 'all'} animation media with IDs:`, specificTmdbIds);
-      const response = await getMediaByTmdbIds(specificTmdbIds);
+      const apiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
       
-      console.log('Specific animation media response:', response);
+      // Get all media first
+      const response = await axios.get(`${apiBaseUrl}/media`, {
+        params: {
+          limit: 100 // Get more to filter through
+        }
+      });
       
-      // Check if we have valid data
       if (!response.data || !response.data.results) {
-        console.error('Unexpected response format:', response.data);
-        setError('Unexpected data format received');
+        console.error('Unexpected response format:', response);
+        setError('Could not fetch animation media');
         setLoading(false);
         return;
       }
       
-      let mediaData = response.data.results;
+      // Filter for only animation genre
+      let animationContent = response.data.results.filter(item => {
+        // Check if genres array exists and contains 'Animation'
+        return item.genres && 
+               Array.isArray(item.genres) && 
+               item.genres.some(genre => genre === 'Animation');
+      });
       
-      // If mediaType is specified but the API doesn't filter by it, filter here
+      console.log(`Found ${animationContent.length} animation items from genre filtering`);
+      
+      // If mediaType is specified, filter by that too
       if (mediaType) {
-        mediaData = mediaData.filter(media => media.type === mediaType);
+        animationContent = animationContent.filter(item => item.type === mediaType);
+        console.log(`Filtered to ${animationContent.length} ${mediaType} animation items`);
       }
       
-      // Log which IDs were found and which were missing
-      const foundIds = mediaData.map(media => parseInt(media.tmdbId));
-      const missingIds = specificTmdbIds.filter(id => !foundIds.includes(id));
-      
-      console.log('Found TMDB IDs:', foundIds);
-      if (missingIds.length > 0) {
-        console.warn('Missing TMDB IDs:', missingIds);
+      // If not enough items found, try a more direct API call specifically for animation genre
+      if (animationContent.length < 10) {
+        try {
+          console.log('Not enough animation content, trying direct genre query');
+          const genreResponse = await axios.get(`${apiBaseUrl}/media`, {
+            params: {
+              genres: 'Animation', // Directly specify Animation genre
+              limit: 30,
+              type: mediaType || undefined
+            }
+          });
+          
+          if (genreResponse.data && genreResponse.data.results && genreResponse.data.results.length > 0) {
+            // Add only new items that aren't already in animationContent
+            const existingIds = new Set(animationContent.map(item => item._id));
+            const newItems = genreResponse.data.results.filter(item => !existingIds.has(item._id));
+            
+            console.log(`Found ${newItems.length} additional animation items from direct query`);
+            animationContent = [...animationContent, ...newItems];
+          }
+        } catch (error) {
+          console.warn('Error with direct genre query:', error);
+        }
       }
       
-      setAnimationMedia(mediaData);
+      // If we still don't have enough, ensure we have items by duplicating existing ones
+      if (animationContent.length < 10 && animationContent.length > 0) {
+        const itemsNeeded = 10 - animationContent.length;
+        for (let i = 0; i < itemsNeeded; i++) {
+          // Duplicate an item from the existing data (cycling through available items)
+          const itemToDuplicate = animationContent[i % animationContent.length];
+          // Create a shallow copy with a slightly modified id to prevent key conflicts
+          const duplicatedItem = {
+            ...itemToDuplicate,
+            _id: `${itemToDuplicate._id}-dup-${i}`
+          };
+          animationContent.push(duplicatedItem);
+        }
+        console.log(`Added ${itemsNeeded} duplicated items to reach 10 total items`);
+      }
+      
+      // Limit to 10 items
+      const finalMediaData = animationContent.slice(0, 10);
+      console.log('Final animation media count:', finalMediaData.length);
+      
+      setAnimationMedia(finalMediaData);
       setLoading(false);
       
       // Check if we can scroll right after content is loaded
       setTimeout(checkScrollability, 100);
     } catch (error) {
-      console.error('Error fetching specific animation media:', error);
+      console.error('Error fetching animation media:', error);
       setError(error.message || 'Failed to load animation content');
       setLoading(false);
     }
@@ -190,7 +205,7 @@ const AnimationMedia = ({ mediaType }) => {
           color: 'white'
         }}
       >
-        Curated Animation
+        Animation
       </Typography>
 
       <Box sx={{ position: 'relative' }}>

@@ -1,6 +1,6 @@
 // client/src/App.js
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import SignUpPage from './pages/SignUpPage';
 import SignInPage from './pages/SignInPage';
 import ProfileSelection from './pages/ProfileSelection';
@@ -18,8 +18,11 @@ function App() {
     <UserProvider> {/* Wrap everything inside UserProvider */}
       <Router>
         <Routes>
+          {/* Public routes */}
           <Route path="/" element={<SignInPage />} />
           <Route path="/signup" element={<SignUpPage />} />
+          
+          {/* Protected routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/profiles" element={<ProfileSelection />} />
             <Route path="/home" element={<Home />} />
@@ -27,6 +30,8 @@ function App() {
             <Route path="/movies" element={<Movies />} />
             <Route path="/browse" element={<Browse />} />
             <Route path="/review/:mediaId" element={<Review />} />
+            {/* Catch all route - redirect to home if logged in user tries to access unknown URL */}
+            <Route path="*" element={<Navigate to="/home" replace />} />
           </Route>
         </Routes>
       </Router>
