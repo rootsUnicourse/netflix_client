@@ -36,8 +36,8 @@ export default function ProfileSelection() {
 
     // Handle profile selection
     const handleSelectProfile = (profile) => {
-        // Store the selected profile in localStorage
-        localStorage.setItem('currentProfile', JSON.stringify(profile));
+        // Store the selected profile in sessionStorage instead of localStorage
+        sessionStorage.setItem('currentProfile', JSON.stringify(profile));
         // Navigate to the home page
         navigate('/home');
     };

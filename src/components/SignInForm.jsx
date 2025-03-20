@@ -11,8 +11,7 @@ export default function SignInForm() {
     const [rememberMe, setRememberMe] = useState(false);
     const [error, setError] = useState('');
     const navigate = useNavigate();
-    const { setUser } = useContext(UserContext);
-
+    const { setUser, logout } = useContext(UserContext);
 
     useEffect(() => {
         const storedUser = Cookies.get('user');
@@ -29,12 +28,16 @@ export default function SignInForm() {
         setError('');
 
         try {
+            // First logout to clear any existing user data
+            logout();
+            
             const { data } = await login({ emailOrPhone, password });
-            setUser(data.user); // ✅ Set user in context
+            
+            // Set new user data after successful login
+            setUser(data.user);
             localStorage.setItem('user', JSON.stringify(data.user)); 
             localStorage.setItem('token', data.token); 
 
-           
             if (rememberMe) {
                 Cookies.set('user', JSON.stringify({ emailOrPhone, password }), { expires: 1 / 24 });
             }

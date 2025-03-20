@@ -1,33 +1,26 @@
 import React, { useContext, useState, useEffect } from 'react';
 import {
-    AppBar,
-    Toolbar,
     Typography,
     Box,
-    Button,
     Container,
     IconButton,
-    Menu,
-    MenuItem,
-    Avatar,
     CssBaseline,
     Grid,
     FormControl,
     Select,
-    InputLabel,
-    CircularProgress,
-    Tooltip
+    MenuItem,
+    Button
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import SearchIcon from '@mui/icons-material/Search';
 import FilterAltOffIcon from '@mui/icons-material/FilterAltOff';
 import UserContext from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import NetflixLogo from '../assets/images/netflixlogo.png';
-import { getMedia } from '../api/api';
 import Footer from '../components/Footer';
 import MoreInfo from '../components/MoreInfo';
+import Navbar from '../components/Navbar';
+import MediaCard from '../components/MediaCard';
+import Loading from '../components/Loading';
 
 const NavButton = styled(Button)(({ theme }) => ({
     color: '#e5e5e5',
@@ -71,7 +64,7 @@ const FilterSelect = styled(FormControl)(({ theme }) => ({
     },
 }));
 
-const MediaCard = styled(Box)(({ theme }) => ({
+const MediaCardStyled = styled(Box)(({ theme }) => ({
     position: 'relative',
     height: 0,
     paddingTop: '150%', // Maintain aspect ratio for posters (2:3)
@@ -124,10 +117,30 @@ const RecentlyAddedTag = styled(Box)({
     zIndex: 1,
 });
 
+// Tab panel component
+function TabPanel(props) {
+    const { children, value, index, ...other } = props;
+
+    return (
+        <div
+            role="tabpanel"
+            hidden={value !== index}
+            id={`simple-tabpanel-${index}`}
+            aria-labelledby={`simple-tab-${index}`}
+            {...other}
+        >
+            {value === index && (
+                <Box sx={{ p: 3 }}>
+                    {children}
+                </Box>
+            )}
+        </div>
+    );
+}
+
 export default function Browse() {
-    const { user, profiles } = useContext(UserContext);
+    const { profiles, logout } = useContext(UserContext);
     const navigate = useNavigate();
-    const [anchorEl, setAnchorEl] = useState(null);
     const [selectedProfile, setSelectedProfile] = useState(null);
     const [media, setMedia] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -187,14 +200,14 @@ export default function Browse() {
         { value: 'Not Rated', label: 'Not Rated' }
     ]);
 
-    // Get the current profile from localStorage or use the first profile
+    // Get the current profile from sessionStorage or use the first profile
     useEffect(() => {
-        const currentProfile = localStorage.getItem('currentProfile');
+        const currentProfile = sessionStorage.getItem('currentProfile');
         if (currentProfile) {
             setSelectedProfile(JSON.parse(currentProfile));
         } else if (profiles && profiles.length > 0) {
             setSelectedProfile(profiles[0]);
-            localStorage.setItem('currentProfile', JSON.stringify(profiles[0]));
+            sessionStorage.setItem('currentProfile', JSON.stringify(profiles[0]));
         }
     }, [profiles]);
 
@@ -285,12 +298,6 @@ export default function Browse() {
     
     // Fetch media with applied filters
     useEffect(() => {
-        // We should always fetch data when filter changes, even if all filters are 'all'
-        // Remove this condition to ensure filters reset properly
-        // if (genreFilter === 'all' && languageFilter === 'all' && ageRatingFilter === 'all') {
-        //     return;
-        // }
-        
         const fetchFilteredMedia = async () => {
             try {
                 setIsLoading(true);
@@ -341,6 +348,7 @@ export default function Browse() {
                         console.log('All filters set to "All" - showing all media');
                     }
                     
+                    // Update both media and allMedia states to ensure filtering works properly
                     setMedia(filteredResults);
                 } else {
                     setMedia([]);
@@ -355,18 +363,25 @@ export default function Browse() {
         fetchFilteredMedia();
     }, [genreFilter, languageFilter, ageRatingFilter]);
 
-    const handleProfileMenuOpen = (event) => {
-        setAnchorEl(event.currentTarget);
-    };
+    // Remove redundant media fetch
+    // Keep only the fetched filtered media effect
+    useEffect(() => {
+        // Disable horizontal scrolling
+        const originalOverflow = document.body.style.overflow;
+        const originalOverflowX = document.body.style.overflowX;
 
-    const handleProfileMenuClose = () => {
-        setAnchorEl(null);
-    };
+        document.body.style.overflow = 'auto';
+        document.body.style.overflowX = 'hidden';
+
+        return () => {
+            document.body.style.overflow = originalOverflow;
+            document.body.style.overflowX = originalOverflowX;
+        };
+    }, []);
 
     const handleProfileSelect = (profile) => {
         setSelectedProfile(profile);
-        localStorage.setItem('currentProfile', JSON.stringify(profile));
-        handleProfileMenuClose();
+        sessionStorage.setItem('currentProfile', JSON.stringify(profile));
     };
 
     const handleSwitchProfiles = () => {
@@ -473,23 +488,6 @@ export default function Browse() {
         return released >= thirtyDaysAgo;
     };
 
-    // Disable horizontal scrolling
-    useEffect(() => {
-        // Save original overflow style
-        const originalOverflow = document.body.style.overflow;
-        const originalOverflowX = document.body.style.overflowX;
-
-        // Disable horizontal scrolling
-        document.body.style.overflow = 'auto';
-        document.body.style.overflowX = 'hidden';
-
-        // Cleanup function to restore original styles when component unmounts
-        return () => {
-            document.body.style.overflow = originalOverflow;
-            document.body.style.overflowX = originalOverflowX;
-        };
-    }, []);
-
     // Simplified function based on how other components handle images
     const getImageUrl = (item) => {
         if (!item) return 'https://via.placeholder.com/300x450?text=No+Image';
@@ -536,239 +534,249 @@ export default function Browse() {
         return null;
     };
 
+    const handleLogout = () => {
+        logout();
+        navigate('/');
+    };
+
     return (
-        <>
+        <Box sx={{
+            flexGrow: 1,
+            bgcolor: '#141414',
+            minHeight: '100vh',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            overflowX: 'hidden', // Disable horizontal scrolling at the container level too
+        }}>
             <CssBaseline />
-            <Box sx={{ bgcolor: '#141414', minHeight: '100vh', color: 'white' }}>
-                {/* Navbar */}
-                <AppBar position="fixed" sx={{ 
-                    bgcolor: 'rgba(20, 20, 20, 0.8)', 
-                    boxShadow: 'none',
-                    backdropFilter: 'blur(8px)'
+            
+            {/* Use shared Navbar component with transparent background */}
+            <Navbar transparent={true} />
+
+            {/* Main Content Container */}
+            <Container maxWidth={false} sx={{ pt: 8, px: { xs: 0 }, overflowX: 'hidden' }}>
+                {/* Browse Page Title */}
+                <Box sx={{ px: 4, pb: 2, display: 'flex', alignItems: 'center' }}>
+                    <Typography 
+                        variant="h2" 
+                        component="h1" 
+                        sx={{ 
+                            color: 'white', 
+                            fontWeight: 'bold',
+                            fontSize: { xs: '2.5rem', md: '3.5rem' }
+                        }}
+                    >
+                        Browse all titles
+                    </Typography>
+                </Box>
+
+                {/* Filters Bar - Styled like the image */}
+                <Box sx={{ 
+                    px: 4, 
+                    py: 2, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    flexWrap: 'wrap',
+                    borderTop: '1px solid rgba(255,255,255,0.1)',
+                    borderBottom: '1px solid rgba(255,255,255,0.1)',
+                    bgcolor: 'rgba(0,0,0,0.4)',
+                    mb: 2
                 }}>
-                    <Toolbar>
-                        <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-                            <img 
-                                src={NetflixLogo} 
-                                alt="Netflix" 
-                                style={{ height: '25px', marginRight: '20px', cursor: 'pointer' }} 
-                                onClick={() => navigateTo('/home')}
-                            />
-                            <NavButton onClick={() => navigateTo('/home')}>Home</NavButton>
-                            <NavButton onClick={() => navigateTo('/tvshows')}>TV Shows</NavButton>
-                            <NavButton onClick={() => navigateTo('/movies')}>Movies</NavButton>
-                            <NavButton onClick={() => navigateTo('/browse')} sx={{ color: '#ffffff', fontWeight: 'bold' }}>Browse</NavButton>
-                        </Box>
-                        
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <IconButton color="inherit">
-                                <SearchIcon />
-                            </IconButton>
-                            
-                            <Box sx={{ ml: 2 }}>
-                                {selectedProfile && (
-                                    <IconButton
-                                        onClick={handleProfileMenuOpen}
-                                        sx={{ p: 0 }}
-                                    >
-                                        <Avatar
-                                            src={selectedProfile.avatar}
-                                            alt={selectedProfile.name}
-                                            sx={{ width: 32, height: 32 }}
-                                        />
-                                    </IconButton>
-                                )}
-                                <Menu
-                                    anchorEl={anchorEl}
-                                    open={Boolean(anchorEl)}
-                                    onClose={handleProfileMenuClose}
-                                    PaperProps={{
+                    <Typography sx={{ 
+                        color: 'white', 
+                        mr: 2, 
+                        fontSize: '16px',
+                        fontWeight: 'light'
+                    }}>
+                        Select Your Preferences
+                    </Typography>
+                    
+                    {/* Original Language Filter */}
+                    <Box sx={{ mr: 2 }}>
+                        <FormControl sx={{ minWidth: 180 }}>
+                            <Select
+                                value={languageFilter}
+                                onChange={handleLanguageChange}
+                                displayEmpty
+                                renderValue={(value) => {
+                                    if (value === 'all') return "Original Language";
+                                    const selected = languages.find(lang => lang.value === value);
+                                    return selected ? selected.label : "Original Language";
+                                }}
+                                sx={{
+                                    bgcolor: '#000',
+                                    color: 'white',
+                                    border: '1px solid rgba(255,255,255,0.3)',
+                                    borderRadius: 0,
+                                    height: '40px',
+                                    "& .MuiSelect-icon": {
+                                        color: "white"
+                                    },
+                                    "& .MuiOutlinedInput-notchedOutline": {
+                                        border: "none"
+                                    }
+                                }}
+                                MenuProps={{
+                                    PaperProps: {
                                         sx: {
                                             bgcolor: '#282828',
                                             color: 'white',
-                                            minWidth: '200px',
-                                            mt: 1
+                                            "& .MuiMenuItem-root:hover": {
+                                                bgcolor: 'rgba(255,255,255,0.1)'
+                                            }
                                         }
-                                    }}
-                                >
-                                    {profiles && profiles.map((profile) => (
-                                        <MenuItem 
-                                            key={profile._id}
-                                            onClick={() => handleProfileSelect(profile)}
-                                            sx={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: 2,
-                                                py: 1
-                                            }}
-                                        >
-                                            <Avatar src={profile.avatar} alt={profile.name} />
-                                            <Typography>{profile.name}</Typography>
-                                        </MenuItem>
-                                    ))}
-                                    <MenuItem 
-                                        onClick={handleSwitchProfiles}
-                                        sx={{ borderTop: '1px solid #404040', mt: 1, pt: 1 }}
-                                    >
-                                        Switch Profiles
+                                    }
+                                }}
+                            >
+                                {languages.map((language) => (
+                                    <MenuItem key={language.value} value={language.value}>
+                                        {language.label}
                                     </MenuItem>
-                                </Menu>
-                            </Box>
-                        </Box>
-                    </Toolbar>
-                </AppBar>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </Box>
+                    
+                    {/* Genre Filter */}
+                    <Box sx={{ mr: 2 }}>
+                        <FormControl sx={{ minWidth: 180 }}>
+                            <Select
+                                value={genreFilter}
+                                onChange={handleGenreChange}
+                                displayEmpty
+                                renderValue={(value) => {
+                                    if (value === 'all') return "Genres";
+                                    const selected = genres.find(genre => genre.value === value);
+                                    return selected ? selected.label : "Genres";
+                                }}
+                                sx={{
+                                    bgcolor: '#000',
+                                    color: 'white',
+                                    border: '1px solid rgba(255,255,255,0.3)',
+                                    borderRadius: 0,
+                                    height: '40px',
+                                    "& .MuiSelect-icon": {
+                                        color: "white"
+                                    },
+                                    "& .MuiOutlinedInput-notchedOutline": {
+                                        border: "none"
+                                    }
+                                }}
+                                MenuProps={{
+                                    PaperProps: {
+                                        sx: {
+                                            bgcolor: '#282828',
+                                            color: 'white',
+                                            "& .MuiMenuItem-root:hover": {
+                                                bgcolor: 'rgba(255,255,255,0.1)'
+                                            }
+                                        }
+                                    }
+                                }}
+                            >
+                                {genres.map((genre) => (
+                                    <MenuItem key={genre.value} value={genre.value}>
+                                        {genre.label}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </Box>
 
-                {/* Main Content with padding to account for fixed navbar */}
-                <Box sx={{ pt: 10 }}>
-                    {/* Browse Header and Filters */}
-                    <Container maxWidth="xl" sx={{ py: 4 }}>
-                        <Typography variant="h4" component="h1" sx={{ mb: 3, fontWeight: 'bold' }}>
-                            Browse
-                        </Typography>
-                        
-                        <Box sx={{ 
-                            display: 'flex', 
-                            alignItems: 'center',
-                            mb: 4, 
-                            p: 0, 
-                            height: '34px'
-                        }}>
-                            <Typography sx={{ mr: 2, fontSize: '13px', color: '#aaa' }}>
-                                Select Your Preferences
-                            </Typography>
-                            
-                            <FilterSelect size="small">
-                                <Select
-                                    value={languageFilter}
-                                    onChange={handleLanguageChange}
-                                    displayEmpty
-                                    MenuProps={{
-                                        PaperProps: {
-                                            sx: {
-                                                bgcolor: '#282828',
-                                                color: 'white',
+                    {/* Rating Filter */}
+                    <Box sx={{ mr: 2 }}>
+                        <FormControl sx={{ minWidth: 180 }}>
+                            <Select
+                                value={ageRatingFilter}
+                                onChange={handleAgeRatingChange}
+                                displayEmpty
+                                renderValue={(value) => {
+                                    if (value === 'all') return "Ratings";
+                                    const selected = ageRatings.find(rating => rating.value === value);
+                                    return selected ? selected.label : "Ratings";
+                                }}
+                                sx={{
+                                    bgcolor: '#000',
+                                    color: 'white',
+                                    border: '1px solid rgba(255,255,255,0.3)',
+                                    borderRadius: 0,
+                                    height: '40px',
+                                    "& .MuiSelect-icon": {
+                                        color: "white"
+                                    },
+                                    "& .MuiOutlinedInput-notchedOutline": {
+                                        border: "none"
+                                    }
+                                }}
+                                MenuProps={{
+                                    PaperProps: {
+                                        sx: {
+                                            bgcolor: '#282828',
+                                            color: 'white',
+                                            "& .MuiMenuItem-root:hover": {
+                                                bgcolor: 'rgba(255,255,255,0.1)'
                                             }
                                         }
-                                    }}
-                                    renderValue={() => "Original Language"}
-                                >
-                                    <MenuItem value="all">All Languages</MenuItem>
-                                    {languages.filter(lang => lang.value !== 'all').map((language) => (
-                                        <MenuItem key={language.value} value={language.value}>
-                                            {language.label}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FilterSelect>
-                            
-                            <FilterSelect size="small">
-                                <Select
-                                    value={ageRatingFilter}
-                                    onChange={handleAgeRatingChange}
-                                    displayEmpty
-                                    MenuProps={{
-                                        PaperProps: {
-                                            sx: {
-                                                bgcolor: '#282828',
-                                                color: 'white',
-                                            }
-                                        }
-                                    }}
-                                    renderValue={() => "English"}
-                                >
-                                    <MenuItem value="all">All Ratings</MenuItem>
-                                    {ageRatings.filter(rating => rating.value !== 'all').map((rating) => (
-                                        <MenuItem key={rating.value} value={rating.value}>
-                                            {rating.label}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FilterSelect>
-                            
-                            <Typography sx={{ mx: 2, fontSize: '13px', color: '#aaa' }}>
-                                Sort by
-                            </Typography>
-                            
-                            <FilterSelect size="small">
-                                <Select
-                                    value={genreFilter}
-                                    onChange={handleGenreChange}
-                                    displayEmpty
-                                    MenuProps={{
-                                        PaperProps: {
-                                            sx: {
-                                                bgcolor: '#282828',
-                                                color: 'white',
-                                            }
-                                        }
-                                    }}
-                                    renderValue={() => "Suggestions For You"}
-                                >
-                                    <MenuItem value="all">All Genres</MenuItem>
-                                    {genres.filter(genre => genre.value !== 'all').map((genre) => (
-                                        <MenuItem key={genre.value} value={genre.value}>
-                                            {genre.label}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FilterSelect>
+                                    }
+                                }}
+                            >
+                                {ageRatings.map((rating) => (
+                                    <MenuItem key={rating.value} value={rating.value}>
+                                        {rating.label}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </Box>
+                    
+                    {/* Reset Filters Button - Only show if filters are active */}
+                    {getActiveFilterCount() > 0 && (
+                        <Box sx={{ ml: 'auto' }}>
+                            <IconButton 
+                                onClick={handleResetFilters}
+                                sx={{ 
+                                    color: 'white',
+                                    bgcolor: 'rgba(255,255,255,0.1)',
+                                    '&:hover': {
+                                        bgcolor: 'rgba(255,255,255,0.2)'
+                                    },
+                                    borderRadius: 1
+                                }}
+                                size="small"
+                            >
+                                <FilterAltOffIcon />
+                            </IconButton>
                         </Box>
-                        
-                        {/* Media Grid */}
-                        {isLoading ? (
-                            <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-                                <CircularProgress sx={{ color: 'red' }} />
-                            </Box>
-                        ) : media.length === 0 ? (
-                            <Box sx={{ textAlign: 'center', py: 8 }}>
-                                <Typography variant="h6">
-                                    No titles found with the selected filters. Try adjusting your filters.
-                                </Typography>
-                            </Box>
-                        ) : (
-                            <Grid container spacing={2}>
-                                {media.map((item, index) => {
-                                    const imageUrl = getImageUrl(item);
-                                    return (
-                                        <Grid item xs={6} sm={4} md={3} lg={2} key={item._id || index}>
-                                            {index === 0 && console.log('First item image URL:', imageUrl)}
-                                            <MediaCard onClick={() => handleMediaClick(item)}>
-                                                <MediaImage 
-                                                    src={imageUrl} 
-                                                    alt={item.title} 
-                                                    onError={(e) => {
-                                                        console.warn(`Image failed to load for: ${item.title}, URL: ${imageUrl}`);
-                                                        // Try to use a transparent pixel instead of text-based placeholder
-                                                        e.target.src = 'https://via.placeholder.com/300x450?text=No+Image';
-                                                    }}
-                                                />
-                                                <MediaTitle variant="body2">{item.title}</MediaTitle>
-                                                {isRecentlyAdded(item.releaseDate) && (
-                                                    <RecentlyAddedTag>
-                                                        NEW
-                                                    </RecentlyAddedTag>
-                                                )}
-                                            </MediaCard>
-                                        </Grid>
-                                    );
-                                })}
-                            </Grid>
-                        )}
-                    </Container>
+                    )}
                 </Box>
-                
-                {/* Footer */}
-                <Footer />
-                
-                {/* MoreInfo Dialog */}
-                {selectedMedia && (
-                    <MoreInfo
-                        open={moreInfoOpen}
-                        onClose={handleMoreInfoClose}
-                        media={selectedMedia}
-                    />
+
+                {/* Media Grid */}
+                {isLoading ? (
+                    <Loading />
+                ) : (
+                    <Box sx={{ p: 3 }}>
+                        <Grid container spacing={2}>
+                            {media.map((item) => (
+                                <Grid item key={item._id} xs={6} sm={4} md={3} lg={2.4}>
+                                    <MediaCard media={item} onClick={() => handleMediaClick(item)} />
+                                </Grid>
+                            ))}
+                        </Grid>
+                    </Box>
                 )}
-            </Box>
-        </>
+            </Container>
+
+            {/* Footer */}
+            <Footer />
+            
+            {/* MoreInfo Dialog */}
+            {selectedMedia && (
+                <MoreInfo
+                    open={moreInfoOpen}
+                    onClose={handleMoreInfoClose}
+                    media={selectedMedia}
+                />
+            )}
+        </Box>
     );
 } 

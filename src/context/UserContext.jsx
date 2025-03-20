@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useCallback } from 'react';
 import ApiService from '../api/api';
+import Cookies from 'js-cookie';
 
 const UserContext = createContext();
 
@@ -25,7 +26,7 @@ export const UserProvider = ({ children }) => {
         }
     }, [user]);
 
-    // Load user & profiles from local storage on initial mount
+    // Load user from local storage on initial mount
     useEffect(() => {
         const storedUser = JSON.parse(localStorage.getItem('user'));
         const token = localStorage.getItem('token');
@@ -41,6 +42,9 @@ export const UserProvider = ({ children }) => {
     useEffect(() => {
         if (user) {
             fetchProfiles();
+        } else {
+            // Clear profiles when user logs out
+            setProfiles([]);
         }
     }, [user]);
     
@@ -51,14 +55,14 @@ export const UserProvider = ({ children }) => {
         }
     }, [user, fetchWatchlist, watchlistLoaded]);
 
-    // Fetch profiles from API and store in localStorage
+    // Fetch profiles from API
     const fetchProfiles = async () => {
         try {
             const { data } = await ApiService.getProfiles();
             setProfiles(data);
-            localStorage.setItem('profiles', JSON.stringify(data)); // Store locally
         } catch (error) {
             console.error('Error fetching profiles:', error);
+            setProfiles([]); // Clear profiles on error
         }
     };
 
@@ -67,7 +71,6 @@ export const UserProvider = ({ children }) => {
         try {
             const { data } = await ApiService.addProfile({ name, avatar });
             setProfiles(data);
-            localStorage.setItem('profiles', JSON.stringify(data)); // Store updated profiles locally
         } catch (error) {
             console.error('Error adding profile:', error);
         }
@@ -79,7 +82,6 @@ export const UserProvider = ({ children }) => {
             await ApiService.deleteProfile(profileId);
             const updatedProfiles = profiles.filter(profile => profile._id !== profileId);
             setProfiles(updatedProfiles);
-            localStorage.setItem('profiles', JSON.stringify(updatedProfiles)); // Store updated list
         } catch (error) {
             console.error('Error deleting profile:', error);
         }
@@ -93,7 +95,6 @@ export const UserProvider = ({ children }) => {
                 profile._id === profileId ? { ...profile, name: newName } : profile
             );
             setProfiles(updatedProfiles);
-            localStorage.setItem('profiles', JSON.stringify(updatedProfiles)); // Store updated list
         } catch (error) {
             console.error('Error renaming profile:', error);
         }
@@ -139,9 +140,17 @@ export const UserProvider = ({ children }) => {
 
     // Logout user (clears storage and resets state)
     const logout = () => {
+        // Clear localStorage
         localStorage.removeItem('user');
         localStorage.removeItem('token');
-        localStorage.removeItem('profiles');
+        
+        // Clear sessionStorage
+        sessionStorage.removeItem('currentProfile');
+        
+        // Clear cookies
+        Cookies.remove('user');
+        
+        // Reset all state
         setUser(null);
         setProfiles([]);
         setWatchlist([]);
