@@ -8,6 +8,7 @@ import Home from './pages/Home';
 import TVShows from './pages/TVShows';
 import Movies from './pages/Movies';
 import Browse from './pages/Browse';
+import NewAndPopular from './pages/NewAndPopular';
 import Review from './components/Review';
 import { UserProvider } from './context/UserContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -29,6 +30,7 @@ function App() {
             <Route path="/tvshows" element={<TVShows />} />
             <Route path="/movies" element={<Movies />} />
             <Route path="/browse" element={<Browse />} />
+            <Route path="/new-and-popular" element={<NewAndPopular />} />
             <Route path="/review/:mediaId" element={<Review />} />
             {/* Catch all route - redirect to home if logged in user tries to access unknown URL */}
             <Route path="*" element={<Navigate to="/home" replace />} />

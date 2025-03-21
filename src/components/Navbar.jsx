@@ -142,7 +142,15 @@ const Navbar = ({ transparent = false }) => {
                     >
                         Browse
                     </NavButton>
-                    <NavButton>New & Popular</NavButton>
+                    <NavButton 
+                        onClick={() => navigate('/new-and-popular')}
+                        sx={{ 
+                            fontWeight: isActive('/new-and-popular') ? 'bold' : 'normal', 
+                            color: isActive('/new-and-popular') ? 'white' : '#e5e5e5' 
+                        }}
+                    >
+                        New & Popular
+                    </NavButton>
                     <NavButton onClick={() => document.getElementById('watchlist-section')?.scrollIntoView({ behavior: 'smooth' })}>
                         My List
                     </NavButton>
