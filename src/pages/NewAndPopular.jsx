@@ -124,15 +124,6 @@ const NewAndPopular = () => {
       
       {/* Main Content */}
       <Container maxWidth="xl" sx={{ flexGrow: 1, pt: 10, pb: 4 }}>
-        <Typography variant="h4" sx={{ 
-          color: 'white', 
-          mb: 3, 
-          fontWeight: 'bold',
-          px: { xs: 2, md: 0 }
-        }}>
-          New & Popular
-        </Typography>
-        
         {/* Media Grid */}
         <Grid container spacing={2} sx={{ mb: 4, px: { xs: 2, md: 0 } }}>
           {media.map((item, index) => {

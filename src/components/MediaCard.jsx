@@ -43,19 +43,6 @@ const MediaTitle = styled(Typography)({
     textOverflow: 'ellipsis',
 });
 
-const RecentlyAddedTag = styled(Box)({
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: 'red',
-    color: 'white',
-    padding: '2px 6px',
-    borderRadius: '4px',
-    fontSize: '12px',
-    fontWeight: 'bold',
-    zIndex: 1,
-});
-
 const MediaCard = ({ media, onClick }) => {
     const navigate = useNavigate();
     
@@ -122,11 +109,6 @@ const MediaCard = ({ media, onClick }) => {
                 }}
             />
             <MediaTitle variant="body2">{media.title}</MediaTitle>
-            {isRecentlyAdded(media.releaseDate) && (
-                <RecentlyAddedTag>
-                    NEW
-                </RecentlyAddedTag>
-            )}
         </MediaCardContainer>
     );
 };
