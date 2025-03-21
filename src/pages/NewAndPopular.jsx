@@ -4,7 +4,8 @@ import {
   Typography, 
   Grid, 
   Container, 
-  CircularProgress
+  CircularProgress,
+  CssBaseline
 } from '@mui/material';
 import Navbar from '../components/Navbar';
 import MediaCard from '../components/MediaCard';
@@ -103,6 +104,23 @@ const NewAndPopular = () => {
     fetchMedia();
   }, [page]);
 
+  // Disable horizontal scrolling
+  useEffect(() => {
+    // Save original overflow style
+    const originalOverflow = document.body.style.overflow;
+    const originalOverflowX = document.body.style.overflowX;
+
+    // Disable horizontal scrolling
+    document.body.style.overflow = 'auto';
+    document.body.style.overflowX = 'hidden';
+
+    // Cleanup function to restore original styles when component unmounts
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.overflowX = originalOverflowX;
+    };
+  }, []);
+
   const handleMediaClick = (media) => {
     setSelectedMedia(media);
     setMoreInfoOpen(true);
@@ -114,18 +132,22 @@ const NewAndPopular = () => {
 
   return (
     <Box sx={{ 
-      minHeight: '100vh',
+      flexGrow: 1,
       backgroundColor: '#141414',
-      display: 'flex',
-      flexDirection: 'column'
+      minHeight: '100vh',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      overflowX: 'hidden', // Disable horizontal scrolling at the container level too
     }}>
+      <CssBaseline /> {/* Ensures consistent styling and removes default margins */}
+      
       {/* Navbar */}
       <Navbar transparent={false} />
       
       {/* Main Content */}
-      <Container maxWidth="xl" sx={{ flexGrow: 1, pt: 10, pb: 4 }}>
+      <Container maxWidth={false} sx={{ pt: 10, px: { xs: 0 }, overflowX: 'hidden' }}>
         {/* Media Grid */}
-        <Grid container spacing={2} sx={{ mb: 4, px: { xs: 2, md: 0 } }}>
+        <Grid container spacing={2} sx={{ mb: 4, px: { xs: 2, md: 4 } }}>
           {media.map((item, index) => {
             // Check if this is the last item
             const isLastElement = index === media.length - 1;
