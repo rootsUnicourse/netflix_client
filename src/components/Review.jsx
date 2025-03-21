@@ -28,7 +28,7 @@ import UserContext from '../context/UserContext';
 const Review = ({ open, onClose, mediaIdProp }) => {
   const { mediaId: mediaIdParam } = useParams();
   const navigate = useNavigate();
-  const { user } = useContext(UserContext);
+  const { profiles } = useContext(UserContext);
   // Use the mediaId from props if provided, otherwise use from URL params
   const mediaId = mediaIdProp || mediaIdParam;
   const [media, setMedia] = useState(null);
@@ -46,6 +46,39 @@ const Review = ({ open, onClose, mediaIdProp }) => {
   const [userReview, setUserReview] = useState(null);
   const [averageRating, setAverageRating] = useState(0);
   const [totalReviews, setTotalReviews] = useState(0);
+  const [currentProfile, setCurrentProfile] = useState(null);
+
+  // Get current profile on component mount
+  useEffect(() => {
+    // First try sessionStorage (current implementation)
+    let profileData = sessionStorage.getItem('currentProfile');
+    
+    // If not found in sessionStorage, try localStorage (backward compatibility)
+    if (!profileData) {
+      console.log('Profile not found in sessionStorage, checking localStorage');
+      profileData = localStorage.getItem('currentProfile');
+    }
+    
+    console.log('Current profile data retrieved:', profileData);
+    
+    if (profileData) {
+      try {
+        const parsed = JSON.parse(profileData);
+        console.log('Parsed profile:', parsed);
+        setCurrentProfile(parsed);
+      } catch (err) {
+        console.error('Error parsing profile data:', err);
+      }
+    } else {
+      console.error('No profile found in sessionStorage or localStorage');
+      // If no profile in storage but profiles are available from context, use the first one
+      if (profiles && profiles.length > 0) {
+        console.log('Using first profile from context:', profiles[0]);
+        setCurrentProfile(profiles[0]);
+        sessionStorage.setItem('currentProfile', JSON.stringify(profiles[0]));
+      }
+    }
+  }, [profiles]);
 
   // Reset all the state when the mediaId changes or the modal opens/closes
   useEffect(() => {
@@ -108,17 +141,15 @@ const Review = ({ open, onClose, mediaIdProp }) => {
         setAverageRating(response.data.averageRating);
         setTotalReviews(response.data.totalReviews);
         
-        // Check if user has already reviewed this media
-        const currentProfile = localStorage.getItem('currentProfile');
-        const profileData = currentProfile ? JSON.parse(currentProfile) : null;
-        const profileId = profileData?._id;
-        
-        if (profileId) {
+        // Get current profile from state
+        if (currentProfile?._id) {
+          console.log('Looking for reviews by profile ID:', currentProfile._id);
           const userReview = response.data.reviews.find(
-            r => r.profile?._id === profileId
+            r => r.profile?._id === currentProfile._id
           );
           
           if (userReview) {
+            console.log('Found existing user review:', userReview);
             setUserReview(userReview);
             setReview({
               rating: userReview.rating,
@@ -136,7 +167,7 @@ const Review = ({ open, onClose, mediaIdProp }) => {
     if (mediaId && (open || (!open && !onClose))) {
       fetchReviews();
     }
-  }, [mediaId, page, user?.userId, open]);
+  }, [mediaId, page, currentProfile, open]);
 
   const handleInputChange = (e) => {
     const { name, value, checked } = e.target;
@@ -176,82 +207,126 @@ const Review = ({ open, onClose, mediaIdProp }) => {
     }
 
     try {
-      const currentProfile = localStorage.getItem('currentProfile');
-      const profileData = currentProfile ? JSON.parse(currentProfile) : null;
-      const profileId = profileData?._id;
-      
-      if (!profileId) {
+      // Get the profile directly from state
+      if (!currentProfile || !currentProfile._id) {
+        console.error('No current profile found in state');
+        
+        // Try getting it directly from session/local storage again
+        const sessionProfile = sessionStorage.getItem('currentProfile');
+        const localProfile = localStorage.getItem('currentProfile');
+        
+        console.log('Session profile:', sessionProfile);
+        console.log('Local profile:', localProfile);
+        
+        let profileData = sessionProfile || localProfile;
+        
+        if (profileData) {
+          try {
+            const parsed = JSON.parse(profileData);
+            setCurrentProfile(parsed);
+            console.log('Retrieved profile data:', parsed);
+            
+            if (!parsed._id) {
+              throw new Error('Invalid profile data - no ID');
+            }
+            
+            // Proceed with the review submission using the refreshed profile
+            await submitReview(parsed._id);
+            return;
+          } catch (parseErr) {
+            console.error('Error parsing profile data:', parseErr);
+          }
+        }
+        
         setError('You must be logged in with a profile to submit a review');
         return;
       }
-
-      // Make sure we have a valid ID
-      if (!mediaId) {
-        setError('Invalid media ID');
-        return;
-      }
       
-      // Remove any suffix that might have been added (like -featured or -trending)
-      const cleanId = mediaId.split('-')[0];
-      console.log('Using clean ID for review submission:', cleanId);
-
-      const reviewData = {
-        mediaId: cleanId,
-        profileId: profileId,
-        rating: review.rating,
-        content: review.content.trim(),
-        isPublic: review.isPublic
-      };
-      
-      console.log('Review data being submitted:', reviewData);
-      
-      // Validate required fields
-      if (!reviewData.mediaId || !reviewData.content) {
-        console.error('Missing required fields:', { 
-          hasMediaId: !!reviewData.mediaId, 
-          hasContent: !!reviewData.content
-        });
-        setError('Media ID and content are required');
-        return;
-      }
-
-      if (userReview) {
-        // Update existing review
-        await updateReview(userReview._id, reviewData);
-      } else {
-        // Create new review
-        await createReview(reviewData);
-      }
-
-      console.log('Review submitted successfully');
-
-      setSuccess('Review submitted successfully!');
-      
-      // Refresh reviews
-      const response = await getMediaReviews(cleanId, page);
-      setReviews(response.data.reviews);
-      setTotalPages(response.data.totalPages);
-      setAverageRating(response.data.averageRating);
-      setTotalReviews(response.data.totalReviews);
-      
-      // Update user review
-      const updatedUserReview = response.data.reviews.find(
-        r => r.profile?._id === profileId
-      );
-      if (updatedUserReview) {
-        setUserReview(updatedUserReview);
-      }
-
-      // If in dialog mode, close the dialog after successful submission
-      if (onClose) {
-        setTimeout(() => {
-          onClose();
-        }, 1500);
-      }
+      await submitReview(currentProfile._id);
     } catch (err) {
       console.error('Error submitting review:', err);
-      setError(err.response?.data?.message || 'Failed to submit review');
+      
+      // First, check if there's a response with data
+      if (err.response && err.response.data) {
+        console.log('Response error data:', err.response.data);
+        setError(err.response.data.message || 'Failed to submit review');
+      } else if (err.message) {
+        // Otherwise, use the error message directly
+        setError(err.message);
+      } else {
+        // Fallback error message
+        setError('Failed to submit review. Please try again later.');
+      }
     }
+  };
+  
+  // Separate function to handle the actual submission
+  const submitReview = async (profileId) => {
+    // Make sure we have a valid ID
+    if (!mediaId) {
+      throw new Error('Invalid media ID');
+    }
+    
+    // Remove any suffix that might have been added (like -featured or -trending)
+    const cleanId = mediaId.split('-')[0];
+    console.log('Using clean ID for review submission:', cleanId);
+
+    const reviewData = {
+      mediaId: cleanId,
+      profileId: profileId,
+      rating: review.rating,
+      content: review.content.trim(),
+      isPublic: review.isPublic
+    };
+    
+    console.log('Review data being submitted:', reviewData);
+    
+    // Validate required fields
+    if (!reviewData.mediaId || !reviewData.content) {
+      console.error('Missing required fields:', { 
+        hasMediaId: !!reviewData.mediaId, 
+        hasContent: !!reviewData.content
+      });
+      throw new Error('Media ID and content are required');
+    }
+
+    let response;
+    if (userReview) {
+      // Update existing review
+      response = await updateReview(userReview._id, reviewData);
+      console.log('Update review response:', response);
+    } else {
+      // Create new review
+      response = await createReview(reviewData);
+      console.log('Create review response:', response);
+    }
+
+    console.log('Review submitted successfully');
+    setSuccess('Review submitted successfully!');
+    
+    // Refresh reviews
+    const reviewsResponse = await getMediaReviews(cleanId, page);
+    setReviews(reviewsResponse.data.reviews);
+    setTotalPages(reviewsResponse.data.totalPages);
+    setAverageRating(reviewsResponse.data.averageRating);
+    setTotalReviews(reviewsResponse.data.totalReviews);
+    
+    // Update user review
+    const updatedUserReview = reviewsResponse.data.reviews.find(
+      r => r.profile?._id === profileId
+    );
+    if (updatedUserReview) {
+      setUserReview(updatedUserReview);
+    }
+
+    // If in dialog mode, close the dialog after successful submission
+    if (onClose) {
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+    }
+    
+    return response;
   };
 
   const handlePageChange = (event, value) => {
