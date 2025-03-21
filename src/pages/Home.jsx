@@ -18,6 +18,7 @@ import TopRatedMedia from '../components/TopRatedMedia';
 import AnimationMedia from '../components/AnimationMedia';
 import ActionMedia from '../components/ActionMedia';
 import WatchlistMedia from '../components/WatchlistMedia';
+import MatchForYou from '../components/MatchForYou';
 import Footer from '../components/Footer';
 
 export default function Home() {
@@ -105,6 +106,7 @@ export default function Home() {
             {/* Main Content Container */}
             <Container maxWidth={false} sx={{ pt: 0, px: { xs: 0 }, overflowX: 'hidden' }}>
                 {/* Rows */}
+                <MatchForYou />
                 <NewOnNetflix />
                 <TopShowsInIsrael />
                 <TopRatedMedia />

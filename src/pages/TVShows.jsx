@@ -18,6 +18,7 @@ import UserReviews from '../components/UserReviews';
 import TopRatedMedia from '../components/TopRatedMedia';
 import AnimationMedia from '../components/AnimationMedia';
 import WatchlistMedia from '../components/WatchlistMedia';
+import MatchForYou from '../components/MatchForYou';
 import Footer from '../components/Footer';
 
 export default function TVShows() {
@@ -124,9 +125,9 @@ export default function TVShows() {
 
             {/* Main Content Container */}
             <Container maxWidth={false} sx={{ pt: 0, px: { xs: 0 }, overflowX: 'hidden' }}>
-                {/* Modified components to only show TV shows */}
+                {/* TV Shows content sections */}
+                <MatchForYou mediaType="tv" />
                 <NewOnNetflix tvOnly={true} />
-                <TopShowsInIsrael />
                 <TopRatedMedia mediaType="tv" />
                 <UserReviews mediaType="tv" />
                 <AnimationMedia mediaType="tv" />

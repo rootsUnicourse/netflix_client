@@ -18,6 +18,7 @@ import UserReviews from '../components/UserReviews';
 import TopRatedMedia from '../components/TopRatedMedia';
 import AnimationMedia from '../components/AnimationMedia';
 import WatchlistMedia from '../components/WatchlistMedia';
+import MatchForYou from '../components/MatchForYou';
 import Footer from '../components/Footer';
 
 export default function Movies() {
@@ -125,6 +126,7 @@ export default function Movies() {
             {/* Main Content Container */}
             <Container maxWidth={false} sx={{ pt: 0, px: { xs: 0 }, overflowX: 'hidden' }}>
                 {/* Movies content sections */}
+                <MatchForYou mediaType="movie" />
                 <NewOnNetflix movieOnly={true} />
                 <TopRatedMedia mediaType="movie" />
                 <UserReviews mediaType="movie" />
