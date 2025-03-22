@@ -46,18 +46,6 @@ const MediaTitle = styled(Typography)({
 const MediaCard = ({ media, onClick }) => {
     const navigate = useNavigate();
     
-    // Check if a media item was recently added (within the last 30 days)
-    const isRecentlyAdded = (releaseDate) => {
-        if (!releaseDate) return false;
-        
-        const released = new Date(releaseDate);
-        const now = new Date();
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(now.getDate() - 30);
-        
-        return released >= thirtyDaysAgo;
-    };
-
     // Get image URL based on available properties
     const getImageUrl = (item) => {
         if (!item) return 'https://via.placeholder.com/300x450?text=No+Image';

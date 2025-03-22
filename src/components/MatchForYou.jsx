@@ -35,11 +35,13 @@ const MatchForYou = ({ mediaType }) => {
   const [scrollPosition, setScrollPosition] = useState(0);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const rowRef = useRef(null);
-  const { user, watchlist } = useContext(UserContext);
+  const { watchlist } = useContext(UserContext);
 
+  // Fetch media on component mount
   useEffect(() => {
     fetchAndRecommendMedia();
-  }, [user, watchlist, mediaType]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const fetchAndRecommendMedia = async () => {
     try {

@@ -30,7 +30,7 @@ const NavButton = styled(Button)(({ theme }) => ({
 }));
 
 const Navbar = ({ transparent = false }) => {
-    const { user, profiles, logout } = useContext(UserContext);
+    const { profiles, logout } = useContext(UserContext);
     const navigate = useNavigate();
     const location = useLocation();
     const [anchorEl, setAnchorEl] = useState(null);

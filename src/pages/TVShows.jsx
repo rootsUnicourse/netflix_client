@@ -1,40 +1,32 @@
 import React, { useContext, useState, useEffect } from 'react';
 import {
-    Typography,
     Box,
     Container,
-    CssBaseline
+    CssBaseline,
+    Typography
 } from '@mui/material';
 import UserContext from '../context/UserContext';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 // Components
 import Navbar from '../components/Navbar';
 import CoverPhotoSection from '../components/CoverPhotoSection';
 import NewOnNetflix from '../components/NewOnNetflix';
-import TopShowsInIsrael from '../components/TopShowsInIsrael';
 import UserReviews from '../components/UserReviews';
 import TopRatedMedia from '../components/TopRatedMedia';
 import AnimationMedia from '../components/AnimationMedia';
 import WatchlistMedia from '../components/WatchlistMedia';
-import MatchForYou from '../components/MatchForYou';
 import Footer from '../components/Footer';
 
 export default function TVShows() {
     const { profiles } = useContext(UserContext);
-    const navigate = useNavigate();
-    const [selectedProfile, setSelectedProfile] = useState(null);
     const [featuredMedia, setFeaturedMedia] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
     // Get the current profile from sessionStorage or use the first profile
     useEffect(() => {
         const currentProfile = sessionStorage.getItem('currentProfile');
-        if (currentProfile) {
-            setSelectedProfile(JSON.parse(currentProfile));
-        } else if (profiles && profiles.length > 0) {
-            setSelectedProfile(profiles[0]);
+        if (!currentProfile && profiles && profiles.length > 0) {
             sessionStorage.setItem('currentProfile', JSON.stringify(profiles[0]));
         }
     }, [profiles]);
@@ -126,7 +118,6 @@ export default function TVShows() {
             {/* Main Content Container */}
             <Container maxWidth={false} sx={{ pt: 0, px: { xs: 0 }, overflowX: 'hidden' }}>
                 {/* TV Shows content sections */}
-                <MatchForYou mediaType="tv" />
                 <NewOnNetflix tvOnly={true} />
                 <TopRatedMedia mediaType="tv" />
                 <UserReviews mediaType="tv" />

@@ -12,18 +12,20 @@ import {
   Container,
   Grid,
   IconButton,
-  Divider,
   Pagination,
   Avatar,
   Chip,
   Dialog,
-  DialogContent
+  DialogContent,
+  DialogTitle,
+  DialogActions,
+  CircularProgress
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloseIcon from '@mui/icons-material/Close';
-import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ApiService, { createReview, getMediaReviews, updateReview } from '../api/api';
 import UserContext from '../context/UserContext';
+import StarIcon from '@mui/icons-material/Star';
 
 const Review = ({ open, onClose, mediaIdProp }) => {
   const { mediaId: mediaIdParam } = useParams();
@@ -93,7 +95,7 @@ const Review = ({ open, onClose, mediaIdProp }) => {
       setError('');
       setSuccess('');
     }
-  }, [mediaId, open]);
+  }, [mediaId, open, onClose]);
 
   useEffect(() => {
     const fetchMedia = async () => {
@@ -126,7 +128,7 @@ const Review = ({ open, onClose, mediaIdProp }) => {
     if (mediaId && (open || (!open && !onClose))) {
       fetchMedia();
     }
-  }, [mediaId, open]);
+  }, [mediaId, open, onClose]);
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -167,7 +169,47 @@ const Review = ({ open, onClose, mediaIdProp }) => {
     if (mediaId && (open || (!open && !onClose))) {
       fetchReviews();
     }
-  }, [mediaId, page, currentProfile, open]);
+  }, [mediaId, page, currentProfile, open, onClose]);
+
+  // Reset form when dialog is opened
+  useEffect(() => {
+    if (open) {
+      // Reset review state to default
+      setReview({
+        rating: 0,
+        content: '',
+        isPublic: true
+      });
+      
+      setError('');
+      setSuccess('');
+    }
+  }, [open]);
+
+  // Set initial values if editing an existing review
+  useEffect(() => {
+    if (userReview && open) {
+      setReview({
+        rating: userReview.rating,
+        content: userReview.content,
+        isPublic: userReview.isPublic === undefined ? true : userReview.isPublic,
+      });
+    }
+  }, [userReview, open]);
+
+  // Set success message timeout
+  useEffect(() => {
+    let timer;
+    if (success && onClose) {
+      timer = setTimeout(() => {
+        onClose();
+      }, 1500);
+    }
+    
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [success, onClose]);
 
   const handleInputChange = (e) => {
     const { name, value, checked } = e.target;
@@ -356,12 +398,14 @@ const Review = ({ open, onClose, mediaIdProp }) => {
           }
         }}
       >
-        <DialogContent>
+        <DialogContent sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 4 }}>
+          <CircularProgress color="primary" sx={{ mr: 2 }} />
           <Typography>Loading...</Typography>
         </DialogContent>
       </Dialog>
     ) : (
-      <Container maxWidth="md" sx={{ mt: 4 }}>
+      <Container maxWidth="md" sx={{ mt: 4, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <CircularProgress color="primary" sx={{ mr: 2 }} />
         <Typography>Loading...</Typography>
       </Container>
     );
@@ -452,6 +496,8 @@ const Review = ({ open, onClose, mediaIdProp }) => {
               value={review.rating}
               onChange={handleRatingChange}
               size="large"
+              precision={0.5}
+              emptyIcon={<StarIcon style={{ opacity: 0.55 }} fontSize="inherit" />}
               sx={{ mb: 3, '& .MuiRating-iconFilled': { color: '#E50914' } }}
             />
 
@@ -635,9 +681,15 @@ const Review = ({ open, onClose, mediaIdProp }) => {
         }
       }}
     >
+      <DialogTitle sx={{ p: 0, m: 0, display: 'none' }}>
+        Review {media?.title}
+      </DialogTitle>
       <DialogContent sx={{ p: 2, bgcolor: 'transparent' }}>
         {content}
       </DialogContent>
+      <DialogActions sx={{ p: 0, m: 0, display: 'none' }}>
+        <Button onClick={onClose} sx={{ display: 'none' }}>Close</Button>
+      </DialogActions>
     </Dialog>
   ) : (
     <Container maxWidth="md" sx={{ mt: 4, mb: 8 }}>

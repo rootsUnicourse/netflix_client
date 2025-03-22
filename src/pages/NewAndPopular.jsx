@@ -11,7 +11,7 @@ import Navbar from '../components/Navbar';
 import MediaCard from '../components/MediaCard';
 import MoreInfo from '../components/MoreInfo';
 import Footer from '../components/Footer';
-import ApiService, { getMedia } from '../api/api';
+import { getMedia } from '../api/api';
 
 const NewAndPopular = () => {
   const [media, setMedia] = useState([]);

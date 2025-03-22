@@ -5,7 +5,6 @@ import {
     CssBaseline
 } from '@mui/material';
 import UserContext from '../context/UserContext';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 // Components
@@ -23,8 +22,6 @@ import Footer from '../components/Footer';
 
 export default function Home() {
     const { profiles } = useContext(UserContext);
-    const navigate = useNavigate();
-    const [selectedProfile, setSelectedProfile] = useState(null);
     const [featuredMedia, setFeaturedMedia] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -32,9 +29,9 @@ export default function Home() {
     useEffect(() => {
         const currentProfile = sessionStorage.getItem('currentProfile');
         if (currentProfile) {
-            setSelectedProfile(JSON.parse(currentProfile));
+            // No need to set selected profile since it's not used
+            // Just use it for sessionStorage
         } else if (profiles && profiles.length > 0) {
-            setSelectedProfile(profiles[0]);
             sessionStorage.setItem('currentProfile', JSON.stringify(profiles[0]));
         }
     }, [profiles]);
