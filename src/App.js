@@ -12,6 +12,8 @@ import NewAndPopular from './pages/NewAndPopular';
 import Review from './components/Review';
 import { UserProvider } from './context/UserContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/AdminRoute';
+import SystemLogs from './pages/SystemLogs';
 import './App.css';
 
 function App() {
@@ -23,7 +25,7 @@ function App() {
           <Route path="/" element={<SignInPage />} />
           <Route path="/signup" element={<SignUpPage />} />
           
-          {/* Protected routes */}
+          {/* Protected routes for regular users */}
           <Route element={<ProtectedRoute />}>
             <Route path="/profiles" element={<ProfileSelection />} />
             <Route path="/home" element={<Home />} />
@@ -32,8 +34,14 @@ function App() {
             <Route path="/browse" element={<Browse />} />
             <Route path="/new-and-popular" element={<NewAndPopular />} />
             <Route path="/review/:mediaId" element={<Review />} />
+            
             {/* Catch all route - redirect to home if logged in user tries to access unknown URL */}
             <Route path="*" element={<Navigate to="/home" replace />} />
+          </Route>
+          
+          {/* Admin-only routes with specialized protection */}
+          <Route element={<AdminRoute />}>
+            <Route path="/admin/logs" element={<SystemLogs />} />
           </Route>
         </Routes>
       </Router>
