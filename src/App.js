@@ -14,11 +14,12 @@ import { UserProvider } from './context/UserContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import SystemLogs from './pages/SystemLogs';
+import AdminMediaInsert from './pages/AdminMediaInsert';
 import './App.css';
 
 function App() {
   return (
-    <UserProvider> {/* Wrap everything inside UserProvider */}
+    <UserProvider>
       <Router>
         <Routes>
           {/* Public routes */}
@@ -42,6 +43,7 @@ function App() {
           {/* Admin-only routes with specialized protection */}
           <Route element={<AdminRoute />}>
             <Route path="/admin/logs" element={<SystemLogs />} />
+            <Route path="/admin/media/insert" element={<AdminMediaInsert />} />
           </Route>
         </Routes>
       </Router>

@@ -8,7 +8,8 @@ import {
     IconButton,
     Menu,
     MenuItem,
-    Avatar
+    Avatar,
+    Divider
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
@@ -30,12 +31,13 @@ const NavButton = styled(Button)(({ theme }) => ({
 }));
 
 const Navbar = ({ transparent = false }) => {
-    const { profiles, logout } = useContext(UserContext);
+    const { profiles, logout, user, isAdmin } = useContext(UserContext);
     const navigate = useNavigate();
     const location = useLocation();
     const [anchorEl, setAnchorEl] = useState(null);
+    const [adminMenuAnchorEl, setAdminMenuAnchorEl] = useState(null);
     const [selectedProfile, setSelectedProfile] = useState(null);
-
+    
     // Set the current profile
     React.useEffect(() => {
         const currentProfile = sessionStorage.getItem('currentProfile');
@@ -70,6 +72,14 @@ const Navbar = ({ transparent = false }) => {
         handleProfileMenuClose();
         logout();
         navigate('/');
+    };
+
+    const handleAdminMenuOpen = (event) => {
+        setAdminMenuAnchorEl(event.currentTarget);
+    };
+
+    const handleAdminMenuClose = () => {
+        setAdminMenuAnchorEl(null);
     };
 
     // Check if the current path matches
@@ -151,6 +161,60 @@ const Navbar = ({ transparent = false }) => {
                     >
                         New & Popular
                     </NavButton>
+                    
+                    {/* Admin Menu */}
+                    {isAdmin && isAdmin() && (
+                        <>
+                            <NavButton 
+                                onClick={handleAdminMenuOpen}
+                                sx={{ 
+                                    fontWeight: location.pathname.includes('/admin') ? 'bold' : 'normal', 
+                                    color: location.pathname.includes('/admin') ? 'white' : '#e5e5e5' 
+                                }}
+                            >
+                                Admin
+                            </NavButton>
+                            <Menu
+                                anchorEl={adminMenuAnchorEl}
+                                open={Boolean(adminMenuAnchorEl)}
+                                onClose={handleAdminMenuClose}
+                                MenuListProps={{
+                                    'aria-labelledby': 'admin-menu-button',
+                                }}
+                                PaperProps={{
+                                    sx: {
+                                        backgroundColor: '#141414',
+                                        color: '#e5e5e5',
+                                        minWidth: '200px',
+                                        mt: 1,
+                                    }
+                                }}
+                            >
+                                <MenuItem 
+                                    onClick={() => {
+                                        navigate('/admin/media/insert');
+                                        handleAdminMenuClose();
+                                    }}
+                                    sx={{ 
+                                        '&:hover': { backgroundColor: '#333' } 
+                                    }}
+                                >
+                                    Add New Media
+                                </MenuItem>
+                                <MenuItem 
+                                    onClick={() => {
+                                        navigate('/admin/logs');
+                                        handleAdminMenuClose();
+                                    }}
+                                    sx={{ 
+                                        '&:hover': { backgroundColor: '#333' } 
+                                    }}
+                                >
+                                    System Logs
+                                </MenuItem>
+                            </Menu>
+                        </>
+                    )}
                     <NavButton onClick={() => document.getElementById('watchlist-section')?.scrollIntoView({ behavior: 'smooth' })}>
                         My List
                     </NavButton>

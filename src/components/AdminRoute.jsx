@@ -4,7 +4,7 @@ import UserContext from '../context/UserContext';
 import { Box, CircularProgress } from '@mui/material';
 
 const AdminRoute = () => {
-    const { user } = useContext(UserContext);
+    const { user, isAdmin } = useContext(UserContext);
     const [loading, setLoading] = useState(true);
 
     // Add a small delay to ensure user context is fully loaded
@@ -35,14 +35,14 @@ const AdminRoute = () => {
         );
     }
 
-    // Check if user is logged in and is an admin
+    // Check if user is logged in
     if (!user) {
         console.log('AdminRoute: No user found, redirecting to login');
         return <Navigate to="/" replace />;
     }
 
     // If user doesn't have admin role, redirect to home
-    if (user.role !== 'admin') {
+    if (!isAdmin()) {
         console.log('AdminRoute: User is not admin, redirecting to home');
         return <Navigate to="/home" replace />;
     }

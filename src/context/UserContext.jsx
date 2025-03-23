@@ -9,6 +9,8 @@ export const UserProvider = ({ children }) => {
     const [profiles, setProfiles] = useState([]);
     const [watchlist, setWatchlist] = useState([]);
     const [watchlistLoaded, setWatchlistLoaded] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     // Memoize fetchWatchlist to prevent recreation on every render
     const fetchWatchlist = useCallback(async () => {
@@ -36,6 +38,7 @@ export const UserProvider = ({ children }) => {
             fetchProfiles();
             fetchWatchlist();
         }
+        setLoading(false);
     }, []);
 
     // Fetch profiles from API when user changes
@@ -138,6 +141,56 @@ export const UserProvider = ({ children }) => {
         setWatchlistLoaded(false); // This will trigger the useEffect to fetch again
     };
 
+    // Login user - this function will store user data with role information
+    const login = async (email, password) => {
+        try {
+            setLoading(true);
+            setError(null);
+            
+            const { data } = await ApiService.login(email, password);
+            
+            // Store user and token in localStorage
+            localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('token', data.token);
+            
+            // Set user state
+            setUser(data.user);
+            
+            return data.user;
+        } catch (error) {
+            const message = error.response?.data?.message || 'Authentication failed';
+            setError(message);
+            throw new Error(message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Register user - this function will also store user data with role information
+    const register = async (userData) => {
+        try {
+            setLoading(true);
+            setError(null);
+            
+            const { data } = await ApiService.register(userData);
+            
+            // Store user and token in localStorage
+            localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('token', data.token);
+            
+            // Set user state
+            setUser(data.user);
+            
+            return data.user;
+        } catch (error) {
+            const message = error.response?.data?.message || 'Registration failed';
+            setError(message);
+            throw new Error(message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // Logout user (clears storage and resets state)
     const logout = () => {
         // Clear localStorage
@@ -157,6 +210,16 @@ export const UserProvider = ({ children }) => {
         setWatchlistLoaded(false);
     };
 
+    // Check if user is admin
+    const isAdmin = () => {
+        return user?.role === 'admin';
+    };
+
+    // Get user role 
+    const getUserRole = () => {
+        return user?.role || 'user';
+    };
+
     return (
         <UserContext.Provider value={{ 
             user, 
@@ -170,8 +233,15 @@ export const UserProvider = ({ children }) => {
             refetchWatchlist,
             addNewProfile, 
             removeProfile, 
-            renameProfile, 
-            logout 
+            renameProfile,
+            login,
+            register,
+            logout,
+            loading,
+            error,
+            isAuthenticated: !!user,
+            isAdmin,
+            getUserRole
         }}>
             {children}
         </UserContext.Provider>
