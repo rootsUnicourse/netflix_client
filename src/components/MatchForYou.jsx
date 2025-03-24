@@ -50,89 +50,76 @@ const MatchForYou = ({ mediaType }) => {
       
       const apiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
       
-      // Fetch all media
-      const response = await axios.get(`${apiBaseUrl}/media`, {
-        params: { 
-          limit: 100,
-          type: mediaType || undefined // Filter by mediaType if provided
+      // Try first without credentials
+      try {
+        const response = await axios.get(`${apiBaseUrl}/media/ai-recommendations`, {
+          params: { 
+            mediaType: mediaType || 'all',
+            limit: 10
+          }
+          // No withCredentials here
+        });
+        
+        if (response.data && response.data.results) {
+          console.log('AI recommendations received (without credentials):', response.data.results.length);
+          setMatchedMedia(response.data.results);
+          setLoading(false);
+          setTimeout(checkScrollability, 100);
+          return;
         }
+      } catch (err) {
+        console.log('Could not fetch recommendations without credentials, trying with credentials...');
+        // Continue to next try block to attempt with credentials
+      }
+      
+      // Try with credentials if first attempt failed
+      const response = await axios.get(`${apiBaseUrl}/media/ai-recommendations`, {
+        params: { 
+          mediaType: mediaType || 'all',
+          limit: 10
+        },
+        withCredentials: true // Include credentials for authentication
       });
       
       if (!response.data || !response.data.results) {
         console.error('Unexpected response format:', response);
-        setError('Could not fetch media data');
+        setError('Could not fetch AI recommendations');
         setLoading(false);
         return;
       }
       
-      const allMedia = response.data.results;
-      console.log(`Loaded ${allMedia.length} media items for matching`);
-      
-      // Generate personalized recommendations using a simplified approach
-      let recommendedMedia = [];
-      
-      // If user has watched/liked items, use them for recommendations
-      if (watchlist && watchlist.length > 0) {
-        // Filter watchlist by mediaType if needed
-        const relevantWatchlist = mediaType 
-          ? watchlist.filter(item => item.type === mediaType)
-          : watchlist;
-          
-        console.log(`Using ${relevantWatchlist.length} watchlist items to generate recommendations`);
-        
-        // Get genres from user's watchlist
-        const userGenres = new Set();
-        relevantWatchlist.forEach(item => {
-          if (item.genres && Array.isArray(item.genres)) {
-            item.genres.forEach(genre => userGenres.add(genre));
-          }
-        });
-        
-        console.log('User genre preferences:', [...userGenres]);
-        
-        // Find media with matching genres that isn't already in watchlist
-        const genreRecommendations = allMedia.filter(media => {
-          // Skip if in watchlist
-          if (watchlist.some(item => item._id === media._id)) return false;
-          
-          // Check if media has any genre matching user preferences
-          return media.genres && Array.isArray(media.genres) && 
-                 media.genres.some(genre => userGenres.has(genre));
-        });
-        
-        console.log(`Found ${genreRecommendations.length} genre-based recommendations`);
-        
-        // Add genre recommendations limited to 10
-        recommendedMedia = genreRecommendations.slice(0, 10);
-      }
-      
-      // If we don't have enough genre recommendations, add popular items
-      if (recommendedMedia.length < 10) {
-        console.log(`Adding popular content to fill up recommendations`);
-        
-        const popularMedia = allMedia
-          .filter(media => !recommendedMedia.some(rec => rec._id === media._id) && 
-                          !watchlist.some(item => item._id === media._id))
-          .sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
-          .slice(0, 10 - recommendedMedia.length);
-          
-        recommendedMedia = [...recommendedMedia, ...popularMedia];
-      }
-      
-      // Shuffle the recommendations for variety
-      const shuffledRecommendations = [...recommendedMedia].sort(() => Math.random() - 0.5);
-      
-      // Limit to exactly 10 recommendations or whatever is available
-      const finalRecommendations = shuffledRecommendations.slice(0, 10);
-      
-      console.log('Generated recommendations:', finalRecommendations.length);
-      setMatchedMedia(finalRecommendations);
+      console.log('AI recommendations received (with credentials):', response.data.results.length);
+      setMatchedMedia(response.data.results);
       setLoading(false);
       
       // Check if we can scroll right after content is loaded
       setTimeout(checkScrollability, 100);
     } catch (error) {
-      console.error('Error generating recommendations:', error);
+      console.error('Error fetching AI recommendations:', error);
+      
+      // Fall back to trending media if AI recommendations fail
+      try {
+        console.log('Falling back to trending media...');
+        const apiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+        
+        const response = await axios.get(`${apiBaseUrl}/media/trending`, {
+          params: { 
+            mediaType: mediaType || 'all',
+            timeWindow: 'week'
+          }
+        });
+        
+        if (response.data && response.data.results) {
+          console.log('Trending media received as fallback:', response.data.results.length);
+          setMatchedMedia(response.data.results);
+          setLoading(false);
+          setTimeout(checkScrollability, 100);
+          return;
+        }
+      } catch (fallbackError) {
+        console.error('Error fetching trending media as fallback:', fallbackError);
+      }
+      
       setError(error.message || 'Failed to generate personalized recommendations');
       setLoading(false);
     }
