@@ -175,7 +175,7 @@ export default function SignInForm() {
                         }}
                     >
                         This page is protected by Google reCAPTCHA to ensure you're not a bot.{' '}
-                        <a href="/" style={{ color: '#0071eb', textDecoration: 'none' }}>
+                        <a href="#" style={{ color: '#0071eb', textDecoration: 'none' }}>
                             Learn more.
                         </a>
                     </Typography>

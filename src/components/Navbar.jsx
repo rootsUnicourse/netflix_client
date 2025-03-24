@@ -144,15 +144,6 @@ const Navbar = ({ transparent = false }) => {
                         Movies
                     </NavButton>
                     <NavButton 
-                        onClick={() => navigate('/browse')}
-                        sx={{ 
-                            fontWeight: isActive('/browse') ? 'bold' : 'normal', 
-                            color: isActive('/browse') ? 'white' : '#e5e5e5' 
-                        }}
-                    >
-                        Browse
-                    </NavButton>
-                    <NavButton 
                         onClick={() => navigate('/new-and-popular')}
                         sx={{ 
                             fontWeight: isActive('/new-and-popular') ? 'bold' : 'normal', 
@@ -161,6 +152,19 @@ const Navbar = ({ transparent = false }) => {
                     >
                         New & Popular
                     </NavButton>
+                    <NavButton onClick={() => document.getElementById('watchlist-section')?.scrollIntoView({ behavior: 'smooth' })}>
+                        My List
+                    </NavButton>
+                    <NavButton 
+                        onClick={() => navigate('/browse')}
+                        sx={{ 
+                            fontWeight: isActive('/browse') ? 'bold' : 'normal', 
+                            color: isActive('/browse') ? 'white' : '#e5e5e5' 
+                        }}
+                    >
+                        Browse
+                    </NavButton>
+                    
                     
                     {/* Admin Menu */}
                     {isAdmin && isAdmin() && (
@@ -215,9 +219,7 @@ const Navbar = ({ transparent = false }) => {
                             </Menu>
                         </>
                     )}
-                    <NavButton onClick={() => document.getElementById('watchlist-section')?.scrollIntoView({ behavior: 'smooth' })}>
-                        My List
-                    </NavButton>
+                    
                 </Box>
 
                 {/* Navigation Links - Mobile (Dropdown) */}
