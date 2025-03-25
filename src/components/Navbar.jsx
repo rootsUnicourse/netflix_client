@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import {
     AppBar,
     Toolbar,
@@ -31,7 +31,7 @@ const NavButton = styled(Button)(({ theme }) => ({
 }));
 
 const Navbar = ({ transparent = false }) => {
-    const { profiles, logout, user, isAdmin } = useContext(UserContext);
+    const { profiles, logout, user, isAdmin, setProfile, currentProfile } = useContext(UserContext);
     const navigate = useNavigate();
     const location = useLocation();
     const [anchorEl, setAnchorEl] = useState(null);
@@ -39,15 +39,26 @@ const Navbar = ({ transparent = false }) => {
     const [selectedProfile, setSelectedProfile] = useState(null);
     
     // Set the current profile
-    React.useEffect(() => {
-        const currentProfile = sessionStorage.getItem('currentProfile');
+    useEffect(() => {
+        // If we have a current profile from context, use that
         if (currentProfile) {
-            setSelectedProfile(JSON.parse(currentProfile));
-        } else if (profiles && profiles.length > 0) {
-            setSelectedProfile(profiles[0]);
-            sessionStorage.setItem('currentProfile', JSON.stringify(profiles[0]));
+            setSelectedProfile(currentProfile);
+        } 
+        // Otherwise check sessionStorage
+        else {
+            const storedProfile = sessionStorage.getItem('currentProfile');
+            if (storedProfile) {
+                const parsedProfile = JSON.parse(storedProfile);
+                setSelectedProfile(parsedProfile);
+                // Also update the context
+                setProfile(parsedProfile);
+            } else if (profiles && profiles.length > 0) {
+                // If no profile is selected, use the first one
+                setSelectedProfile(profiles[0]);
+                setProfile(profiles[0]);
+            }
         }
-    }, [profiles]);
+    }, [profiles, setProfile, currentProfile]);
 
     const handleProfileMenuOpen = (event) => {
         setAnchorEl(event.currentTarget);
@@ -59,13 +70,13 @@ const Navbar = ({ transparent = false }) => {
 
     const handleProfileSelect = (profile) => {
         setSelectedProfile(profile);
-        sessionStorage.setItem('currentProfile', JSON.stringify(profile));
+        setProfile(profile);
         handleProfileMenuClose();
     };
 
     const handleSwitchProfiles = () => {
-        navigate('/profiles');
         handleProfileMenuClose();
+        navigate('/profiles');
     };
 
     const handleLogout = () => {
@@ -239,15 +250,17 @@ const Navbar = ({ transparent = false }) => {
                             onClick={handleProfileMenuOpen}
                             sx={{ ml: 2 }}
                         >
-                            <Avatar
-                                src={selectedProfile.avatar}
-                                alt={selectedProfile.name}
-                                sx={{
-                                    width: 32,
-                                    height: 32,
-                                    border: '1px solid #333'
-                                }}
-                            />
+                            <Box sx={{ position: 'relative' }}>
+                                <Avatar
+                                    src={selectedProfile.avatar}
+                                    alt={selectedProfile.name}
+                                    sx={{
+                                        width: 32,
+                                        height: 32,
+                                        border: '1px solid #333'
+                                    }}
+                                />
+                            </Box>
                         </IconButton>
                     )}
 
@@ -279,15 +292,27 @@ const Navbar = ({ transparent = false }) => {
                                     display: 'flex',
                                     alignItems: 'center',
                                     padding: '8px 16px',
-                                    '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' }
+                                    backgroundColor: selectedProfile && selectedProfile._id === profile._id ? 'rgba(255,255,255,0.1)' : 'transparent',
+                                    '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' }
                                 }}
                             >
                                 <Avatar
                                     src={profile.avatar}
                                     alt={profile.name}
-                                    sx={{ width: 32, height: 32, mr: 2 }}
+                                    sx={{ 
+                                        width: 32, 
+                                        height: 32, 
+                                        mr: 2
+                                    }}
                                 />
-                                <Typography variant="body2">{profile.name}</Typography>
+                                <Typography variant="body2">
+                                    {profile.name}
+                                    {selectedProfile && selectedProfile._id === profile._id && 
+                                        <Box component="span" sx={{ ml: 1, fontSize: '0.8rem', opacity: 0.7 }}>
+                                            (Active)
+                                        </Box>
+                                    }
+                                </Typography>
                             </MenuItem>
                         ))}
                         <MenuItem
