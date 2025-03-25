@@ -31,7 +31,14 @@ const WatchlistMedia = ({ mediaType }) => {
   if (!filteredWatchlist || filteredWatchlist.length === 0) {
     return (
       <Box sx={{ my: 4, px: 4 }}>
-        <Typography variant="h5" sx={{ color: 'white', mb: 2 }}>
+        <Typography 
+          variant="h5" 
+          sx={{ 
+            fontWeight: 'bold',
+            color: 'white', 
+            mb: 2 
+          }}
+        >
           My List {mediaType === 'tv' ? '(TV Shows)' : mediaType === 'movie' ? '(Movies)' : ''}
         </Typography>
         <Typography variant="body1" sx={{ color: '#aaa' }}>
@@ -45,7 +52,14 @@ const WatchlistMedia = ({ mediaType }) => {
 
   return (
     <Box sx={{ my: 4, px: 4 }}>
-      <Typography variant="h5" sx={{ color: 'white', mb: 2 }}>
+      <Typography 
+        variant="h5" 
+        sx={{ 
+          fontWeight: 'bold',
+          color: 'white', 
+          mb: 2 
+        }}
+      >
         My List {mediaType === 'tv' ? '(TV Shows)' : mediaType === 'movie' ? '(Movies)' : ''}
       </Typography>
 

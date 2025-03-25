@@ -23,7 +23,7 @@ const getImagePath = (path) => {
   return path;
 };
 
-const ActionMedia = () => {
+const ActionMedia = ({ mediaType }) => {
   const [actionMedia, setActionMedia] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -36,7 +36,7 @@ const ActionMedia = () => {
 
   useEffect(() => {
     fetchActionMedia();
-  }, []);
+  }, [mediaType]);
 
   const fetchActionMedia = async () => {
     try {
@@ -50,7 +50,13 @@ const ActionMedia = () => {
       console.log('Action media response:', response);
       
       if (response.data && response.data.results && Array.isArray(response.data.results)) {
-        const mediaData = response.data.results;
+        let mediaData = response.data.results;
+        
+        // Filter by mediaType if provided
+        if (mediaType) {
+          mediaData = mediaData.filter(item => item.type === mediaType);
+        }
+        
         console.log('Action media found:', mediaData.length);
         
         if (mediaData.length > 0) {
@@ -157,7 +163,11 @@ const ActionMedia = () => {
         mb: 2,
         fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.5rem' }
       }}>
-        Action Movies & TV Shows
+        {mediaType === 'movie' 
+          ? 'Action Movies' 
+          : mediaType === 'tv' 
+            ? 'Action TV Shows' 
+            : 'Action Movies & TV Shows'}
       </Typography>
       
       {/* Scroll Buttons */}

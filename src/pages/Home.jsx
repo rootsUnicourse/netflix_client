@@ -106,8 +106,8 @@ export default function Home() {
                 <MatchForYou />
                 <NewOnNetflix />
                 <TopShowsInIsrael />
-                <TopRatedMedia />
                 <UserReviews />
+                <TopRatedMedia />
                 <AnimationMedia />
                 <ActionMedia />
                 {/* Watchlist Section */}
