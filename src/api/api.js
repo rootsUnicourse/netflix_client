@@ -178,8 +178,20 @@ export const getActionMedia = async (limit = 10) => {
   console.log(`Calling action genre endpoint with limit=${limit}`);
   return api.get('/media', {
     params: { 
-      genre: 'Action',
+      genres: ['Action', 'Action & Adventure'],
       limit
+    },
+    paramsSerializer: params => {
+      // Convert array parameters to repeated query params
+      const queryParams = new URLSearchParams();
+      for (const key in params) {
+        if (Array.isArray(params[key])) {
+          params[key].forEach(value => queryParams.append(key, value));
+        } else {
+          queryParams.append(key, params[key]);
+        }
+      }
+      return queryParams.toString();
     }
   });
 };

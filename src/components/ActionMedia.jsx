@@ -43,9 +43,10 @@ const ActionMedia = ({ mediaType }) => {
       setLoading(true);
       setError(null);
       
-      console.log('Fetching action media from database...');
+      console.log(`Fetching action media from database with mediaType: ${mediaType || 'all'}`);
+      
       // Get action movies/shows directly from our database using genres field
-      const response = await getActionMedia(10);
+      const response = await getActionMedia(20); // Increase limit to ensure we have enough after filtering
       
       console.log('Action media response:', response);
       
@@ -57,12 +58,16 @@ const ActionMedia = ({ mediaType }) => {
           mediaData = mediaData.filter(item => item.type === mediaType);
         }
         
-        console.log('Action media found:', mediaData.length);
+        console.log(`Action ${mediaType || ''} media found:`, mediaData.length);
         
         if (mediaData.length > 0) {
           setActionMedia(mediaData);
         } else {
-          setError('No action media found in the database');
+          if (mediaType === 'tv') {
+            setError(`No action TV shows found. Please try refreshing the page.`);
+          } else {
+            setError(`No action ${mediaType || ''} media found in the database`);
+          }
         }
       } else {
         setError('Unexpected response format from action media API');
