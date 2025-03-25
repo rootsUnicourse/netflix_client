@@ -55,7 +55,8 @@ const MatchForYou = ({ mediaType }) => {
         const response = await axios.get(`${apiBaseUrl}/media/ai-recommendations`, {
           params: { 
             mediaType: mediaType || 'all',
-            limit: 10
+            limit: 10,
+            includeSeasonData: true  // Request season data for TV shows
           }
           // No withCredentials here
         });
@@ -76,7 +77,8 @@ const MatchForYou = ({ mediaType }) => {
       const response = await axios.get(`${apiBaseUrl}/media/ai-recommendations`, {
         params: { 
           mediaType: mediaType || 'all',
-          limit: 10
+          limit: 10,
+          includeSeasonData: true  // Request season data for TV shows
         },
         withCredentials: true // Include credentials for authentication
       });
@@ -146,28 +148,21 @@ const MatchForYou = ({ mediaType }) => {
       
       console.log('Full media details received:', fullMediaData);
       
-      // Only proceed if we have valid data
-      if (!fullMediaData) {
-        throw new Error('No media data received');
-      }
-
-      // For TV shows, ensure we have season data
-      if (media.type === 'tv' && (!fullMediaData.seasonData || fullMediaData.seasonData.length === 0)) {
-        console.warn('TV show missing season data:', media.title);
-        // Use the basic media data we already have
-        setSelectedMedia(media);
-      } else {
-        // Set the selected media with full details
-        setSelectedMedia(fullMediaData);
-      }
-      
-      // Open modal regardless of data completeness
+      // Set the selected media with full details and open modal
+      setSelectedMedia(fullMediaData);
       setMoreInfoOpen(true);
       setMediaDetailsLoading(false);
     } catch (error) {
       console.error('Error fetching full media details:', error);
-      // Use the basic media data we already have instead of showing error
-      setSelectedMedia(media);
+      // If there's an error, use the basic media data we already have
+      // but keep seasonData if it exists (might be partial)
+      const basicMediaWithSeasonData = {
+        ...media,
+        // If we already have seasonData from before, keep it
+        seasonData: media.seasonData || [] 
+      };
+      
+      setSelectedMedia(basicMediaWithSeasonData);
       setMoreInfoOpen(true);
       setMediaDetailsLoading(false);
     }
