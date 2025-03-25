@@ -146,13 +146,27 @@ const MatchForYou = ({ mediaType }) => {
       
       console.log('Full media details received:', fullMediaData);
       
-      // Set the selected media with full details and open modal
-      setSelectedMedia(fullMediaData);
+      // Only proceed if we have valid data
+      if (!fullMediaData) {
+        throw new Error('No media data received');
+      }
+
+      // For TV shows, ensure we have season data
+      if (media.type === 'tv' && (!fullMediaData.seasonData || fullMediaData.seasonData.length === 0)) {
+        console.warn('TV show missing season data:', media.title);
+        // Use the basic media data we already have
+        setSelectedMedia(media);
+      } else {
+        // Set the selected media with full details
+        setSelectedMedia(fullMediaData);
+      }
+      
+      // Open modal regardless of data completeness
       setMoreInfoOpen(true);
       setMediaDetailsLoading(false);
     } catch (error) {
       console.error('Error fetching full media details:', error);
-      // If there's an error, just use the basic media data we already have
+      // Use the basic media data we already have instead of showing error
       setSelectedMedia(media);
       setMoreInfoOpen(true);
       setMediaDetailsLoading(false);
