@@ -175,10 +175,8 @@ export const getActionMedia = async (limit = 10) => {
 
 // Watchlist operations
 export const addToWatchlist = async (mediaId, profileId) => {
-  console.log('API call: Adding to watchlist, mediaId:', mediaId, 'profileId:', profileId);
   try {
     const response = await api.post('/profiles/watchlist', { mediaId, profileId });
-    console.log('API response for add to watchlist:', response.data);
     return response;
   } catch (error) {
     console.error('API error adding to watchlist:', error.response?.data || error.message);
@@ -187,10 +185,8 @@ export const addToWatchlist = async (mediaId, profileId) => {
 };
 
 export const removeFromWatchlist = async (mediaId, profileId) => {
-  console.log('API call: Removing from watchlist, mediaId:', mediaId, 'profileId:', profileId);
   try {
     const response = await api.delete(`/profiles/${profileId}/watchlist/${mediaId}`);
-    console.log('API response for remove from watchlist:', response.data);
     return response;
   } catch (error) {
     console.error('API error removing from watchlist:', error.response?.data || error.message);
@@ -199,10 +195,8 @@ export const removeFromWatchlist = async (mediaId, profileId) => {
 };
 
 export const getWatchlist = async (profileId) => {
-  console.log('API call: Getting watchlist for profile:', profileId);
   try {
     const response = await api.get(`/profiles/${profileId}/watchlist`);
-    console.log('API response for get watchlist:', response.data);
     return response;
   } catch (error) {
     console.error('API error getting watchlist:', error.response?.data || error.message);

@@ -35,7 +35,6 @@ const MoreInfo = ({ open, onClose, media }) => {
   const updateWatchlistStatus = useCallback(() => {
     if (media && media._id) {
       const inList = isInWatchlist(media._id);
-      console.log('Updating watchlist status for', media.title, 'is in watchlist:', inList);
       setLocalInWatchlist(inList);
     }
   }, [media, isInWatchlist]);
@@ -52,13 +51,9 @@ const MoreInfo = ({ open, onClose, media }) => {
     }
   }, [open, updateWatchlistStatus]);
 
-  console.log('MoreInfo media:', media, 'localInWatchlist:', localInWatchlist);
-
   if (!media) return null;
 
   const handleReviewClick = () => {
-    console.log('Media object:', media);
-    
     // Check if media._id is a valid MongoDB ID
     if (!media._id) {
       console.error('Media ID is missing or invalid');
@@ -76,7 +71,7 @@ const MoreInfo = ({ open, onClose, media }) => {
   const handleWatchlistToggle = async () => {
     if (!user) {
       // Handle not logged in scenario
-      console.log('User needs to be logged in to use watchlist');
+      console.error('User needs to be logged in to use watchlist');
       return;
     }
 
@@ -88,8 +83,6 @@ const MoreInfo = ({ open, onClose, media }) => {
     }
     
     try {
-      console.log('Watchlist toggle for media:', mediaId, 'Current status:', localInWatchlist);
-      
       // Immediately update UI for better responsiveness
       const newWatchlistStatus = !localInWatchlist;
       setLocalInWatchlist(newWatchlistStatus);

@@ -15,7 +15,6 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import SystemLogs from './pages/SystemLogs';
 import AdminMediaInsert from './pages/AdminMediaInsert';
-import WatchlistState from './components/WatchlistState';
 import './App.css';
 
 function App() {
@@ -47,9 +46,6 @@ function App() {
             <Route path="/admin/media/insert" element={<AdminMediaInsert />} />
           </Route>
         </Routes>
-        
-        {/* Debug component for development */}
-        {process.env.NODE_ENV === 'development' && <WatchlistState />}
       </Router>
     </UserProvider>
   );

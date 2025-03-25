@@ -26,13 +26,10 @@ export const UserProvider = ({ children }) => {
         if (!user || !currentProfile) return;
         
         try {
-            console.log('Fetching watchlist for profile:', currentProfile._id);
             const { data } = await ApiService.getWatchlist(currentProfile._id);
-            console.log('Watchlist data received:', data);
             setWatchlist(data);
             setWatchlistLoaded(true);
         } catch (error) {
-            console.error('Error fetching watchlist:', error);
             // Don't reset watchlist on error to keep any cached data
         }
     }, [user, currentProfile]);
@@ -117,13 +114,10 @@ export const UserProvider = ({ children }) => {
             console.error('No profile selected');
             // Fallback to first profile if available
             if (profiles.length > 0) {
-                console.log('Using first profile as fallback');
                 const firstProfile = profiles[0];
                 setProfile(firstProfile);
                 try {
-                    console.log('Adding to watchlist:', mediaId, 'for first profile:', firstProfile._id);
                     const { data } = await ApiService.addToWatchlist(mediaId, firstProfile._id);
-                    console.log('Updated watchlist:', data);
                     
                     // Force a complete refresh of watchlist data
                     const fullWatchlistResponse = await ApiService.getWatchlist(firstProfile._id);
@@ -139,9 +133,7 @@ export const UserProvider = ({ children }) => {
         }
         
         try {
-            console.log('Adding to watchlist:', mediaId, 'for profile:', currentProfile._id);
             const { data } = await ApiService.addToWatchlist(mediaId, currentProfile._id);
-            console.log('Updated watchlist:', data);
             
             // Force a complete refresh of watchlist data
             const fullWatchlistResponse = await ApiService.getWatchlist(currentProfile._id);
@@ -160,13 +152,10 @@ export const UserProvider = ({ children }) => {
             console.error('No profile selected');
             // Fallback to first profile if available
             if (profiles.length > 0) {
-                console.log('Using first profile as fallback');
                 const firstProfile = profiles[0];
                 setProfile(firstProfile);
                 try {
-                    console.log('Removing from watchlist:', mediaId, 'for first profile:', firstProfile._id);
                     const { data } = await ApiService.removeFromWatchlist(mediaId, firstProfile._id);
-                    console.log('Updated watchlist after removal:', data);
                     
                     // Force a complete refresh of watchlist data
                     const fullWatchlistResponse = await ApiService.getWatchlist(firstProfile._id);
@@ -182,9 +171,7 @@ export const UserProvider = ({ children }) => {
         }
         
         try {
-            console.log('Removing from watchlist:', mediaId, 'for profile:', currentProfile._id);
             const { data } = await ApiService.removeFromWatchlist(mediaId, currentProfile._id);
-            console.log('Updated watchlist after removal:', data);
             
             // Force a complete refresh of watchlist data
             const fullWatchlistResponse = await ApiService.getWatchlist(currentProfile._id);
