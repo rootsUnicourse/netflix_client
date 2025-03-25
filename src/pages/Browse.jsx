@@ -67,7 +67,7 @@ const FilterSelect = styled(FormControl)(({ theme }) => ({
 const MediaCardStyled = styled(Box)(({ theme }) => ({
     position: 'relative',
     height: 0,
-    paddingTop: '150%', // Maintain aspect ratio for posters (2:3)
+    paddingTop: '56.25%', // 16:9 aspect ratio (horizontal instead of vertical)
     overflow: 'hidden',
     cursor: 'pointer',
     transition: 'transform 0.3s ease',
@@ -89,19 +89,6 @@ const MediaImage = styled('img')({
     height: '100%',
     objectFit: 'cover',
     objectPosition: 'center',
-});
-
-const MediaTitle = styled(Typography)({
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: '8px',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    color: 'white',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
 });
 
 const RecentlyAddedTag = styled(Box)({
@@ -219,7 +206,7 @@ export default function Browse() {
                 
                 // Fetch all media to populate filter options
                 const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/media`, {
-                    params: { limit: 100 }
+                    params: { limit: 200 }
                 });
                 
                 if (response.data.results && response.data.results.length > 0) {
@@ -490,20 +477,25 @@ export default function Browse() {
 
     // Simplified function based on how other components handle images
     const getImageUrl = (item) => {
-        if (!item) return 'https://via.placeholder.com/300x450?text=No+Image';
+        if (!item) return 'https://via.placeholder.com/300x170?text=No+Image'; // 16:9 ratio
         
-        // Try different image properties in order of preference
-        if (item.posterPath) return item.posterPath;
+        // For horizontal display, prioritize backdrop images which are typically in landscape format
         if (item.backdropPath) return item.backdropPath;
+        if (item.posterPath) return item.posterPath;
         if (item.additionalImages && item.additionalImages.length > 0) return item.additionalImages[0];
+        if (item.backdropUrl) return item.backdropUrl; // Prioritize backdrop over poster
         if (item.imageUrl) return item.imageUrl;
         if (item.posterUrl) return item.posterUrl;
-        if (item.backdropUrl) return item.backdropUrl;
         
         // Fallbacks
         if (item.img) return item.img;
         
-        // Check if there's a poster object with a path
+        // Check if there's a backdrop or poster object with a path
+        if (item.backdrop) {
+            if (typeof item.backdrop === 'string') return item.backdrop;
+            if (item.backdrop.path) return item.backdrop.path;
+        }
+        
         if (item.poster) {
             if (typeof item.poster === 'string') return item.poster;
             if (item.poster.path) return item.poster.path;
@@ -516,7 +508,7 @@ export default function Browse() {
         }
         
         // Fallback
-        return 'https://via.placeholder.com/300x450?text=No+Image';
+        return 'https://via.placeholder.com/300x170?text=No+Image'; // 16:9 ratio
     };
 
     // Add a debug function to examine a media item when rendered
@@ -758,7 +750,42 @@ export default function Browse() {
                         <Grid container spacing={2}>
                             {media.map((item) => (
                                 <Grid item key={item._id} xs={6} sm={4} md={3} lg={2.4}>
-                                    <MediaCard media={item} onClick={() => handleMediaClick(item)} />
+                                    <Box 
+                                        sx={{ 
+                                            position: 'relative',
+                                            height: 0,
+                                            paddingTop: '56.25%', // 16:9 aspect ratio
+                                            overflow: 'hidden',
+                                            cursor: 'pointer',
+                                            transition: 'transform 0.3s ease',
+                                            borderRadius: '4px',
+                                            boxShadow: '0 0 10px rgba(0,0,0,0.3)',
+                                            backgroundColor: '#333',
+                                            '&:hover': {
+                                                transform: 'scale(1.05)',
+                                                zIndex: 1,
+                                            },
+                                        }}
+                                        onClick={() => handleMediaClick(item)}
+                                    >
+                                        <Box 
+                                            component="img"
+                                            src={getImageUrl(item)}
+                                            alt={item.title}
+                                            sx={{ 
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                width: '100%',
+                                                height: '100%',
+                                                objectFit: 'cover',
+                                                objectPosition: 'center',
+                                            }}
+                                        />
+                                        {isRecentlyAdded(item.releaseDate) && (
+                                            <RecentlyAddedTag>NEW</RecentlyAddedTag>
+                                        )}
+                                    </Box>
                                 </Grid>
                             ))}
                         </Grid>

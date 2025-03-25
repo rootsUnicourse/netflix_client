@@ -1,12 +1,12 @@
 import React from 'react';
-import { Box, Typography, styled } from '@mui/material';
+import { Box, styled } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
 // Styled components
 const MediaCardContainer = styled(Box)(({ theme }) => ({
     position: 'relative',
     height: 0,
-    paddingTop: '150%', // Maintain aspect ratio for posters (2:3)
+    paddingTop: '56.25%', // 16:9 aspect ratio for horizontal display
     overflow: 'hidden',
     cursor: 'pointer',
     transition: 'transform 0.3s ease',
@@ -30,29 +30,16 @@ const MediaImage = styled('img')({
     objectPosition: 'center',
 });
 
-const MediaTitle = styled(Typography)({
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: '8px',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    color: 'white',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-});
-
 const MediaCard = ({ media, onClick }) => {
     const navigate = useNavigate();
     
     // Get image URL based on available properties
     const getImageUrl = (item) => {
-        if (!item) return 'https://via.placeholder.com/300x450?text=No+Image';
+        if (!item) return 'https://via.placeholder.com/300x170?text=No+Image';
         
-        // Try different image properties in order of preference
-        if (item.posterPath) return item.posterPath;
+        // For horizontal images, prefer backdrop over poster when available
         if (item.backdropPath) return item.backdropPath;
+        if (item.posterPath) return item.posterPath;
         if (item.additionalImages && item.additionalImages.length > 0) return item.additionalImages[0];
         if (item.imageUrl) return item.imageUrl;
         if (item.posterUrl) return item.posterUrl;
@@ -74,7 +61,7 @@ const MediaCard = ({ media, onClick }) => {
         }
         
         // Fallback
-        return 'https://via.placeholder.com/300x450?text=No+Image';
+        return 'https://via.placeholder.com/300x170?text=No+Image';
     };
 
     const handleClick = () => {
@@ -93,10 +80,9 @@ const MediaCard = ({ media, onClick }) => {
                 alt={media.title} 
                 onError={(e) => {
                     console.warn(`Image failed to load for: ${media.title}`);
-                    e.target.src = 'https://via.placeholder.com/300x450?text=No+Image';
+                    e.target.src = 'https://via.placeholder.com/300x170?text=No+Image';
                 }}
             />
-            <MediaTitle variant="body2">{media.title}</MediaTitle>
         </MediaCardContainer>
     );
 };

@@ -7,7 +7,7 @@ import { getActionMedia, getMediaById } from '../api/api';
 
 // Helper function to ensure image URLs are properly formatted
 const getImagePath = (path) => {
-  if (!path) return 'https://via.placeholder.com/200x120?text=No+Image';
+  if (!path) return 'https://via.placeholder.com/200x113?text=No+Image'; // 16:9 ratio
   
   // If the path is already a full URL, return it as is
   if (path.startsWith('http://') || path.startsWith('https://')) {
@@ -268,7 +268,7 @@ const ActionMedia = ({ mediaType }) => {
                   position: 'relative',
                   minWidth: '200px',
                   cursor: 'pointer',
-                  transition: 'transform 0.3s',
+                  transition: 'transform 0.3s ease',
                   '&:hover': {
                     transform: 'scale(1.05)',
                     zIndex: 1
@@ -283,7 +283,7 @@ const ActionMedia = ({ mediaType }) => {
                   alt={media.title}
                   sx={{ 
                     width: '200px',
-                    height: '120px',
+                    height: '113px', // 16:9 aspect ratio
                     objectFit: 'cover',
                     borderRadius: '4px'
                   }}
