@@ -7,18 +7,27 @@ const UserContext = createContext();
 export const UserProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [profiles, setProfiles] = useState([]);
+    const [currentProfile, setCurrentProfile] = useState(null);
     const [watchlist, setWatchlist] = useState([]);
     const [watchlistLoaded, setWatchlistLoaded] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // Load current profile from session storage
+    useEffect(() => {
+        const storedProfile = JSON.parse(sessionStorage.getItem('currentProfile'));
+        if (storedProfile) {
+            setCurrentProfile(storedProfile);
+        }
+    }, []);
+
     // Memoize fetchWatchlist to prevent recreation on every render
     const fetchWatchlist = useCallback(async () => {
-        if (!user) return;
+        if (!user || !currentProfile) return;
         
         try {
-            console.log('Fetching watchlist for user:', user._id);
-            const { data } = await ApiService.getWatchlist();
+            console.log('Fetching watchlist for profile:', currentProfile._id);
+            const { data } = await ApiService.getWatchlist(currentProfile._id);
             console.log('Watchlist data received:', data);
             setWatchlist(data);
             setWatchlistLoaded(true);
@@ -26,7 +35,7 @@ export const UserProvider = ({ children }) => {
             console.error('Error fetching watchlist:', error);
             // Don't reset watchlist on error to keep any cached data
         }
-    }, [user]);
+    }, [user, currentProfile]);
 
     // Load user from local storage on initial mount
     useEffect(() => {
@@ -36,7 +45,6 @@ export const UserProvider = ({ children }) => {
         if (storedUser && token) {
             setUser(storedUser);
             fetchProfiles();
-            fetchWatchlist();
         }
         setLoading(false);
     }, []);
@@ -51,12 +59,12 @@ export const UserProvider = ({ children }) => {
         }
     }, [user]);
     
-    // Fetch watchlist only when user changes or after specific watchlist operations
+    // Fetch watchlist when user or current profile changes
     useEffect(() => {
-        if (user && !watchlistLoaded) {
+        if (user && currentProfile && !watchlistLoaded) {
             fetchWatchlist();
         }
-    }, [user, fetchWatchlist, watchlistLoaded]);
+    }, [user, currentProfile, fetchWatchlist, watchlistLoaded]);
 
     // Fetch profiles from API
     const fetchProfiles = async () => {
@@ -105,11 +113,40 @@ export const UserProvider = ({ children }) => {
 
     // Add to watchlist
     const addToWatchlist = async (mediaId) => {
+        if (!currentProfile) {
+            console.error('No profile selected');
+            // Fallback to first profile if available
+            if (profiles.length > 0) {
+                console.log('Using first profile as fallback');
+                const firstProfile = profiles[0];
+                setProfile(firstProfile);
+                try {
+                    console.log('Adding to watchlist:', mediaId, 'for first profile:', firstProfile._id);
+                    const { data } = await ApiService.addToWatchlist(mediaId, firstProfile._id);
+                    console.log('Updated watchlist:', data);
+                    
+                    // Force a complete refresh of watchlist data
+                    const fullWatchlistResponse = await ApiService.getWatchlist(firstProfile._id);
+                    setWatchlist(fullWatchlistResponse.data);
+                    
+                    return true;
+                } catch (error) {
+                    console.error('Error adding to watchlist:', error.response?.data || error);
+                    return false;
+                }
+            }
+            return false;
+        }
+        
         try {
-            console.log('Adding to watchlist:', mediaId);
-            const { data } = await ApiService.addToWatchlist(mediaId);
+            console.log('Adding to watchlist:', mediaId, 'for profile:', currentProfile._id);
+            const { data } = await ApiService.addToWatchlist(mediaId, currentProfile._id);
             console.log('Updated watchlist:', data);
-            setWatchlist(data);
+            
+            // Force a complete refresh of watchlist data
+            const fullWatchlistResponse = await ApiService.getWatchlist(currentProfile._id);
+            setWatchlist(fullWatchlistResponse.data);
+            
             return true;
         } catch (error) {
             console.error('Error adding to watchlist:', error.response?.data || error);
@@ -119,11 +156,40 @@ export const UserProvider = ({ children }) => {
 
     // Remove from watchlist
     const removeFromWatchlist = async (mediaId) => {
+        if (!currentProfile) {
+            console.error('No profile selected');
+            // Fallback to first profile if available
+            if (profiles.length > 0) {
+                console.log('Using first profile as fallback');
+                const firstProfile = profiles[0];
+                setProfile(firstProfile);
+                try {
+                    console.log('Removing from watchlist:', mediaId, 'for first profile:', firstProfile._id);
+                    const { data } = await ApiService.removeFromWatchlist(mediaId, firstProfile._id);
+                    console.log('Updated watchlist after removal:', data);
+                    
+                    // Force a complete refresh of watchlist data
+                    const fullWatchlistResponse = await ApiService.getWatchlist(firstProfile._id);
+                    setWatchlist(fullWatchlistResponse.data);
+                    
+                    return true;
+                } catch (error) {
+                    console.error('Error removing from watchlist:', error.response?.data || error);
+                    return false;
+                }
+            }
+            return false;
+        }
+        
         try {
-            console.log('Removing from watchlist:', mediaId);
-            const { data } = await ApiService.removeFromWatchlist(mediaId);
+            console.log('Removing from watchlist:', mediaId, 'for profile:', currentProfile._id);
+            const { data } = await ApiService.removeFromWatchlist(mediaId, currentProfile._id);
             console.log('Updated watchlist after removal:', data);
-            setWatchlist(data);
+            
+            // Force a complete refresh of watchlist data
+            const fullWatchlistResponse = await ApiService.getWatchlist(currentProfile._id);
+            setWatchlist(fullWatchlistResponse.data);
+            
             return true;
         } catch (error) {
             console.error('Error removing from watchlist:', error.response?.data || error);
@@ -133,12 +199,32 @@ export const UserProvider = ({ children }) => {
 
     // Check if media is in watchlist
     const isInWatchlist = (mediaId) => {
-        return watchlist.some(item => item._id === mediaId);
+        if (!watchlist || !watchlist.length) return false;
+        
+        return watchlist.some(item => {
+            // Check different ways the ID might be represented
+            if (item._id === mediaId) return true;
+            if (item._id && mediaId && item._id.toString() === mediaId.toString()) return true;
+            if (typeof item === 'string' && item === mediaId) return true;
+            return false;
+        });
     };
 
     // Force refresh watchlist - use this when needed externally
     const refetchWatchlist = () => {
         setWatchlistLoaded(false); // This will trigger the useEffect to fetch again
+    };
+
+    // Set current profile
+    const setProfile = (profile) => {
+        sessionStorage.setItem('currentProfile', JSON.stringify(profile));
+        setCurrentProfile(profile);
+        setWatchlistLoaded(false); // Refresh watchlist when profile changes
+    };
+
+    // Get current profile
+    const getCurrentProfile = () => {
+        return currentProfile;
     };
 
     // Login user - this function will store user data with role information
@@ -208,6 +294,7 @@ export const UserProvider = ({ children }) => {
         setProfiles([]);
         setWatchlist([]);
         setWatchlistLoaded(false);
+        setCurrentProfile(null);
     };
 
     // Check if user is admin
@@ -241,7 +328,10 @@ export const UserProvider = ({ children }) => {
             error,
             isAuthenticated: !!user,
             isAdmin,
-            getUserRole
+            getUserRole,
+            currentProfile,
+            setProfile,
+            getCurrentProfile
         }}>
             {children}
         </UserContext.Provider>

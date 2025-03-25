@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -29,17 +29,30 @@ const MoreInfo = ({ open, onClose, media }) => {
   const [selectedSeason, setSelectedSeason] = useState(0);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [localInWatchlist, setLocalInWatchlist] = useState(false);
-  const { user, addToWatchlist, removeFromWatchlist, isInWatchlist, watchlist } = useContext(UserContext);
+  const { user, addToWatchlist, removeFromWatchlist, isInWatchlist, watchlist, currentProfile } = useContext(UserContext);
 
-  // Update local watchlist status when media or watchlist changes
-  useEffect(() => {
+  // Update local watchlist status whenever any relevant state changes
+  const updateWatchlistStatus = useCallback(() => {
     if (media && media._id) {
       const inList = isInWatchlist(media._id);
+      console.log('Updating watchlist status for', media.title, 'is in watchlist:', inList);
       setLocalInWatchlist(inList);
     }
-  }, [media, watchlist, isInWatchlist]);
+  }, [media, isInWatchlist]);
 
-  console.log('MoreInfo media:', media);
+  // Initial load and whenever dependencies change
+  useEffect(() => {
+    updateWatchlistStatus();
+  }, [media, watchlist, isInWatchlist, updateWatchlistStatus, currentProfile]);
+
+  // When the dialog opens, check the status again
+  useEffect(() => {
+    if (open) {
+      updateWatchlistStatus();
+    }
+  }, [open, updateWatchlistStatus]);
+
+  console.log('MoreInfo media:', media, 'localInWatchlist:', localInWatchlist);
 
   if (!media) return null;
 
@@ -75,26 +88,43 @@ const MoreInfo = ({ open, onClose, media }) => {
     }
     
     try {
-      console.log('Watchlist toggle for media:', mediaId);
+      console.log('Watchlist toggle for media:', mediaId, 'Current status:', localInWatchlist);
       
-      if (localInWatchlist) {
-        const success = await removeFromWatchlist(mediaId);
-        if (success) {
+      // Immediately update UI for better responsiveness
+      const newWatchlistStatus = !localInWatchlist;
+      setLocalInWatchlist(newWatchlistStatus);
+      
+      // API call in background
+      if (newWatchlistStatus) {
+        // Adding to watchlist
+        addToWatchlist(mediaId).then(success => {
+          if (!success) {
+            // Revert UI only if the operation failed
+            setLocalInWatchlist(false);
+            console.error('Failed to add to watchlist');
+          }
+        }).catch(error => {
+          // Revert UI on error
           setLocalInWatchlist(false);
-          console.log('Successfully removed from watchlist');
-        } else {
-          console.error('Failed to remove from watchlist');
-        }
+          console.error('Error adding to watchlist:', error);
+        });
       } else {
-        const success = await addToWatchlist(mediaId);
-        if (success) {
+        // Removing from watchlist
+        removeFromWatchlist(mediaId).then(success => {
+          if (!success) {
+            // Revert UI only if the operation failed
+            setLocalInWatchlist(true);
+            console.error('Failed to remove from watchlist');
+          }
+        }).catch(error => {
+          // Revert UI on error
           setLocalInWatchlist(true);
-          console.log('Successfully added to watchlist');
-        } else {
-          console.error('Failed to add to watchlist');
-        }
+          console.error('Error removing from watchlist:', error);
+        });
       }
     } catch (error) {
+      // Revert UI on any other error
+      setLocalInWatchlist(!localInWatchlist);
       console.error('Error toggling watchlist:', error);
     }
   };
@@ -205,9 +235,57 @@ const MoreInfo = ({ open, onClose, media }) => {
                       color: 'white',
                       border: '2px solid rgba(255, 255, 255, 0.5)',
                       '&:hover': { bgcolor: 'rgba(42, 42, 42, 0.9)' },
+                      transition: 'all 0.2s ease-in-out',
+                      width: 42,
+                      height: 42,
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
                     }}
                   >
-                    {localInWatchlist ? <CheckIcon /> : <AddIcon />}
+                    <Box sx={{ 
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      width: 24,
+                      height: 24,
+                      position: 'relative',
+                    }}>
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          top: '50%',
+                          left: '50%',
+                          transform: localInWatchlist 
+                            ? 'translate(-50%, -50%) scale(1)' 
+                            : 'translate(-50%, -50%) scale(0.5)',
+                          opacity: localInWatchlist ? 1 : 0,
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <CheckIcon fontSize="small" />
+                      </Box>
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          top: '50%',
+                          left: '50%',
+                          transform: localInWatchlist 
+                            ? 'translate(-50%, -50%) scale(0.5)' 
+                            : 'translate(-50%, -50%) scale(1)',
+                          opacity: localInWatchlist ? 0 : 1,
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <AddIcon fontSize="small" />
+                      </Box>
+                    </Box>
                   </IconButton>
                 </Tooltip>
               </Box>

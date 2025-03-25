@@ -16,7 +16,7 @@ import mummi from '../assets/images/profile5.png';
 const avatars = [RedAvatar, BlueAvatar, PurpleAvatar, OrangeAvatar, mummi];
 
 export default function ProfileSelection() {
-    const { profiles, setProfiles } = useContext(UserContext);
+    const { user, profiles, setProfiles, setProfile } = useContext(UserContext);
     const [isEditing, setIsEditing] = useState(null);
     const navigate = useNavigate();
 
@@ -36,8 +36,9 @@ export default function ProfileSelection() {
 
     // Handle profile selection
     const handleSelectProfile = (profile) => {
-        // Store the selected profile in sessionStorage instead of localStorage
-        sessionStorage.setItem('currentProfile', JSON.stringify(profile));
+        // Set current profile in context
+        setProfile(profile);
+        
         // Navigate to the home page
         navigate('/home');
     };
