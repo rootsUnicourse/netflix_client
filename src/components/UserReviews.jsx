@@ -17,25 +17,32 @@ const UserReviews = ({ mediaType }) => {
   const [scrollPosition, setScrollPosition] = useState(0);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const rowRef = useRef(null);
-  const { user } = useContext(UserContext);
+  const { user, currentProfile } = useContext(UserContext);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Only fetch reviews if user is logged in
-    if (user) {
+    // Only fetch reviews if user is logged in and has a profile selected
+    if (user && currentProfile) {
       fetchUserReviewedMedia();
     } else {
       setLoading(false);
     }
-  }, [user, mediaType]);
+  }, [user, currentProfile, mediaType]);
 
   const fetchUserReviewedMedia = async () => {
+    if (!currentProfile) {
+      console.error('No profile selected, cannot fetch reviews');
+      setError('Please select a profile to view your reviews');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
-      const response = await getUserReviews();
+      const response = await getUserReviews(currentProfile._id);
       
-      console.log('User reviews response:', response.data);
+      console.log('User reviews response for profile', currentProfile.name, ':', response.data);
       
       // Check if we have data and results
       if (!response.data || !response.data.results || !Array.isArray(response.data.results)) {
@@ -55,7 +62,7 @@ const UserReviews = ({ mediaType }) => {
         reviewedMedia = reviewedMedia.filter(media => media.type === mediaType);
       }
       
-      console.log(`Extracted ${mediaType || 'all'} media from reviews:`, reviewedMedia);
+      console.log(`Extracted ${mediaType || 'all'} media from reviews for profile ${currentProfile.name}:`, reviewedMedia);
       
       setUserReviewedMedia(reviewedMedia);
       setLoading(false);
