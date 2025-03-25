@@ -6,6 +6,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import UserContext from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
+import eventBus, { EVENTS } from '../services/EventBusService';
 
 const UserReviews = ({ mediaType }) => {
   const [userReviewedMedia, setUserReviewedMedia] = useState([]);
@@ -28,6 +29,39 @@ const UserReviews = ({ mediaType }) => {
       setLoading(false);
     }
   }, [user, currentProfile, mediaType]);
+
+  // Listen for review created/updated events
+  useEffect(() => {
+    console.log('Setting up event listeners for review events');
+    
+    // Listen for review creation events
+    const reviewCreatedUnsubscribe = eventBus.on(EVENTS.REVIEW_CREATED, (data) => {
+      console.log('Review created event received:', data);
+      
+      // Check if the event is for the current profile
+      if (data.profileId === currentProfile?._id) {
+        console.log('Refreshing user reviewed media after review created');
+        fetchUserReviewedMedia();
+      }
+    });
+    
+    // Listen for review update events
+    const reviewUpdatedUnsubscribe = eventBus.on(EVENTS.REVIEW_UPDATED, (data) => {
+      console.log('Review updated event received:', data);
+      
+      // Check if the event is for the current profile
+      if (data.profileId === currentProfile?._id) {
+        console.log('Refreshing user reviewed media after review updated');
+        fetchUserReviewedMedia();
+      }
+    });
+    
+    // Clean up event listeners on component unmount
+    return () => {
+      reviewCreatedUnsubscribe();
+      reviewUpdatedUnsubscribe();
+    };
+  }, [currentProfile]);
 
   const fetchUserReviewedMedia = async () => {
     if (!currentProfile) {

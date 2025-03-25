@@ -26,6 +26,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import ApiService, { createReview, getMediaReviews, updateReview } from '../api/api';
 import UserContext from '../context/UserContext';
 import StarIcon from '@mui/icons-material/Star';
+import eventBus, { EVENTS } from '../services/EventBusService';
 
 const Review = ({ open, onClose, mediaIdProp }) => {
   const { mediaId: mediaIdParam } = useParams();
@@ -337,29 +338,73 @@ const Review = ({ open, onClose, mediaIdProp }) => {
       // Update existing review
       response = await updateReview(userReview._id, reviewData);
       console.log('Update review response:', response);
+      
+      // Emit event that review was updated
+      eventBus.emit(EVENTS.REVIEW_UPDATED, {
+        reviewId: userReview._id,
+        mediaId: cleanId,
+        profileId: profileId,
+        updatedReview: response.data.review
+      });
     } else {
       // Create new review
       response = await createReview(reviewData);
       console.log('Create review response:', response);
+      
+      // Immediately add the new review to the reviews list to avoid page refresh
+      if (response.data && response.data.review) {
+        const newReview = {
+          ...response.data.review,
+          profile: currentProfile, // Add profile information to display correctly
+          createdAt: new Date().toISOString()
+        };
+        
+        // Add the new review at the beginning of the list
+        setReviews(prevReviews => [newReview, ...prevReviews]);
+        
+        // Update user review
+        setUserReview(newReview);
+        
+        // Update average rating and total reviews
+        if (response.data.averageRating !== undefined) {
+          setAverageRating(response.data.averageRating);
+        }
+        if (response.data.totalReviews !== undefined) {
+          setTotalReviews(prevTotal => prevTotal + 1);
+        }
+        
+        // Emit event that a new review was created
+        eventBus.emit(EVENTS.REVIEW_CREATED, {
+          review: newReview,
+          media: media,
+          profileId: profileId
+        });
+      }
     }
 
     console.log('Review submitted successfully');
     setSuccess('Review submitted successfully!');
     
-    // Refresh reviews
-    const reviewsResponse = await getMediaReviews(cleanId, page);
-    setReviews(reviewsResponse.data.reviews);
-    setTotalPages(reviewsResponse.data.totalPages);
-    setAverageRating(reviewsResponse.data.averageRating);
-    setTotalReviews(reviewsResponse.data.totalReviews);
-    
-    // Update user review
-    const updatedUserReview = reviewsResponse.data.reviews.find(
-      r => r.profile?._id === profileId
-    );
-    if (updatedUserReview) {
-      setUserReview(updatedUserReview);
-    }
+    // Refresh reviews after a short delay to ensure we have the latest data
+    setTimeout(async () => {
+      try {
+        const reviewsResponse = await getMediaReviews(cleanId, page);
+        setReviews(reviewsResponse.data.reviews);
+        setTotalPages(reviewsResponse.data.totalPages);
+        setAverageRating(reviewsResponse.data.averageRating);
+        setTotalReviews(reviewsResponse.data.totalReviews);
+        
+        // Update user review
+        const updatedUserReview = reviewsResponse.data.reviews.find(
+          r => r.profile?._id === profileId
+        );
+        if (updatedUserReview) {
+          setUserReview(updatedUserReview);
+        }
+      } catch (err) {
+        console.error('Error refreshing reviews:', err);
+      }
+    }, 500);
 
     // If in dialog mode, close the dialog after successful submission
     if (onClose) {
