@@ -55,8 +55,7 @@ const MatchForYou = ({ mediaType }) => {
         const response = await axios.get(`${apiBaseUrl}/media/ai-recommendations`, {
           params: { 
             mediaType: mediaType || 'all',
-            limit: 10,
-            includeSeasonData: true  // Request season data for TV shows
+            limit: 10
           }
           // No withCredentials here
         });
@@ -77,8 +76,7 @@ const MatchForYou = ({ mediaType }) => {
       const response = await axios.get(`${apiBaseUrl}/media/ai-recommendations`, {
         params: { 
           mediaType: mediaType || 'all',
-          limit: 10,
-          includeSeasonData: true  // Request season data for TV shows
+          limit: 10
         },
         withCredentials: true // Include credentials for authentication
       });
@@ -154,15 +152,8 @@ const MatchForYou = ({ mediaType }) => {
       setMediaDetailsLoading(false);
     } catch (error) {
       console.error('Error fetching full media details:', error);
-      // If there's an error, use the basic media data we already have
-      // but keep seasonData if it exists (might be partial)
-      const basicMediaWithSeasonData = {
-        ...media,
-        // If we already have seasonData from before, keep it
-        seasonData: media.seasonData || [] 
-      };
-      
-      setSelectedMedia(basicMediaWithSeasonData);
+      // If there's an error, just use the basic media data we already have
+      setSelectedMedia(media);
       setMoreInfoOpen(true);
       setMediaDetailsLoading(false);
     }

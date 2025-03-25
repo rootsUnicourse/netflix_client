@@ -469,15 +469,6 @@ const MoreInfo = ({ open, onClose, media }) => {
               </Box>
             )}
 
-            {/* Add message when TV show has no episode data */}
-            {media.type === 'tv' && (!media.seasonData || media.seasonData.length === 0) && (
-              <Box sx={{ mt: 4, p: 3, bgcolor: '#2F2F2F', borderRadius: '4px' }}>
-                <Typography variant="h6" sx={{ color: '#aaa', textAlign: 'center' }}>
-                  Episode information is not available for this show.
-                </Typography>
-              </Box>
-            )}
-
             {/* Photos section - moved below the details */}
             <Box sx={{ mt: 4 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
