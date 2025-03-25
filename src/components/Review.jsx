@@ -31,7 +31,7 @@ import eventBus, { EVENTS } from '../services/EventBusService';
 const Review = ({ open, onClose, mediaIdProp }) => {
   const { mediaId: mediaIdParam } = useParams();
   const navigate = useNavigate();
-  const { profiles } = useContext(UserContext);
+  const { profiles, user } = useContext(UserContext);
   // Use the mediaId from props if provided, otherwise use from URL params
   const mediaId = mediaIdProp || mediaIdParam;
   const [media, setMedia] = useState(null);
@@ -50,6 +50,42 @@ const Review = ({ open, onClose, mediaIdProp }) => {
   const [averageRating, setAverageRating] = useState(0);
   const [totalReviews, setTotalReviews] = useState(0);
   const [currentProfile, setCurrentProfile] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check if user is admin
+  useEffect(() => {
+    // Get fresh user data with role information
+    const userData = localStorage.getItem('user');
+    let userFromStorage = null;
+    
+    if (userData) {
+      try {
+        userFromStorage = JSON.parse(userData);
+        console.log('User data from localStorage:', userFromStorage);
+      } catch (err) {
+        console.error('Error parsing user data from localStorage:', err);
+      }
+    }
+    
+    // Use either context user or localStorage user
+    const currentUser = user || userFromStorage;
+    
+    if (currentUser) {
+      console.log('Current user object:', currentUser);
+      console.log('User role from storage or context:', currentUser.role);
+      
+      if (currentUser.role === 'admin') {
+        console.log('Setting user as admin based on role');
+        setIsAdmin(true);
+      } else {
+        console.log('User is not an admin, role:', currentUser.role);
+        setIsAdmin(false);
+      }
+    } else {
+      console.log('No user object available');
+      setIsAdmin(false);
+    }
+  }, [user]);
 
   // Get current profile on component mount
   useEffect(() => {
@@ -137,7 +173,20 @@ const Review = ({ open, onClose, mediaIdProp }) => {
         if (!mediaId) return;
         
         const cleanId = mediaId.split('-')[0];
-        const response = await getMediaReviews(cleanId, page);
+        console.log('About to fetch reviews with admin status:', isAdmin);
+        
+        // Pass includeNonPublic='true' as a string if the user is an admin
+        const includeNonPublicValue = isAdmin ? 'true' : 'false';
+        console.log('Fetching reviews with includeNonPublic:', includeNonPublicValue);
+        
+        const response = await getMediaReviews(cleanId, page, 10, includeNonPublicValue);
+        
+        console.log('Reviews response:', response.data);
+        console.log('Number of reviews received:', response.data.reviews.length);
+        
+        // Check if we got the expected private review
+        const hasPrivateReviews = response.data.reviews.some(r => r.isPublic === false);
+        console.log('Response contains private reviews:', hasPrivateReviews);
         
         setReviews(response.data.reviews);
         setTotalPages(response.data.totalPages);
@@ -161,6 +210,21 @@ const Review = ({ open, onClose, mediaIdProp }) => {
             });
           }
         }
+        
+        // If admin but no private reviews found, try forcing the admin flag
+        if (isAdmin && !hasPrivateReviews) {
+          console.log('Admin user but no private reviews found, retrying with forced admin flag');
+          // Force admin mode by directly specifying 'true' string
+          const retryResponse = await getMediaReviews(cleanId, page, 10, 'true');
+          
+          if (retryResponse.data.reviews.some(r => r.isPublic === false)) {
+            console.log('Retry succeeded, updating reviews with private reviews included');
+            setReviews(retryResponse.data.reviews);
+            setTotalPages(retryResponse.data.totalPages);
+            setAverageRating(retryResponse.data.averageRating);
+            setTotalReviews(retryResponse.data.totalReviews);
+          }
+        }
       } catch (err) {
         console.error('Error fetching reviews:', err);
         setError('Failed to load reviews. Please try again later.');
@@ -170,7 +234,7 @@ const Review = ({ open, onClose, mediaIdProp }) => {
     if (mediaId && (open || (!open && !onClose))) {
       fetchReviews();
     }
-  }, [mediaId, page, currentProfile, open, onClose]);
+  }, [mediaId, page, currentProfile, open, onClose, isAdmin]);
 
   // Reset form when dialog is opened
   useEffect(() => {
@@ -388,7 +452,7 @@ const Review = ({ open, onClose, mediaIdProp }) => {
     // Refresh reviews after a short delay to ensure we have the latest data
     setTimeout(async () => {
       try {
-        const reviewsResponse = await getMediaReviews(cleanId, page);
+        const reviewsResponse = await getMediaReviews(cleanId, page, 10, isAdmin ? 'true' : 'false');
         setReviews(reviewsResponse.data.reviews);
         setTotalPages(reviewsResponse.data.totalPages);
         setAverageRating(reviewsResponse.data.averageRating);
@@ -638,7 +702,8 @@ const Review = ({ open, onClose, mediaIdProp }) => {
               p: 3,
               mb: 2,
               bgcolor: 'rgba(255,255,255,0.05)',
-              borderRadius: 2
+              borderRadius: 2,
+              border: review.isPublic === false ? '1px solid rgba(229,9,20,0.3)' : 'none'
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -655,6 +720,18 @@ const Review = ({ open, onClose, mediaIdProp }) => {
                   {new Date(review.createdAt).toLocaleDateString()}
                 </Typography>
               </Box>
+              {isAdmin && review.isPublic === false && (
+                <Chip
+                  label="Private Review"
+                  size="small"
+                  sx={{
+                    ml: 2,
+                    bgcolor: 'rgba(229,9,20,0.1)',
+                    color: '#E50914',
+                    border: '1px solid #E50914'
+                  }}
+                />
+              )}
             </Box>
 
             <Rating

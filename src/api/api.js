@@ -7,9 +7,14 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    console.log('API Request to:', config.url, 'Token present:', token ? 'Yes' : 'No');
+    console.log('API Request to:', config.url);
+    console.log('Request method:', config.method.toUpperCase());
+    console.log('Request params:', config.params);
+    console.log('Token present:', token ? 'Yes' : 'No');
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('Authorization header set with token');
     } else {
       console.warn('No token found in localStorage for API call to:', config.url);
     }
@@ -52,9 +57,15 @@ export const getFeaturedMedia = async (limit = 8) => api.get('/media', {
 
 // Review operations
 export const createReview = async (reviewData) => api.post('/reviews', reviewData);
-export const getMediaReviews = async (mediaId, page = 1, limit = 10) => api.get(`/reviews/media/${mediaId}`, {
-  params: { page, limit }
-});
+export const getMediaReviews = async (mediaId, page = 1, limit = 10, includeNonPublic = false) => {
+  // Convert the boolean to a string 'true' or 'false' for the query parameter
+  const includeNonPublicStr = includeNonPublic === true || includeNonPublic === 'true' ? 'true' : 'false';
+  console.log('Making API call with includeNonPublic:', includeNonPublicStr);
+  
+  return api.get(`/reviews/media/${mediaId}`, {
+    params: { page, limit, includeNonPublic: includeNonPublicStr }
+  });
+};
 export const getUserReviews = async (profileId, page = 1, limit = 10) => api.get('/reviews/my-reviews', {
   params: { page, limit, profileId }
 });
