@@ -180,7 +180,6 @@ const SystemLogs = () => {
                       <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Level</TableCell>
                       <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Action</TableCell>
                       <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>User</TableCell>
-                      <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>IP</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -218,12 +217,11 @@ const SystemLogs = () => {
                               </Typography>
                             )}
                           </TableCell>
-                          <TableCell>{log.ip || 'N/A'}</TableCell>
                         </TableRow>
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={5} align="center" sx={{ color: 'white' }}>
+                        <TableCell colSpan={4} align="center" sx={{ color: 'white' }}>
                           No logs found
                         </TableCell>
                       </TableRow>
@@ -436,14 +434,6 @@ const SystemLogs = () => {
                   ) : (
                     'System'
                   )}
-                </Typography>
-              </Grid>
-              <Grid item xs={12}>
-                <Typography variant="subtitle1" gutterBottom>
-                  IP Address:
-                </Typography>
-                <Typography variant="body1" gutterBottom>
-                  {selectedLog.ip || 'N/A'}
                 </Typography>
               </Grid>
               <Grid item xs={12}>
