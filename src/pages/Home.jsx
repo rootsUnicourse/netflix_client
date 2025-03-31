@@ -43,10 +43,8 @@ export default function Home() {
                 setIsLoading(true);
                 // Use the new TMDB endpoint
                 const response = await ApiService.getTMDBPopularMedia('all', 4);
-                console.log('API Response:', response);
                 if (response && response.data) {
                     setFeaturedMedia(response.data);
-                    console.log('Featured Media State:', response.data);
                 }
                 setIsLoading(false);
             } catch (error) {
@@ -60,7 +58,6 @@ export default function Home() {
 
     // Add a console log to see when featuredMedia changes
     useEffect(() => {
-        console.log('Featured Media Updated:', featuredMedia);
     }, [featuredMedia]);
 
     // Disable horizontal scrolling

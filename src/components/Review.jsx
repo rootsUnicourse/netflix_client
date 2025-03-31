@@ -61,7 +61,6 @@ const Review = ({ open, onClose, mediaIdProp }) => {
     if (userData) {
       try {
         userFromStorage = JSON.parse(userData);
-        console.log('User data from localStorage:', userFromStorage);
       } catch (err) {
         console.error('Error parsing user data from localStorage:', err);
       }
@@ -71,18 +70,13 @@ const Review = ({ open, onClose, mediaIdProp }) => {
     const currentUser = user || userFromStorage;
     
     if (currentUser) {
-      console.log('Current user object:', currentUser);
-      console.log('User role from storage or context:', currentUser.role);
       
       if (currentUser.role === 'admin') {
-        console.log('Setting user as admin based on role');
         setIsAdmin(true);
       } else {
-        console.log('User is not an admin, role:', currentUser.role);
         setIsAdmin(false);
       }
     } else {
-      console.log('No user object available');
       setIsAdmin(false);
     }
   }, [user]);
@@ -94,16 +88,13 @@ const Review = ({ open, onClose, mediaIdProp }) => {
     
     // If not found in sessionStorage, try localStorage (backward compatibility)
     if (!profileData) {
-      console.log('Profile not found in sessionStorage, checking localStorage');
       profileData = localStorage.getItem('currentProfile');
     }
     
-    console.log('Current profile data retrieved:', profileData);
     
     if (profileData) {
       try {
         const parsed = JSON.parse(profileData);
-        console.log('Parsed profile:', parsed);
         setCurrentProfile(parsed);
       } catch (err) {
         console.error('Error parsing profile data:', err);
@@ -112,7 +103,6 @@ const Review = ({ open, onClose, mediaIdProp }) => {
       console.error('No profile found in sessionStorage or localStorage');
       // If no profile in storage but profiles are available from context, use the first one
       if (profiles && profiles.length > 0) {
-        console.log('Using first profile from context:', profiles[0]);
         setCurrentProfile(profiles[0]);
         sessionStorage.setItem('currentProfile', JSON.stringify(profiles[0]));
       }
@@ -137,7 +127,6 @@ const Review = ({ open, onClose, mediaIdProp }) => {
   useEffect(() => {
     const fetchMedia = async () => {
       try {
-        console.log('Fetching media with ID:', mediaId);
         
         // Make sure we have a valid ID
         if (!mediaId) {
@@ -149,10 +138,8 @@ const Review = ({ open, onClose, mediaIdProp }) => {
         
         // Remove any suffix that might have been added (like -featured or -trending)
         const cleanId = mediaId.split('-')[0];
-        console.log('Using clean ID for fetching:', cleanId);
         
         const response = await ApiService.getMediaById(cleanId);
-        console.log('Media data received:', response.data);
         setMedia(response.data);
         setLoading(false);
       } catch (err) {
@@ -173,20 +160,15 @@ const Review = ({ open, onClose, mediaIdProp }) => {
         if (!mediaId) return;
         
         const cleanId = mediaId.split('-')[0];
-        console.log('About to fetch reviews with admin status:', isAdmin);
         
         // Pass includeNonPublic='true' as a string if the user is an admin
         const includeNonPublicValue = isAdmin ? 'true' : 'false';
-        console.log('Fetching reviews with includeNonPublic:', includeNonPublicValue);
         
         const response = await getMediaReviews(cleanId, page, 10, includeNonPublicValue);
         
-        console.log('Reviews response:', response.data);
-        console.log('Number of reviews received:', response.data.reviews.length);
         
         // Check if we got the expected private review
         const hasPrivateReviews = response.data.reviews.some(r => r.isPublic === false);
-        console.log('Response contains private reviews:', hasPrivateReviews);
         
         setReviews(response.data.reviews);
         setTotalPages(response.data.totalPages);
@@ -195,13 +177,11 @@ const Review = ({ open, onClose, mediaIdProp }) => {
         
         // Get current profile from state
         if (currentProfile?._id) {
-          console.log('Looking for reviews by profile ID:', currentProfile._id);
           const userReview = response.data.reviews.find(
             r => r.profile?._id === currentProfile._id
           );
           
           if (userReview) {
-            console.log('Found existing user review:', userReview);
             setUserReview(userReview);
             setReview({
               rating: userReview.rating,
@@ -213,12 +193,10 @@ const Review = ({ open, onClose, mediaIdProp }) => {
         
         // If admin but no private reviews found, try forcing the admin flag
         if (isAdmin && !hasPrivateReviews) {
-          console.log('Admin user but no private reviews found, retrying with forced admin flag');
           // Force admin mode by directly specifying 'true' string
           const retryResponse = await getMediaReviews(cleanId, page, 10, 'true');
           
           if (retryResponse.data.reviews.some(r => r.isPublic === false)) {
-            console.log('Retry succeeded, updating reviews with private reviews included');
             setReviews(retryResponse.data.reviews);
             setTotalPages(retryResponse.data.totalPages);
             setAverageRating(retryResponse.data.averageRating);
@@ -322,8 +300,6 @@ const Review = ({ open, onClose, mediaIdProp }) => {
         const sessionProfile = sessionStorage.getItem('currentProfile');
         const localProfile = localStorage.getItem('currentProfile');
         
-        console.log('Session profile:', sessionProfile);
-        console.log('Local profile:', localProfile);
         
         let profileData = sessionProfile || localProfile;
         
@@ -331,7 +307,6 @@ const Review = ({ open, onClose, mediaIdProp }) => {
           try {
             const parsed = JSON.parse(profileData);
             setCurrentProfile(parsed);
-            console.log('Retrieved profile data:', parsed);
             
             if (!parsed._id) {
               throw new Error('Invalid profile data - no ID');
@@ -355,7 +330,6 @@ const Review = ({ open, onClose, mediaIdProp }) => {
       
       // First, check if there's a response with data
       if (err.response && err.response.data) {
-        console.log('Response error data:', err.response.data);
         setError(err.response.data.message || 'Failed to submit review');
       } else if (err.message) {
         // Otherwise, use the error message directly
@@ -376,7 +350,6 @@ const Review = ({ open, onClose, mediaIdProp }) => {
     
     // Remove any suffix that might have been added (like -featured or -trending)
     const cleanId = mediaId.split('-')[0];
-    console.log('Using clean ID for review submission:', cleanId);
 
     const reviewData = {
       mediaId: cleanId,
@@ -386,7 +359,6 @@ const Review = ({ open, onClose, mediaIdProp }) => {
       isPublic: review.isPublic
     };
     
-    console.log('Review data being submitted:', reviewData);
     
     // Validate required fields
     if (!reviewData.mediaId || !reviewData.content) {
@@ -401,7 +373,6 @@ const Review = ({ open, onClose, mediaIdProp }) => {
     if (userReview) {
       // Update existing review
       response = await updateReview(userReview._id, reviewData);
-      console.log('Update review response:', response);
       
       // Emit event that review was updated
       eventBus.emit(EVENTS.REVIEW_UPDATED, {
@@ -413,7 +384,6 @@ const Review = ({ open, onClose, mediaIdProp }) => {
     } else {
       // Create new review
       response = await createReview(reviewData);
-      console.log('Create review response:', response);
       
       // Immediately add the new review to the reviews list to avoid page refresh
       if (response.data && response.data.review) {
@@ -446,7 +416,6 @@ const Review = ({ open, onClose, mediaIdProp }) => {
       }
     }
 
-    console.log('Review submitted successfully');
     setSuccess('Review submitted successfully!');
     
     // Refresh reviews after a short delay to ensure we have the latest data

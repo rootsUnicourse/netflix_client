@@ -64,21 +64,16 @@ const TopRatedMedia = ({ mediaType }) => {
       setLoading(true);
       setError(null);
       
-      console.log('Fetching top rated media with type:', mediaType);
       const response = await getTopRatedMedia(15, mediaType); // Pass the media type
       
-      console.log('Top rated media response:', response);
-      console.log('Top rated media response data:', response.data);
       
       // Check for different response formats
       let mediaData = [];
       if (response.data?.results && Array.isArray(response.data.results)) {
         // Handle {results: [...]} format
-        console.log('Found results array in response data');
         mediaData = response.data.results;
       } else if (Array.isArray(response.data)) {
         // Handle direct array format
-        console.log('Response data is directly an array');
         mediaData = response.data;
       } else {
         console.error('Unexpected response format:', response.data);
@@ -92,13 +87,6 @@ const TopRatedMedia = ({ mediaType }) => {
         mediaData = mediaData.filter(item => item.type === mediaType);
       }
       
-      console.log('Processed media data:', mediaData);
-      console.log('Media data length:', mediaData.length);
-      
-      // Log image paths for debugging
-      mediaData.forEach(item => {
-        console.log(`Media: ${item.title}, posterPath: ${item.posterPath}, backdropPath: ${item.backdropPath}`);
-      });
       
       setTopRatedMedia(mediaData);
       setLoading(false);
@@ -125,13 +113,11 @@ const TopRatedMedia = ({ mediaType }) => {
       // Set loading state for media details
       setMediaDetailsLoading(true);
       
-      console.log('Fetching full media details for:', media._id);
       
       // Fetch full media details
       const response = await getMediaById(media._id);
       const fullMediaData = response.data;
       
-      console.log('Full media details received:', fullMediaData);
       
       // Set the selected media with full details and open modal
       setSelectedMedia(fullMediaData);

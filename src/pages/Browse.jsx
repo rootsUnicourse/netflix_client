@@ -225,9 +225,6 @@ export default function Browse() {
                         }
                     });
                     
-                    console.log('Unique genres found:', [...uniqueGenres]);
-                    console.log('Unique languages found:', [...uniqueLanguages]);
-                    console.log('Unique ratings found:', [...uniqueRatings]);
                     
                     // Update filter options with actual data from API
                     // Keep 'all' option at the top
@@ -324,8 +321,7 @@ export default function Browse() {
                             return genreMatch && languageMatch && ratingMatch;
                         });
                         
-                        console.log(`Filtering applied: ${response.data.results.length} items filtered to ${filteredResults.length} items`);
-                        console.log('Filter criteria:', { genreFilter, languageFilter, ageRatingFilter });
+                       
                     } else {
                         // If all filters are 'all', use all results
                         console.log('All filters set to "All" - showing all media');
@@ -405,7 +401,6 @@ export default function Browse() {
     };
 
     const handleMediaClick = (media) => {
-        console.log('Media clicked:', media);
         // Prepare media object for MoreInfo component
         const preparedMedia = prepareMediaForMoreInfo(media);
         // Open MoreInfo component
@@ -451,7 +446,6 @@ export default function Browse() {
             prepared.seasonData = [];
         }
         
-        console.log('Prepared media for MoreInfo:', prepared);
         return prepared;
     };
     

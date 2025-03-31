@@ -7,14 +7,8 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    console.log('API Request to:', config.url);
-    console.log('Request method:', config.method.toUpperCase());
-    console.log('Request params:', config.params);
-    console.log('Token present:', token ? 'Yes' : 'No');
-    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('Authorization header set with token');
     } else {
       console.warn('No token found in localStorage for API call to:', config.url);
     }
@@ -29,7 +23,6 @@ api.interceptors.request.use(
 // Add response interceptor
 api.interceptors.response.use(
   (response) => {
-    console.log('API Response from:', response.config.url, 'Status:', response.status);
     return response;
   },
   (error) => {
@@ -60,7 +53,6 @@ export const createReview = async (reviewData) => api.post('/reviews', reviewDat
 export const getMediaReviews = async (mediaId, page = 1, limit = 10, includeNonPublic = false) => {
   // Convert the boolean to a string 'true' or 'false' for the query parameter
   const includeNonPublicStr = includeNonPublic === true || includeNonPublic === 'true' ? 'true' : 'false';
-  console.log('Making API call with includeNonPublic:', includeNonPublicStr);
   
   return api.get(`/reviews/media/${mediaId}`, {
     params: { page, limit, includeNonPublic: includeNonPublicStr }
@@ -95,13 +87,11 @@ export const getAnimationMedia = async (limit = 15) => api.get('/media/animation
 
 // Get media by specific TMDB IDs
 export const getMediaByTmdbIds = async (ids) => {
-  console.log('Fetching media with TMDB IDs:', ids);
   return api.post('/media/by-tmdb-ids', { ids });
 };
 
 // Get top rated media by users
 export const getTopRatedMedia = async (limit = 10, mediaType = null) => {
-  console.log(`Calling top-rated-by-users endpoint with limit=${limit}, mediaType=${mediaType}`);
   try {
     // First try the primary endpoint
     return await api.get('/media/top-rated-by-users', {
@@ -111,7 +101,6 @@ export const getTopRatedMedia = async (limit = 10, mediaType = null) => {
     console.error('Error with top-rated-by-users endpoint:', error.message);
     
     // Fallback to the reviews top-rated endpoint if the first one fails
-    console.log('Trying fallback to /reviews/top-rated endpoint');
     return await api.get('/reviews/top-rated', {
       params: { limit, mediaType }
     });
@@ -175,7 +164,6 @@ export const getMixedMedia = async (count = 4) => {
 
 // Get action media
 export const getActionMedia = async (limit = 10) => {
-  console.log(`Calling action genre endpoint with limit=${limit}`);
   return api.get('/media', {
     params: { 
       genres: ['Action', 'Action & Adventure'],

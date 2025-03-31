@@ -37,7 +37,6 @@ const NewAndPopular = () => {
     observer.current = new IntersectionObserver(entries => {
       // If the last element is visible and we have more items to load
       if (entries[0].isIntersecting && hasMore) {
-        console.log('Last element is visible, loading more media...');
         setPage(prevPage => prevPage + 1);
       }
     }, {
@@ -65,7 +64,6 @@ const NewAndPopular = () => {
           order: 'desc',
         };
         
-        console.log(`Fetching new & popular media, page ${page}...`, params);
         const response = await getMedia(params);
         
         if (response.data && response.data.results) {

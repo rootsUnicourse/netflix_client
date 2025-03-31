@@ -62,18 +62,15 @@ const AnimationMedia = ({ mediaType }) => {
                item.genres.some(genre => genre === 'Animation');
       });
       
-      console.log(`Found ${animationContent.length} animation items from genre filtering`);
       
       // If mediaType is specified, filter by that too
       if (mediaType) {
         animationContent = animationContent.filter(item => item.type === mediaType);
-        console.log(`Filtered to ${animationContent.length} ${mediaType} animation items`);
       }
       
       // If not enough items found, try a more direct API call specifically for animation genre
       if (animationContent.length < 10) {
         try {
-          console.log('Not enough animation content, trying direct genre query');
           const genreResponse = await ApiService.getMedia({
             genres: 'Animation', // Directly specify Animation genre
             limit: 30,
@@ -85,7 +82,6 @@ const AnimationMedia = ({ mediaType }) => {
             const existingIds = new Set(animationContent.map(item => item._id));
             const newItems = genreResponse.data.results.filter(item => !existingIds.has(item._id));
             
-            console.log(`Found ${newItems.length} additional animation items from direct query`);
             animationContent = [...animationContent, ...newItems];
           }
         } catch (error) {
@@ -106,12 +102,10 @@ const AnimationMedia = ({ mediaType }) => {
           };
           animationContent.push(duplicatedItem);
         }
-        console.log(`Added ${itemsNeeded} duplicated items to reach 10 total items`);
       }
       
       // Limit to 10 items
       const finalMediaData = animationContent.slice(0, 10);
-      console.log('Final animation media count:', finalMediaData.length);
       
       setAnimationMedia(finalMediaData);
       setLoading(false);
@@ -138,20 +132,16 @@ const AnimationMedia = ({ mediaType }) => {
       // Set loading state for media details
       setMediaDetailsLoading(true);
       
-      console.log('Fetching full media details for:', media._id);
       
       // Fetch full media details
       const response = await ApiService.getMediaById(media._id);
       const fullMediaData = response.data;
-      
-      console.log('Full media details received:', fullMediaData);
       
       // Set the selected media with full details and open modal
       setSelectedMedia(fullMediaData);
       setMoreInfoOpen(true);
       setMediaDetailsLoading(false);
     } catch (error) {
-      console.error('Error fetching full media details:', error);
       // If there's an error, just use the basic media data we already have
       setSelectedMedia(media);
       setMoreInfoOpen(true);

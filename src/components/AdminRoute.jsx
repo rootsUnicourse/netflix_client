@@ -37,18 +37,15 @@ const AdminRoute = () => {
 
     // Check if user is logged in
     if (!user) {
-        console.log('AdminRoute: No user found, redirecting to login');
         return <Navigate to="/" replace />;
     }
 
     // If user doesn't have admin role, redirect to home
     if (!isAdmin()) {
-        console.log('AdminRoute: User is not admin, redirecting to home');
         return <Navigate to="/home" replace />;
     }
 
     // User is admin, render the requested route
-    console.log('AdminRoute: User is admin, rendering protected admin content');
     return <Outlet />;
 };
 

@@ -43,7 +43,6 @@ const ActionMedia = ({ mediaType }) => {
       setLoading(true);
       setError(null);
       
-      console.log(`Fetching action media from database with mediaType: ${mediaType || 'all'}`);
       
       // Get media with specific filters
       const response = await ApiService.getMedia({
@@ -52,7 +51,6 @@ const ActionMedia = ({ mediaType }) => {
         genres: ['Action', 'Action & Adventure'] // Filter by action genres
       });
       
-      console.log('Raw media response:', response);
       
       if (!response.data || !response.data.results) {
         console.error('Unexpected response format:', response);
@@ -65,7 +63,6 @@ const ActionMedia = ({ mediaType }) => {
       let actionContent = response.data.results
         .filter(item => {
           // Log each item's genres for debugging
-          console.log(`Checking genres for ${item.title}:`, item.genres);
           
           // Check if genres array exists and contains 'Action'
           return item.genres && 
@@ -76,8 +73,6 @@ const ActionMedia = ({ mediaType }) => {
         })
         .slice(0, 10); // Limit to 10 items
       
-      console.log(`Found ${actionContent.length} action items from genre filtering`);
-      console.log('Action content:', actionContent);
       
       if (actionContent.length > 0) {
         setActionMedia(actionContent);
@@ -122,16 +117,13 @@ const ActionMedia = ({ mediaType }) => {
       // Set loading state for media details
       setMediaDetailsLoading(true);
       
-      console.log('Media clicked:', media);
       
       // Fetch full media details
-      console.log('Fetching full media details for:', media._id);
       
       // Fetch full media details
       const response = await ApiService.getMediaById(media._id);
       const fullMediaData = response.data;
       
-      console.log('Full media details received:', fullMediaData);
       
       // Set the selected media with full details and open modal
       setSelectedMedia(fullMediaData);

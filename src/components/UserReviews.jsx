@@ -32,26 +32,21 @@ const UserReviews = ({ mediaType }) => {
 
   // Listen for review created/updated events
   useEffect(() => {
-    console.log('Setting up event listeners for review events');
     
     // Listen for review creation events
     const reviewCreatedUnsubscribe = eventBus.on(EVENTS.REVIEW_CREATED, (data) => {
-      console.log('Review created event received:', data);
       
       // Check if the event is for the current profile
       if (data.profileId === currentProfile?._id) {
-        console.log('Refreshing user reviewed media after review created');
         fetchUserReviewedMedia();
       }
     });
     
     // Listen for review update events
     const reviewUpdatedUnsubscribe = eventBus.on(EVENTS.REVIEW_UPDATED, (data) => {
-      console.log('Review updated event received:', data);
       
       // Check if the event is for the current profile
       if (data.profileId === currentProfile?._id) {
-        console.log('Refreshing user reviewed media after review updated');
         fetchUserReviewedMedia();
       }
     });
@@ -76,7 +71,6 @@ const UserReviews = ({ mediaType }) => {
       setError(null);
       const response = await getUserReviews(currentProfile._id);
       
-      console.log('User reviews response for profile', currentProfile.name, ':', response.data);
       
       // Check if we have data and results
       if (!response.data || !response.data.results || !Array.isArray(response.data.results)) {
@@ -96,7 +90,6 @@ const UserReviews = ({ mediaType }) => {
         reviewedMedia = reviewedMedia.filter(media => media.type === mediaType);
       }
       
-      console.log(`Extracted ${mediaType || 'all'} media from reviews for profile ${currentProfile.name}:`, reviewedMedia);
       
       setUserReviewedMedia(reviewedMedia);
       setLoading(false);
@@ -125,13 +118,11 @@ const UserReviews = ({ mediaType }) => {
       
       // Remove any suffix that might have been added (like -featured or -trending)
       const cleanId = media._id.split('-')[0];
-      console.log('Fetching full media details for:', cleanId);
       
       // Fetch full media details
       const response = await getMediaById(cleanId);
       const fullMediaData = response.data;
       
-      console.log('Full media details received:', fullMediaData);
       
       // Set the selected media with full details and open modal
       setSelectedMedia(fullMediaData);

@@ -51,7 +51,6 @@ const MatchForYou = ({ mediaType }) => {
         const response = await ApiService.getAIRecommendations(mediaType || 'all', 10);
         
         if (response.data && response.data.results) {
-          console.log('AI recommendations received (without credentials):', response.data.results.length);
           setMatchedMedia(response.data.results);
           setLoading(false);
           setTimeout(checkScrollability, 100);
@@ -72,7 +71,6 @@ const MatchForYou = ({ mediaType }) => {
         return;
       }
       
-      console.log('AI recommendations received (with credentials):', response.data.results.length);
       setMatchedMedia(response.data.results);
       setLoading(false);
       
@@ -83,7 +81,6 @@ const MatchForYou = ({ mediaType }) => {
       
       // Fall back to trending media if AI recommendations fail
       try {
-        console.log('Falling back to trending media...');
         const response = await ApiService.getMedia({
           trending: true,
           mediaType: mediaType || 'all',
@@ -91,7 +88,6 @@ const MatchForYou = ({ mediaType }) => {
         });
         
         if (response.data && response.data.results) {
-          console.log('Trending media received as fallback:', response.data.results.length);
           setMatchedMedia(response.data.results);
           setLoading(false);
           setTimeout(checkScrollability, 100);
@@ -119,13 +115,11 @@ const MatchForYou = ({ mediaType }) => {
       // Set loading state for media details
       setMediaDetailsLoading(true);
       
-      console.log('Fetching full media details for:', media._id);
       
       // Fetch full media details
       const response = await ApiService.getMediaById(media._id);
       const fullMediaData = response.data;
       
-      console.log('Full media details received:', fullMediaData);
       
       // Set the selected media with full details and open modal
       setSelectedMedia(fullMediaData);

@@ -12,16 +12,13 @@ const CoverPhotoSection = ({ featuredMediaList = [] }) => {
   
   // Set initial displayed media when featuredMediaList changes
   useEffect(() => {
-    console.log('CoverPhotoSection received featuredMediaList:', featuredMediaList);
     if (featuredMediaList && featuredMediaList.length > 0) {
-      console.log('Setting initial displayed media:', featuredMediaList[0]);
       setDisplayedMedia(featuredMediaList[0]);
     }
   }, [featuredMediaList]);
 
   // Add effect to log displayedMedia changes
   useEffect(() => {
-    console.log('Displayed Media Updated:', displayedMedia);
   }, [displayedMedia]);
 
   // Rotate through featured media every 4 seconds
@@ -81,10 +78,8 @@ const CoverPhotoSection = ({ featuredMediaList = [] }) => {
     return null;
   }
 
-  console.log('Rendering CoverPhotoSection with backdropPath:', displayedMedia.backdropPath);
 
   const backgroundImage = `linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.3) 100%), url(${displayedMedia.backdropPath})`;
-  console.log('Background Image URL:', backgroundImage);
 
   return (
     <Box

@@ -48,7 +48,6 @@ export default function TVShows() {
 
                 if (response.data.results && response.data.results.length > 0) {
                     setFeaturedMedia(response.data.results);
-                    console.log('Fetched newest TV shows:', response.data.results);
                 }
                 setIsLoading(false);
             } catch (error) {
