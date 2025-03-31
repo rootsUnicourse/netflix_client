@@ -256,6 +256,23 @@ export const getSystemLogs = async (params) => {
   return api.get('/admin/logs', { params });
 };
 
+// TMDB Media operations
+export const getTMDBMediaDetails = async (mediaType, tmdbId) => {
+  return api.get(`/media/tmdb/${mediaType}/${tmdbId}`);
+};
+
+export const getTMDBFeaturedMedia = async (mediaType = 'all', limit = 4) => {
+  return api.get('/media/tmdb/featured', {
+    params: { mediaType, limit }
+  });
+};
+
+export const getTMDBPopularMedia = async (mediaType = 'all', limit = 4) => {
+  return api.get('/tmdb/popular', {
+    params: { mediaType, limit }
+  });
+};
+
 const ApiService = {
   signUp,
   login,
@@ -287,6 +304,9 @@ const ApiService = {
   checkMediaExists,
   addMedia,
   getSystemLogs,
+  getTMDBMediaDetails,
+  getTMDBFeaturedMedia,
+  getTMDBPopularMedia,
 };
 
 export default ApiService;

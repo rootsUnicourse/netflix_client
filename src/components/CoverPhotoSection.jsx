@@ -3,25 +3,30 @@ import { Box, Typography, Button } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import MoreInfo from './MoreInfo';
 
-const CoverPhotoSection = ({ featuredMediaList = [], featured }) => {
-  const [displayedMedia, setDisplayedMedia] = useState(featured);
+const CoverPhotoSection = ({ featuredMediaList = [] }) => {
+  const [displayedMedia, setDisplayedMedia] = useState(null);
   const [fadeIn, setFadeIn] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [moreInfoOpen, setMoreInfoOpen] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState(null);
   
-  // Initialize with provided media list or featured item
+  // Set initial displayed media when featuredMediaList changes
   useEffect(() => {
-    if (featured) {
-      setDisplayedMedia(featured);
-    } else if (featuredMediaList && featuredMediaList.length > 0) {
+    console.log('CoverPhotoSection received featuredMediaList:', featuredMediaList);
+    if (featuredMediaList && featuredMediaList.length > 0) {
+      console.log('Setting initial displayed media:', featuredMediaList[0]);
       setDisplayedMedia(featuredMediaList[0]);
     }
-  }, [featured, featuredMediaList]);
+  }, [featuredMediaList]);
+
+  // Add effect to log displayedMedia changes
+  useEffect(() => {
+    console.log('Displayed Media Updated:', displayedMedia);
+  }, [displayedMedia]);
 
   // Rotate through featured media every 4 seconds
   useEffect(() => {
-    if (!featuredMediaList || featuredMediaList.length <= 1 || featured || moreInfoOpen) return;
+    if (!featuredMediaList || featuredMediaList.length <= 1 || moreInfoOpen) return;
     
     const interval = setInterval(() => {
       setCurrentIndex((prevIndex) => {
@@ -32,7 +37,7 @@ const CoverPhotoSection = ({ featuredMediaList = [], featured }) => {
     }, 4000);
     
     return () => clearInterval(interval);
-  }, [featuredMediaList, featured, moreInfoOpen]);
+  }, [featuredMediaList, moreInfoOpen]);
 
   // Handle media change with fade effect
   const handleMediaChange = (newMedia) => {
@@ -45,7 +50,7 @@ const CoverPhotoSection = ({ featuredMediaList = [], featured }) => {
     setTimeout(() => {
       setDisplayedMedia(newMedia);
       setFadeIn(true);
-    }, 300); // This should match the transition duration
+    }, 300);
   };
 
   // Handle manual navigation to a specific item
@@ -67,7 +72,19 @@ const CoverPhotoSection = ({ featuredMediaList = [], featured }) => {
     setMoreInfoOpen(false);
   };
 
-  if (!displayedMedia) return null;
+  if (!displayedMedia || !featuredMediaList.length) {
+    console.log('CoverPhotoSection not rendering:', { 
+      displayedMedia, 
+      featuredMediaListLength: featuredMediaList.length,
+      featuredMediaList 
+    });
+    return null;
+  }
+
+  console.log('Rendering CoverPhotoSection with backdropPath:', displayedMedia.backdropPath);
+
+  const backgroundImage = `linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.3) 100%), url(${displayedMedia.backdropPath})`;
+  console.log('Background Image URL:', backgroundImage);
 
   return (
     <Box
@@ -79,7 +96,7 @@ const CoverPhotoSection = ({ featuredMediaList = [], featured }) => {
         flexDirection: 'column',
         justifyContent: 'flex-end',
         padding: '0 0 10% 4%',
-        backgroundImage: `linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.3) 100%), url(${displayedMedia.backdropPath})`,
+        backgroundImage: backgroundImage,
         backgroundSize: 'cover',
         backgroundPosition: 'center top',
         transition: 'opacity 0.3s ease-in-out',

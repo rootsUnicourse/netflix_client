@@ -41,16 +41,12 @@ export default function Home() {
         const fetchFeaturedMedia = async () => {
             try {
                 setIsLoading(true);
-                // Fetch newest media items
-                const response = await ApiService.getMedia({
-                    limit: 4,
-                    sort: 'releaseDate',  // Sort by release date instead of popularity
-                    order: 'desc'         // Descending order (newest first)
-                });
-
-                if (response.data.results && response.data.results.length > 0) {
-                    setFeaturedMedia(response.data.results);
-                    console.log('Fetched newest media:', response.data.results);
+                // Use the new TMDB endpoint
+                const response = await ApiService.getTMDBPopularMedia('all', 4);
+                console.log('API Response:', response);
+                if (response && response.data) {
+                    setFeaturedMedia(response.data);
+                    console.log('Featured Media State:', response.data);
                 }
                 setIsLoading(false);
             } catch (error) {
@@ -61,6 +57,11 @@ export default function Home() {
 
         fetchFeaturedMedia();
     }, []);
+
+    // Add a console log to see when featuredMedia changes
+    useEffect(() => {
+        console.log('Featured Media Updated:', featuredMedia);
+    }, [featuredMedia]);
 
     // Disable horizontal scrolling
     useEffect(() => {
@@ -95,7 +96,10 @@ export default function Home() {
 
             {/* Cover Photo Section */}
             {!isLoading && featuredMedia.length > 0 && (
-                <CoverPhotoSection featuredMediaList={featuredMedia} />
+                <CoverPhotoSection 
+                    featuredMediaList={featuredMedia} 
+                    key={featuredMedia[0]?.id} // Add key to force re-render when data changes
+                />
             )}
 
             {/* Main Content Container */}

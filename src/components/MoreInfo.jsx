@@ -23,13 +23,35 @@ import CheckIcon from '@mui/icons-material/Check';
 import { useNavigate } from 'react-router-dom';
 import Review from './Review';
 import UserContext from '../context/UserContext';
+import ApiService from '../api/api';
 
 const MoreInfo = ({ open, onClose, media }) => {
   const navigate = useNavigate();
   const [selectedSeason, setSelectedSeason] = useState(0);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [localInWatchlist, setLocalInWatchlist] = useState(false);
+  const [fullMediaDetails, setFullMediaDetails] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { user, addToWatchlist, removeFromWatchlist, isInWatchlist, watchlist, currentProfile } = useContext(UserContext);
+
+  // Fetch full media details when the dialog opens
+  useEffect(() => {
+    const fetchMediaDetails = async () => {
+      if (open && media && media.tmdbId) {
+        try {
+          setIsLoading(true);
+          const response = await ApiService.getTMDBMediaDetails(media.type, media.tmdbId);
+          setFullMediaDetails(response.data);
+        } catch (error) {
+          console.error('Error fetching media details:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchMediaDetails();
+  }, [open, media]);
 
   // Update local watchlist status whenever any relevant state changes
   const updateWatchlistStatus = useCallback(() => {
@@ -51,16 +73,13 @@ const MoreInfo = ({ open, onClose, media }) => {
     }
   }, [open, updateWatchlistStatus]);
 
-  if (!media) return null;
+  if (!media || !fullMediaDetails) return null;
 
   const handleReviewClick = () => {
-    // Check if media._id is a valid MongoDB ID
     if (!media._id) {
       console.error('Media ID is missing or invalid');
       return;
     }
-    
-    // Open the review modal instead of navigating
     setReviewModalOpen(true);
   };
 
@@ -70,7 +89,6 @@ const MoreInfo = ({ open, onClose, media }) => {
 
   const handleWatchlistToggle = async () => {
     if (!user) {
-      // Handle not logged in scenario
       console.error('User needs to be logged in to use watchlist');
       return;
     }
@@ -83,40 +101,31 @@ const MoreInfo = ({ open, onClose, media }) => {
     }
     
     try {
-      // Immediately update UI for better responsiveness
       const newWatchlistStatus = !localInWatchlist;
       setLocalInWatchlist(newWatchlistStatus);
       
-      // API call in background
       if (newWatchlistStatus) {
-        // Adding to watchlist
         addToWatchlist(mediaId).then(success => {
           if (!success) {
-            // Revert UI only if the operation failed
             setLocalInWatchlist(false);
             console.error('Failed to add to watchlist');
           }
         }).catch(error => {
-          // Revert UI on error
           setLocalInWatchlist(false);
           console.error('Error adding to watchlist:', error);
         });
       } else {
-        // Removing from watchlist
         removeFromWatchlist(mediaId).then(success => {
           if (!success) {
-            // Revert UI only if the operation failed
             setLocalInWatchlist(true);
             console.error('Failed to remove from watchlist');
           }
         }).catch(error => {
-          // Revert UI on error
           setLocalInWatchlist(true);
           console.error('Error removing from watchlist:', error);
         });
       }
     } catch (error) {
-      // Revert UI on any other error
       setLocalInWatchlist(!localInWatchlist);
       console.error('Error toggling watchlist:', error);
     }
@@ -138,10 +147,10 @@ const MoreInfo = ({ open, onClose, media }) => {
 
   // Get episodes for the selected season
   const getEpisodes = () => {
-    if (!media.seasonData || !media.seasonData[selectedSeason] || !media.seasonData[selectedSeason].episodes) {
+    if (!fullMediaDetails.seasonData || !fullMediaDetails.seasonData[selectedSeason] || !fullMediaDetails.seasonData[selectedSeason].episodes) {
       return [];
     }
-    return media.seasonData[selectedSeason].episodes;
+    return fullMediaDetails.seasonData[selectedSeason].episodes;
   };
 
   return (
@@ -158,7 +167,7 @@ const MoreInfo = ({ open, onClose, media }) => {
             color: 'white',
             borderRadius: '8px',
             overflow: 'hidden',
-            maxHeight: '90vh', // Limit maximum height to 90% of viewport height
+            maxHeight: '90vh',
           }
         }}
       >
@@ -168,7 +177,7 @@ const MoreInfo = ({ open, onClose, media }) => {
             sx={{
               height: { xs: '300px', sm: '350px', md: '400px' },
               width: '100%',
-              backgroundImage: `linear-gradient(to top, rgba(24,24,24,1) 0%, rgba(24,24,24,0) 50%), url(${media.backdropPath})`,
+              backgroundImage: `linear-gradient(to top, rgba(24,24,24,1) 0%, rgba(24,24,24,0) 50%), url(${fullMediaDetails.backdropPath})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center top',
               position: 'relative',
@@ -200,7 +209,7 @@ const MoreInfo = ({ open, onClose, media }) => {
               }}
             >
               <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 2 }}>
-                {media.title}
+                {fullMediaDetails.title}
               </Typography>
 
               <Box sx={{ display: 'flex', gap: 2 }}>
@@ -310,13 +319,13 @@ const MoreInfo = ({ open, onClose, media }) => {
                 {/* Details row */}
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
                   <Typography sx={{ color: '#46d369', fontWeight: 'bold', mr: 1 }}>
-                    {Math.round(media.voteAverage * 10)}% Match
+                    {Math.round(fullMediaDetails.voteAverage * 10)}% Match
                   </Typography>
                   <Typography sx={{ color: '#777', mr: 1 }}>
-                    {formatYear(media.releaseDate)}
+                    {formatYear(fullMediaDetails.releaseDate)}
                   </Typography>
                   <Chip
-                    label={media.maturityRating || 'Not Rated'}
+                    label={fullMediaDetails.maturityRating || 'Not Rated'}
                     size="small"
                     sx={{
                       bgcolor: 'transparent',
@@ -326,20 +335,20 @@ const MoreInfo = ({ open, onClose, media }) => {
                       mr: 1
                     }}
                   />
-                  {media.type === 'movie' ? (
+                  {fullMediaDetails.type === 'movie' ? (
                     <Typography sx={{ color: '#777' }}>
-                      {formatRuntime(media.runtime)}
+                      {formatRuntime(fullMediaDetails.runtime)}
                     </Typography>
                   ) : (
                     <Typography sx={{ color: '#777' }}>
-                      {media.seasons} {media.seasons === 1 ? 'Season' : 'Seasons'}
+                      {fullMediaDetails.seasons} {fullMediaDetails.seasons === 1 ? 'Season' : 'Seasons'}
                     </Typography>
                   )}
                 </Box>
 
                 {/* Overview */}
                 <Typography sx={{ mb: 3 }}>
-                  {media.overview}
+                  {fullMediaDetails.overview}
                 </Typography>
               </Grid>
 
@@ -348,37 +357,37 @@ const MoreInfo = ({ open, onClose, media }) => {
                 <Box sx={{ mb: 2 }}>
                   <Typography sx={{ color: '#f0f0f0', mb: 0.5 }}>
                     <Typography component="span" sx={{ color: '#777' }}>Cast: </Typography>
-                    {media.cast?.slice(0, 3).map((actor, index) => (
+                    {fullMediaDetails.cast?.slice(0, 3).map((actor, index) => (
                       <React.Fragment key={actor.id}>
                         <Typography component="span">{actor.name}</Typography>
-                        {index < Math.min(media.cast.length, 3) - 1 && ', '}
+                        {index < Math.min(fullMediaDetails.cast.length, 3) - 1 && ', '}
                       </React.Fragment>
                     ))}
-                    {media.cast?.length > 3 && ', more...'}
+                    {fullMediaDetails.cast?.length > 3 && ', more...'}
                   </Typography>
 
                   <Typography sx={{ color: '#f0f0f0' }}>
                     <Typography component="span" sx={{ color: '#777' }}>Genres: </Typography>
-                    {media.genres?.join(', ')}
+                    {fullMediaDetails.genres?.join(', ')}
                   </Typography>
 
                   <Typography sx={{ color: '#f0f0f0' }}>
                     <Typography component="span" sx={{ color: '#777' }}>This show is: </Typography>
-                    {media.contentTags?.slice(0, 2).join(', ')}
+                    {fullMediaDetails.contentTags?.slice(0, 2).join(', ')}
                   </Typography>
                 </Box>
               </Grid>
             </Grid>
 
             {/* Episodes section (for TV shows only) */}
-            {media.type === 'tv' && media.seasonData && media.seasonData.length > 0 && (
+            {fullMediaDetails.type === 'tv' && fullMediaDetails.seasonData && fullMediaDetails.seasonData.length > 0 && (
               <Box sx={{ mt: 4 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
                     Episodes
                   </Typography>
                   <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                    {media.title}
+                    {fullMediaDetails.title}
                   </Typography>
                 </Box>
 
@@ -420,7 +429,7 @@ const MoreInfo = ({ open, onClose, media }) => {
                         >
                           <Box
                             component="img"
-                            src={episode.stillPath || media.backdropPath}
+                            src={episode.stillPath || fullMediaDetails.backdropPath}
                             alt={episode.name}
                             sx={{
                               width: '100%',
@@ -475,13 +484,13 @@ const MoreInfo = ({ open, onClose, media }) => {
                 Photos
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 2 }}>
-                {media.additionalImages?.length > 0 ? (
-                  media.additionalImages.map((image, index) => (
+                {fullMediaDetails.additionalImages?.length > 0 ? (
+                  fullMediaDetails.additionalImages.map((image, index) => (
                     <Box
                       key={index}
                       component="img"
                       src={image}
-                      alt={`${media.title} scene ${index + 1}`}
+                      alt={`${fullMediaDetails.title} scene ${index + 1}`}
                       sx={{
                         width: '200px',
                         height: '120px',
@@ -510,27 +519,27 @@ const MoreInfo = ({ open, onClose, media }) => {
             {/* About section */}
             <Box sx={{ mt: 4 }}>
               <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
-                About {media.title}
+                About {fullMediaDetails.title}
               </Typography>
 
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                 <Typography sx={{ color: '#f0f0f0' }}>
                   <Typography component="span" sx={{ color: '#777', fontWeight: 'bold', mr: 1 }}>
-                    {media.type === 'movie' ? 'Director:' : 'Director:'}
+                    {fullMediaDetails.type === 'movie' ? 'Director:' : 'Director:'}
                   </Typography>
-                  {media.type === 'movie'
-                    ? media.director || 'Unknown'
-                    : media.creators?.join(', ') || 'Unknown'}
+                  {fullMediaDetails.type === 'movie'
+                    ? fullMediaDetails.director || 'Unknown'
+                    : fullMediaDetails.creators?.join(', ') || 'Unknown'}
                 </Typography>
 
                 <Typography sx={{ color: '#f0f0f0' }}>
                   <Typography component="span" sx={{ color: '#777', fontWeight: 'bold', mr: 1 }}>
                     Cast:
                   </Typography>
-                  {media.cast?.slice(0, 10).map((actor, index) => (
+                  {fullMediaDetails.cast?.slice(0, 10).map((actor, index) => (
                     <React.Fragment key={actor.id}>
                       <Typography component="span">{actor.name}</Typography>
-                      {index < Math.min(media.cast.length, 10) - 1 && ', '}
+                      {index < Math.min(fullMediaDetails.cast.length, 10) - 1 && ', '}
                     </React.Fragment>
                   ))}
                 </Typography>
@@ -539,24 +548,24 @@ const MoreInfo = ({ open, onClose, media }) => {
                   <Typography component="span" sx={{ color: '#777', fontWeight: 'bold', mr: 1 }}>
                     Genres:
                   </Typography>
-                  {media.genres?.join(', ')}
+                  {fullMediaDetails.genres?.join(', ')}
                 </Typography>
 
                 <Typography sx={{ color: '#f0f0f0' }}>
                   <Typography component="span" sx={{ color: '#777', fontWeight: 'bold', mr: 1 }}>
                     This show is:
                   </Typography>
-                  {media.contentTags?.slice(0, 3).join(', ') || 'No tags available'}
+                  {fullMediaDetails.contentTags?.slice(0, 3).join(', ') || 'No tags available'}
                 </Typography>
 
                 <Typography sx={{ color: '#f0f0f0' }}>
                   <Typography component="span" sx={{ color: '#777', fontWeight: 'bold', mr: 1 }}>
                     Maturity rating:
                   </Typography>
-                  {media.maturityRating || 'Not Rated'}
+                  {fullMediaDetails.maturityRating || 'Not Rated'}
                 </Typography>
 
-                {media.maturityRating && (
+                {fullMediaDetails.maturityRating && (
                   <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
                     <Box
                       sx={{
@@ -569,7 +578,7 @@ const MoreInfo = ({ open, onClose, media }) => {
                         color: '#f0f0f0'
                       }}
                     >
-                      {media.maturityRating}
+                      {fullMediaDetails.maturityRating}
                     </Box>
                   </Box>
                 )}
