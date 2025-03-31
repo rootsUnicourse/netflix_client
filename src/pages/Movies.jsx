@@ -6,7 +6,7 @@ import {
     Typography
 } from '@mui/material';
 import UserContext from '../context/UserContext';
-import axios from 'axios';
+import ApiService from '../api/api';
 
 // Components
 import Navbar from '../components/Navbar';
@@ -39,13 +39,11 @@ export default function Movies() {
             try {
                 setIsLoading(true);
                 // Fetch newest movies - add type=movie parameter to only get movies
-                const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/media`, {
-                    params: {
-                        limit: 4,
-                        sort: 'releaseDate',
-                        order: 'desc',
-                        type: 'movie'  // Filter to only get movies
-                    }
+                const response = await ApiService.getMedia({
+                    limit: 4,
+                    sort: 'releaseDate',
+                    order: 'desc',
+                    type: 'movie'  // Filter to only get movies
                 });
 
                 if (response.data.results && response.data.results.length > 0) {

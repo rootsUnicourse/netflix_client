@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Box, Typography, Skeleton, IconButton } from '@mui/material';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import MoreInfo from './MoreInfo';
-import { getMediaById } from '../api/api';
-import axios from 'axios';
+import ApiService from '../api/api';
 
 // Helper function to ensure image URLs are properly formatted
 const getImagePath = (path) => {
@@ -44,13 +42,9 @@ const AnimationMedia = ({ mediaType }) => {
       setLoading(true);
       setError(null);
       
-      const apiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-      
       // Get all media first
-      const response = await axios.get(`${apiBaseUrl}/media`, {
-        params: {
-          limit: 100 // Get more to filter through
-        }
+      const response = await ApiService.getMedia({
+        limit: 100 // Get more to filter through
       });
       
       if (!response.data || !response.data.results) {
@@ -80,12 +74,10 @@ const AnimationMedia = ({ mediaType }) => {
       if (animationContent.length < 10) {
         try {
           console.log('Not enough animation content, trying direct genre query');
-          const genreResponse = await axios.get(`${apiBaseUrl}/media`, {
-            params: {
-              genres: 'Animation', // Directly specify Animation genre
-              limit: 30,
-              type: mediaType || undefined
-            }
+          const genreResponse = await ApiService.getMedia({
+            genres: 'Animation', // Directly specify Animation genre
+            limit: 30,
+            type: mediaType || undefined
           });
           
           if (genreResponse.data && genreResponse.data.results && genreResponse.data.results.length > 0) {
@@ -149,7 +141,7 @@ const AnimationMedia = ({ mediaType }) => {
       console.log('Fetching full media details for:', media._id);
       
       // Fetch full media details
-      const response = await getMediaById(media._id);
+      const response = await ApiService.getMediaById(media._id);
       const fullMediaData = response.data;
       
       console.log('Full media details received:', fullMediaData);
@@ -226,7 +218,7 @@ const AnimationMedia = ({ mediaType }) => {
               },
             }}
           >
-            <ChevronLeftIcon fontSize="large" />
+            <ChevronLeft fontSize="large" />
           </IconButton>
         )}
 
@@ -247,7 +239,7 @@ const AnimationMedia = ({ mediaType }) => {
               },
             }}
           >
-            <ChevronRightIcon fontSize="large" />
+            <ChevronRight fontSize="large" />
           </IconButton>
         )}
 

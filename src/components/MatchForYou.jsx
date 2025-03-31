@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { Box, Typography, Skeleton, IconButton } from '@mui/material';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import MoreInfo from './MoreInfo';
 import UserContext from '../context/UserContext';
-import { getMediaById } from '../api/api';
-import axios from 'axios';
+import ApiService from '../api/api';
 
 // Helper function to ensure image URLs are properly formatted
 const getImagePath = (path) => {
@@ -48,17 +46,9 @@ const MatchForYou = ({ mediaType }) => {
       setLoading(true);
       setError(null);
       
-      const apiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-      
       // Try first without credentials
       try {
-        const response = await axios.get(`${apiBaseUrl}/media/ai-recommendations`, {
-          params: { 
-            mediaType: mediaType || 'all',
-            limit: 10
-          }
-          // No withCredentials here
-        });
+        const response = await ApiService.getAIRecommendations(mediaType || 'all', 10);
         
         if (response.data && response.data.results) {
           console.log('AI recommendations received (without credentials):', response.data.results.length);
@@ -73,13 +63,7 @@ const MatchForYou = ({ mediaType }) => {
       }
       
       // Try with credentials if first attempt failed
-      const response = await axios.get(`${apiBaseUrl}/media/ai-recommendations`, {
-        params: { 
-          mediaType: mediaType || 'all',
-          limit: 10
-        },
-        withCredentials: true // Include credentials for authentication
-      });
+      const response = await ApiService.getAIRecommendations(mediaType || 'all', 10);
       
       if (!response.data || !response.data.results) {
         console.error('Unexpected response format:', response);
@@ -100,13 +84,10 @@ const MatchForYou = ({ mediaType }) => {
       // Fall back to trending media if AI recommendations fail
       try {
         console.log('Falling back to trending media...');
-        const apiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-        
-        const response = await axios.get(`${apiBaseUrl}/media/trending`, {
-          params: { 
-            mediaType: mediaType || 'all',
-            timeWindow: 'week'
-          }
+        const response = await ApiService.getMedia({
+          trending: true,
+          mediaType: mediaType || 'all',
+          timeWindow: 'week'
         });
         
         if (response.data && response.data.results) {
@@ -141,7 +122,7 @@ const MatchForYou = ({ mediaType }) => {
       console.log('Fetching full media details for:', media._id);
       
       // Fetch full media details
-      const response = await getMediaById(media._id);
+      const response = await ApiService.getMediaById(media._id);
       const fullMediaData = response.data;
       
       console.log('Full media details received:', fullMediaData);
@@ -218,7 +199,7 @@ const MatchForYou = ({ mediaType }) => {
               },
             }}
           >
-            <ChevronLeftIcon fontSize="large" />
+            <ChevronLeft fontSize="large" />
           </IconButton>
         )}
 
@@ -239,7 +220,7 @@ const MatchForYou = ({ mediaType }) => {
               },
             }}
           >
-            <ChevronRightIcon fontSize="large" />
+            <ChevronRight fontSize="large" />
           </IconButton>
         )}
 

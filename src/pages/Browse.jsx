@@ -15,7 +15,7 @@ import { styled } from '@mui/material/styles';
 import FilterAltOffIcon from '@mui/icons-material/FilterAltOff';
 import UserContext from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import ApiService from '../api/api';
 import Footer from '../components/Footer';
 import MoreInfo from '../components/MoreInfo';
 import Navbar from '../components/Navbar';
@@ -205,9 +205,7 @@ export default function Browse() {
                 setIsLoading(true);
                 
                 // Fetch all media to populate filter options
-                const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/media`, {
-                    params: { limit: 200 }
-                });
+                const response = await ApiService.getMedia({ limit: 200 });
                 
                 if (response.data.results && response.data.results.length > 0) {
                     // Extract unique genres, languages, and ratings
@@ -289,11 +287,9 @@ export default function Browse() {
             try {
                 setIsLoading(true);
                 
-                // Simple approach to fetch all media directly from endpoint
-                const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/media`, {
-                    params: {
-                        limit: 100
-                    }
+                // Fetch media using API service
+                const response = await ApiService.getMedia({
+                    limit: 100
                 });
                 
                 if (response.data.results && response.data.results.length > 0) {                    

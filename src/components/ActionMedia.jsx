@@ -3,7 +3,7 @@ import { Box, Typography, Skeleton, IconButton } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import MoreInfo from './MoreInfo';
-import { getActionMedia, getMediaById } from '../api/api';
+import ApiService from '../api/api';
 
 // Helper function to ensure image URLs are properly formatted
 const getImagePath = (path) => {
@@ -45,32 +45,48 @@ const ActionMedia = ({ mediaType }) => {
       
       console.log(`Fetching action media from database with mediaType: ${mediaType || 'all'}`);
       
-      // Get action movies/shows directly from our database using genres field
-      const response = await getActionMedia(20); // Increase limit to ensure we have enough after filtering
+      // Get media with specific filters
+      const response = await ApiService.getMedia({
+        limit: 20, // Get a few more to ensure we have enough after filtering
+        type: mediaType, // Filter by type (movie/tv)
+        genres: ['Action', 'Action & Adventure'] // Filter by action genres
+      });
       
-      console.log('Action media response:', response);
+      console.log('Raw media response:', response);
       
-      if (response.data && response.data.results && Array.isArray(response.data.results)) {
-        let mediaData = response.data.results;
-        
-        // Filter by mediaType if provided
-        if (mediaType) {
-          mediaData = mediaData.filter(item => item.type === mediaType);
-        }
-        
-        console.log(`Action ${mediaType || ''} media found:`, mediaData.length);
-        
-        if (mediaData.length > 0) {
-          setActionMedia(mediaData);
-        } else {
-          if (mediaType === 'tv') {
-            setError(`No action TV shows found. Please try refreshing the page.`);
-          } else {
-            setError(`No action ${mediaType || ''} media found in the database`);
-          }
-        }
+      if (!response.data || !response.data.results) {
+        console.error('Unexpected response format:', response);
+        setError('Could not fetch action media');
+        setLoading(false);
+        return;
+      }
+      
+      // Filter for only action genre and limit to 10
+      let actionContent = response.data.results
+        .filter(item => {
+          // Log each item's genres for debugging
+          console.log(`Checking genres for ${item.title}:`, item.genres);
+          
+          // Check if genres array exists and contains 'Action'
+          return item.genres && 
+                 Array.isArray(item.genres) && 
+                 item.genres.some(genre => 
+                   genre.toLowerCase().includes('action')
+                 );
+        })
+        .slice(0, 10); // Limit to 10 items
+      
+      console.log(`Found ${actionContent.length} action items from genre filtering`);
+      console.log('Action content:', actionContent);
+      
+      if (actionContent.length > 0) {
+        setActionMedia(actionContent);
       } else {
-        setError('Unexpected response format from action media API');
+        if (mediaType === 'tv') {
+          setError(`No action TV shows found. Please try refreshing the page.`);
+        } else {
+          setError(`No action ${mediaType || ''} media found in the database`);
+        }
       }
       
       setLoading(false);
@@ -112,7 +128,7 @@ const ActionMedia = ({ mediaType }) => {
       console.log('Fetching full media details for:', media._id);
       
       // Fetch full media details
-      const response = await getMediaById(media._id);
+      const response = await ApiService.getMediaById(media._id);
       const fullMediaData = response.data;
       
       console.log('Full media details received:', fullMediaData);

@@ -33,7 +33,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import UserContext from '../context/UserContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import axios from 'axios';
+import ApiService from '../api/api';
 
 // Chip colors for different log levels
 const levelColors = {
@@ -72,24 +72,18 @@ const SystemLogs = () => {
       setError('');
 
       // Build query parameters
-      const params = new URLSearchParams({
+      const params = {
         page: page + 1,
         limit: rowsPerPage,
         excludeAction: 'HTTP Request'
-      });
+      };
 
-      if (filters.level) params.append('level', filters.level);
-      if (filters.action) params.append('action', filters.action);
-      if (filters.startDate) params.append('startDate', new Date(filters.startDate).toISOString());
-      if (filters.endDate) params.append('endDate', new Date(filters.endDate).toISOString());
+      if (filters.level) params.level = filters.level;
+      if (filters.action) params.action = filters.action;
+      if (filters.startDate) params.startDate = new Date(filters.startDate).toISOString();
+      if (filters.endDate) params.endDate = new Date(filters.endDate).toISOString();
 
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/admin/logs?${params.toString()}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
+      const response = await ApiService.getSystemLogs(params);
       setLogs(response.data.logs);
       setTotalCount(response.data.totalCount);
     } catch (err) {

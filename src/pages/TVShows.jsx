@@ -6,7 +6,7 @@ import {
     Typography
 } from '@mui/material';
 import UserContext from '../context/UserContext';
-import axios from 'axios';
+import ApiService from '../api/api';
 
 // Components
 import Navbar from '../components/Navbar';
@@ -38,14 +38,12 @@ export default function TVShows() {
         const fetchFeaturedMedia = async () => {
             try {
                 setIsLoading(true);
-                // Fetch newest TV shows - add type=tv parameter to only get TV shows
-                const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/media`, {
-                    params: {
-                        limit: 4,
-                        sort: 'releaseDate',
-                        order: 'desc',
-                        type: 'tv'  // Filter to only get TV shows
-                    }
+                // Fetch newest TV shows using ApiService
+                const response = await ApiService.getMedia({
+                    limit: 4,
+                    sort: 'releaseDate',
+                    order: 'desc',
+                    type: 'tv'  // Filter to only get TV shows
                 });
 
                 if (response.data.results && response.data.results.length > 0) {

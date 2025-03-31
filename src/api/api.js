@@ -227,6 +227,35 @@ export const getWatchlist = async (profileId) => {
   }
 };
 
+// Get AI recommendations
+export const getAIRecommendations = async (mediaType = 'all', limit = 10) => {
+  return api.get('/media/ai-recommendations', {
+    params: { mediaType, limit }
+  });
+};
+
+// Admin media operations
+export const searchTMDB = async (query) => {
+  return api.get(`/media/tmdb-search?query=${encodeURIComponent(query)}`);
+};
+
+export const getTMDBDetails = async (mediaType, tmdbId) => {
+  return api.get(`/media/tmdb-details/${mediaType}/${tmdbId}`);
+};
+
+export const checkMediaExists = async (tmdbId) => {
+  return api.get(`/media/exists/${tmdbId}`);
+};
+
+export const addMedia = async (mediaData) => {
+  return api.post('/media', mediaData);
+};
+
+// Admin operations
+export const getSystemLogs = async (params) => {
+  return api.get('/admin/logs', { params });
+};
+
 const ApiService = {
   signUp,
   login,
@@ -252,6 +281,12 @@ const ApiService = {
   addToWatchlist,
   removeFromWatchlist,
   getWatchlist,
+  getAIRecommendations,
+  searchTMDB,
+  getTMDBDetails,
+  checkMediaExists,
+  addMedia,
+  getSystemLogs,
 };
 
 export default ApiService;

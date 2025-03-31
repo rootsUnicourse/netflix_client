@@ -5,7 +5,7 @@ import {
     CssBaseline
 } from '@mui/material';
 import UserContext from '../context/UserContext';
-import axios from 'axios';
+import ApiService from '../api/api';
 
 // Components
 import Navbar from '../components/Navbar';
@@ -42,12 +42,10 @@ export default function Home() {
             try {
                 setIsLoading(true);
                 // Fetch newest media items
-                const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/media`, {
-                    params: {
-                        limit: 4,
-                        sort: 'releaseDate',  // Sort by release date instead of popularity
-                        order: 'desc'         // Descending order (newest first)
-                    }
+                const response = await ApiService.getMedia({
+                    limit: 4,
+                    sort: 'releaseDate',  // Sort by release date instead of popularity
+                    order: 'desc'         // Descending order (newest first)
                 });
 
                 if (response.data.results && response.data.results.length > 0) {

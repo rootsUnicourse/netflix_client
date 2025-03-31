@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import UserContext from '../context/UserContext';
+import ApiService from '../api/api';
 import {
   Container,
   Typography,
@@ -110,10 +110,7 @@ const AdminMediaInsert = () => {
     
     setLoading(true);
     try {
-      // Make a direct search to TMDB API
-      const response = await axios.get(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/media/tmdb-search?query=${encodeURIComponent(searchQuery)}`
-      );
+      const response = await ApiService.searchTMDB(searchQuery);
       setSearchResults(response.data.results);
     } catch (error) {
       setNotification({
@@ -133,8 +130,7 @@ const AdminMediaInsert = () => {
       const mediaType = result.media_type;
       const tmdbId = result.id;
       
-      // Use the new endpoint that doesn't store data
-      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/media/tmdb-details/${mediaType}/${tmdbId}`);
+      const response = await ApiService.getTMDBDetails(mediaType, tmdbId);
       const media = response.data;
       
       // If this media already exists in the database, show a warning
@@ -210,9 +206,7 @@ const AdminMediaInsert = () => {
     
     try {
       // First, check if this media already exists in the database
-      const checkResponse = await axios.get(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/media/exists/${formData.tmdbId}`
-      );
+      const checkResponse = await ApiService.checkMediaExists(formData.tmdbId);
       
       if (checkResponse.data.exists) {
         setNotification({
@@ -225,16 +219,7 @@ const AdminMediaInsert = () => {
       }
       
       // Proceed with adding the media
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/media`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        }
-      );
+      const response = await ApiService.addMedia(formData);
       
       setNotification({
         open: true,
