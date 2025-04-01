@@ -228,7 +228,7 @@ export const searchTMDB = async (query) => {
 };
 
 export const getTMDBDetails = async (mediaType, tmdbId) => {
-  return api.get(`/media/tmdb-details/${mediaType}/${tmdbId}`);
+  return api.get(`/tmdb/details/${mediaType}/${tmdbId}`);
 };
 
 export const checkMediaExists = async (tmdbId) => {

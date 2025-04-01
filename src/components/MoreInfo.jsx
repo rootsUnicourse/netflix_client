@@ -37,10 +37,14 @@ const MoreInfo = ({ open, onClose, media }) => {
   // Fetch full media details when the dialog opens
   useEffect(() => {
     const fetchMediaDetails = async () => {
-      if (open && media && media.tmdbId) {
+      if (open && media) {
         try {
           setIsLoading(true);
-          const response = await ApiService.getTMDBMediaDetails(media.type, media.tmdbId);
+          // Use the TMDB API directly instead of our database
+          const response = await ApiService.getTMDBDetails(
+            media.type, 
+            media.tmdbId ? media.tmdbId : media.id // Support both formats
+          );
           setFullMediaDetails(response.data);
         } catch (error) {
           console.error('Error fetching media details:', error);
@@ -55,9 +59,13 @@ const MoreInfo = ({ open, onClose, media }) => {
 
   // Update local watchlist status whenever any relevant state changes
   const updateWatchlistStatus = useCallback(() => {
-    if (media && media._id) {
-      const inList = isInWatchlist(media._id);
-      setLocalInWatchlist(inList);
+    if (media) {
+      // Use either the existing _id or create a unique identifier based on tmdbId
+      const mediaId = media._id || `tmdb-${media.type}-${media.tmdbId || media.id}`;
+      if (mediaId) {
+        const inList = isInWatchlist(mediaId);
+        setLocalInWatchlist(inList);
+      }
     }
   }, [media, isInWatchlist]);
 
@@ -76,7 +84,10 @@ const MoreInfo = ({ open, onClose, media }) => {
   if (!media || !fullMediaDetails) return null;
 
   const handleReviewClick = () => {
-    if (!media._id) {
+    // Use either the existing _id or create a unique identifier based on tmdbId
+    const mediaId = media._id || `tmdb-${media.type}-${media.tmdbId || media.id}`;
+    
+    if (!mediaId) {
       console.error('Media ID is missing or invalid');
       return;
     }
@@ -93,7 +104,9 @@ const MoreInfo = ({ open, onClose, media }) => {
       return;
     }
 
-    const mediaId = media._id;
+    // When using TMDB directly, we may not have the _id property
+    // So we'll use either the existing _id or create a unique identifier based on tmdbId
+    const mediaId = media._id || `tmdb-${media.type}-${media.tmdbId || media.id}`;
     
     if (!mediaId) {
       console.error('Media ID is missing or invalid');
@@ -485,7 +498,7 @@ const MoreInfo = ({ open, onClose, media }) => {
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 2 }}>
                 {fullMediaDetails.additionalImages?.length > 0 ? (
-                  fullMediaDetails.additionalImages.map((image, index) => (
+                  fullMediaDetails.additionalImages.slice(0, 3).map((image, index) => (
                     <Box
                       key={index}
                       component="img"
@@ -592,7 +605,7 @@ const MoreInfo = ({ open, onClose, media }) => {
       <Review 
         open={reviewModalOpen} 
         onClose={handleCloseReviewModal}
-        mediaIdProp={media._id}
+        mediaIdProp={media._id || `tmdb-${media.type}-${media.tmdbId || media.id}`}
       />
     </>
   );
