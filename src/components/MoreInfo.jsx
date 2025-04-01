@@ -13,7 +13,8 @@ import {
   ListItem,
   ListItemText,
   Avatar,
-  Tooltip
+  Tooltip,
+  CircularProgress
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -33,6 +34,19 @@ const MoreInfo = ({ open, onClose, media }) => {
   const [fullMediaDetails, setFullMediaDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const { user, addToWatchlist, removeFromWatchlist, isInWatchlist, watchlist, currentProfile } = useContext(UserContext);
+
+  // Clear details when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setFullMediaDetails(null);
+    }
+  }, [open]);
+
+  // Clear details when media changes
+  useEffect(() => {
+    setFullMediaDetails(null);
+    setIsLoading(true);
+  }, [media]);
 
   // Fetch full media details when the dialog opens
   useEffect(() => {
@@ -54,7 +68,9 @@ const MoreInfo = ({ open, onClose, media }) => {
       }
     };
 
-    fetchMediaDetails();
+    if (open && media) {
+      fetchMediaDetails();
+    }
   }, [open, media]);
 
   // Update local watchlist status whenever any relevant state changes
@@ -81,7 +97,33 @@ const MoreInfo = ({ open, onClose, media }) => {
     }
   }, [open, updateWatchlistStatus]);
 
-  if (!media || !fullMediaDetails) return null;
+  if (!media || !fullMediaDetails || isLoading) {
+    // Return loading state
+    return (
+      <Dialog
+        open={open}
+        onClose={onClose}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: '#181818',
+            color: 'white',
+            borderRadius: '8px',
+            height: '80vh',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }
+        }}
+      >
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <CircularProgress sx={{ color: '#E50914', mb: 2 }} />
+          <Typography variant="body1">Loading details...</Typography>
+        </Box>
+      </Dialog>
+    );
+  }
 
   const handleReviewClick = () => {
     // Use either the existing _id or create a unique identifier based on tmdbId
