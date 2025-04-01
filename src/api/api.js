@@ -222,6 +222,13 @@ export const getAIRecommendations = async (mediaType = 'all', limit = 10) => {
   });
 };
 
+// Get TMDB recommendations
+export const getTMDBRecommendations = async (mediaType = 'all', limit = 10) => {
+  return api.get('/tmdb/recommendations', {
+    params: { mediaType, limit }
+  });
+};
+
 // Admin media operations
 export const searchTMDB = async (query) => {
   return api.get(`/media/tmdb-search?query=${encodeURIComponent(query)}`);
@@ -287,6 +294,7 @@ const ApiService = {
   removeFromWatchlist,
   getWatchlist,
   getAIRecommendations,
+  getTMDBRecommendations,
   searchTMDB,
   getTMDBDetails,
   checkMediaExists,

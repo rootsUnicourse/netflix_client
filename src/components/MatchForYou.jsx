@@ -46,7 +46,22 @@ const MatchForYou = ({ mediaType }) => {
       setLoading(true);
       setError(null);
       
-      // Try first without credentials
+      // Use TMDB recommendations directly
+      try {
+        const response = await ApiService.getTMDBRecommendations(mediaType || 'all', 10);
+        
+        if (response.data && response.data.results) {
+          setMatchedMedia(response.data.results);
+          setLoading(false);
+          setTimeout(checkScrollability, 100);
+          return;
+        }
+      } catch (err) {
+        console.error('Error fetching TMDB recommendations:', err);
+        // Continue to fallback method
+      }
+      
+      // Fallback to original AI recommendations if TMDB fails
       try {
         const response = await ApiService.getAIRecommendations(mediaType || 'all', 10);
         
@@ -56,30 +71,11 @@ const MatchForYou = ({ mediaType }) => {
           setTimeout(checkScrollability, 100);
           return;
         }
-      } catch (err) {
-        console.log('Could not fetch recommendations without credentials, trying with credentials...');
-        // Continue to next try block to attempt with credentials
+      } catch (fallbackError) {
+        console.error('Error fetching AI recommendations as fallback:', fallbackError);
       }
       
-      // Try with credentials if first attempt failed
-      const response = await ApiService.getAIRecommendations(mediaType || 'all', 10);
-      
-      if (!response.data || !response.data.results) {
-        console.error('Unexpected response format:', response);
-        setError('Could not fetch AI recommendations');
-        setLoading(false);
-        return;
-      }
-      
-      setMatchedMedia(response.data.results);
-      setLoading(false);
-      
-      // Check if we can scroll right after content is loaded
-      setTimeout(checkScrollability, 100);
-    } catch (error) {
-      console.error('Error fetching AI recommendations:', error);
-      
-      // Fall back to trending media if AI recommendations fail
+      // Final fallback to trending media
       try {
         const response = await ApiService.getMedia({
           trending: true,
@@ -93,10 +89,14 @@ const MatchForYou = ({ mediaType }) => {
           setTimeout(checkScrollability, 100);
           return;
         }
-      } catch (fallbackError) {
-        console.error('Error fetching trending media as fallback:', fallbackError);
+      } catch (trendingError) {
+        console.error('Error fetching trending media as fallback:', trendingError);
       }
       
+      setError('Failed to generate personalized recommendations');
+      setLoading(false);
+    } catch (error) {
+      console.error('Error in recommendation system:', error);
       setError(error.message || 'Failed to generate personalized recommendations');
       setLoading(false);
     }
@@ -115,18 +115,15 @@ const MatchForYou = ({ mediaType }) => {
       // Set loading state for media details
       setMediaDetailsLoading(true);
       
-      
-      // Fetch full media details
-      const response = await ApiService.getMediaById(media._id);
-      const fullMediaData = response.data;
-      
-      
-      // Set the selected media with full details and open modal
-      setSelectedMedia(fullMediaData);
+      // For TMDB media items, we can just use the basic data we already have
+      // No need for additional API calls at this stage
+      setSelectedMedia(media);
       setMoreInfoOpen(true);
       setMediaDetailsLoading(false);
+      
+      // The MoreInfo component will fetch the full details directly from TMDB when it opens
     } catch (error) {
-      console.error('Error fetching full media details:', error);
+      console.error('Error preparing media for details view:', error);
       // If there's an error, just use the basic media data we already have
       setSelectedMedia(media);
       setMoreInfoOpen(true);
