@@ -54,7 +54,16 @@ const MoreInfo = ({ open, onClose, media }) => {
       if (open && media) {
         try {
           setIsLoading(true);
-          // Use the TMDB API directly instead of our database
+          
+          // Check if the media object already has all the details we need
+          if (media.fullDetails) {
+            // Skip API call and use the data we already have
+            setFullMediaDetails(media);
+            setIsLoading(false);
+            return;
+          }
+          
+          // Otherwise use the TMDB API to get details
           const response = await ApiService.getTMDBDetails(
             media.type, 
             media.tmdbId ? media.tmdbId : media.id // Support both formats

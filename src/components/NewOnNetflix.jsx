@@ -1,48 +1,76 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Box, Typography, Grid, Skeleton, IconButton } from '@mui/material';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Box, Typography, Grid, Skeleton, IconButton, CircularProgress } from '@mui/material';
 import MoreInfo from './MoreInfo';
-import ApiService, { getNewReleases } from '../api/api';
+import ApiService, { getTMDBNewReleases } from '../api/api';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 const NewOnNetflix = ({ tvOnly, mediaType }) => {
   const [newShows, setNewShows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [moreInfoOpen, setMoreInfoOpen] = useState(false);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const rowRef = useRef(null);
+  const abortControllerRef = useRef(null);
 
   useEffect(() => {
     const fetchNewShows = async () => {
       try {
+        // Reset any previous error
+        setError(null);
         setLoading(true);
+        
+        // Cancel any previous request
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+        }
+        
+        // Create new abort controller for this request
+        abortControllerRef.current = new AbortController();
+        
         // Determine the type of media to fetch
         // mediaType takes precedence if provided, otherwise use tvOnly
         const type = mediaType || (tvOnly ? 'tv' : null);
         
-        const response = await getNewReleases(10, type);
+        console.log(`Fetching new ${type || 'all'} releases...`);
+        const startTime = Date.now();
         
-        // Filter results if necessary
-        let filteredResults = response.data.results;
-        if (!mediaType && tvOnly && !response.config?.params?.type) {
-          // If using legacy tvOnly prop and API doesn't support filtering
-          filteredResults = filteredResults.filter(show => show.type === 'tv');
+        const response = await getTMDBNewReleases(10, type);
+        
+        console.log(`Fetch completed in ${(Date.now() - startTime) / 1000} seconds`);
+        
+        if (response && response.data && response.data.results) {
+          setNewShows(response.data.results);
+        } else {
+          setNewShows([]);
         }
         
-        setNewShows(filteredResults);
         setLoading(false);
         
         // Check if we can scroll right after content is loaded
         setTimeout(checkScrollability, 100);
       } catch (error) {
+        if (error.name === 'AbortError') {
+          console.log('Fetch aborted');
+          return;
+        }
         console.error('Error fetching new shows:', error);
+        setError('Failed to fetch new releases');
         setLoading(false);
       }
     };
 
     fetchNewShows();
+    
+    // Cleanup function
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [tvOnly, mediaType]);
 
   // Check if we can scroll right
@@ -54,12 +82,19 @@ const NewOnNetflix = ({ tvOnly, mediaType }) => {
   };
 
   const handleShowClick = (media) => {
-    setSelectedMedia(media);
+    // Set the full media object which now contains all the details needed by MoreInfo
+    setSelectedMedia({
+      ...media,
+      // Add a flag to indicate this is a complete media object that doesn't need further fetching
+      fullDetails: true
+    });
     setMoreInfoOpen(true);
   };
 
   const handleMoreInfoClose = () => {
     setMoreInfoOpen(false);
+    // Clear the selected media after closing to free up memory
+    setTimeout(() => setSelectedMedia(null), 300);
   };
 
   const handleScrollLeft = () => {
@@ -87,6 +122,21 @@ const NewOnNetflix = ({ tvOnly, mediaType }) => {
     }
   };
 
+  // Memoize skeletons to reduce re-renders
+  const loadingSkeletons = useMemo(() => {
+    return Array.from(new Array(10)).map((_, index) => (
+      <Box key={index} sx={{ position: 'relative', minWidth: '200px' }}>
+        <Skeleton 
+          variant="rectangular" 
+          width={200} 
+          height={120} 
+          animation="wave" 
+          sx={{ bgcolor: '#333', borderRadius: '4px' }} 
+        />
+      </Box>
+    ));
+  }, []);
+
   return (
     <Box sx={{ mt: 4, mb: 4, px: 4, position: 'relative' }}>
       <Typography 
@@ -94,11 +144,25 @@ const NewOnNetflix = ({ tvOnly, mediaType }) => {
         sx={{ 
           fontWeight: 'bold', 
           mb: 2, 
-          color: 'white' 
+          color: 'white',
+          display: 'flex',
+          alignItems: 'center'
         }}
       >
         New on Netflix
+        {loading && (
+          <CircularProgress 
+            size={20} 
+            sx={{ ml: 2, color: '#E50914' }} 
+          />
+        )}
       </Typography>
+
+      {error && (
+        <Typography sx={{ color: '#ff6b6b', mb: 2 }}>
+          {error}
+        </Typography>
+      )}
 
       <Box sx={{ position: 'relative' }}>
         {/* Left Arrow */}
@@ -162,17 +226,7 @@ const NewOnNetflix = ({ tvOnly, mediaType }) => {
         >
           {loading ? (
             // Skeleton loaders while content is loading
-            Array.from(new Array(10)).map((_, index) => (
-              <Box key={index} sx={{ position: 'relative', minWidth: '200px' }}>
-                <Skeleton 
-                  variant="rectangular" 
-                  width={200} 
-                  height={120} 
-                  animation="wave" 
-                  sx={{ bgcolor: '#333', borderRadius: '4px' }} 
-                />
-              </Box>
-            ))
+            loadingSkeletons
           ) : newShows.length === 0 ? (
             // No new releases found
             <Typography sx={{ color: '#777', fontStyle: 'italic', py: 4 }}>
@@ -182,7 +236,7 @@ const NewOnNetflix = ({ tvOnly, mediaType }) => {
             // Actual content
             newShows.map((show) => (
               <Box 
-                key={show._id} 
+                key={show.tmdbId || show._id} 
                 sx={{ 
                   position: 'relative',
                   minWidth: '200px',
@@ -199,6 +253,7 @@ const NewOnNetflix = ({ tvOnly, mediaType }) => {
                   component="img"
                   src={show.backdropPath || show.posterPath}
                   alt={show.title}
+                  loading="lazy"
                   sx={{ 
                     width: '200px',
                     height: '120px',
@@ -267,11 +322,13 @@ const NewOnNetflix = ({ tvOnly, mediaType }) => {
       </Box>
       
       {/* MoreInfo Dialog */}
-      <MoreInfo 
-        open={moreInfoOpen} 
-        onClose={handleMoreInfoClose} 
-        media={selectedMedia} 
-      />
+      {selectedMedia && (
+        <MoreInfo 
+          open={moreInfoOpen} 
+          onClose={handleMoreInfoClose} 
+          media={selectedMedia} 
+        />
+      )}
     </Box>
   );
 };

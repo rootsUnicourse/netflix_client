@@ -268,6 +268,15 @@ export const getTMDBPopularMedia = async (mediaType = 'all', limit = 4) => {
   });
 };
 
+export const getTMDBNewReleases = async (limit = 10, mediaType = null) => {
+  return api.get('/tmdb/new-releases', {
+    params: { 
+      limit,
+      type: mediaType
+    }
+  });
+};
+
 const ApiService = {
   signUp,
   login,
@@ -303,6 +312,7 @@ const ApiService = {
   getTMDBMediaDetails,
   getTMDBFeaturedMedia,
   getTMDBPopularMedia,
+  getTMDBNewReleases,
 };
 
 export default ApiService;
