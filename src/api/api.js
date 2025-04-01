@@ -76,7 +76,7 @@ export const getNewReleases = async (limit = 10, mediaType = null) => api.get('/
 });
 
 // Get top shows in Israel
-export const getTopShowsInIsrael = async (limit = 10) => api.get('/media/top-shows-israel', {
+export const getTopShowsInIsrael = async (limit = 10) => api.get('/tmdb/top-shows-israel', {
   params: { limit }
 });
 
