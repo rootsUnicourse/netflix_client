@@ -136,7 +136,37 @@ const Review = ({ open, onClose, mediaIdProp }) => {
           return;
         }
         
-        // Remove any suffix that might have been added (like -featured or -trending)
+        // Check if this is a TMDB ID (in format tmdb-type-id)
+        if (mediaId.startsWith('tmdb-')) {
+          // For TMDB IDs, we don't need to fetch the media as we'll have all details in the MoreInfo component
+          // Just create a placeholder media object with necessary info
+          const parts = mediaId.split('-');
+          if (parts.length >= 3) {
+            const mediaType = parts[1];
+            const tmdbId = parts[2];
+            
+            try {
+              // Fetch basic details from TMDB
+              const response = await ApiService.getTMDBDetails(mediaType, tmdbId);
+              
+              if (response.data) {
+                setMedia({
+                  ...response.data,
+                  _id: mediaId, // Keep the original ID format for consistency
+                  tmdbId: tmdbId,
+                  type: mediaType
+                });
+                setLoading(false);
+                return;
+              }
+            } catch (tmdbErr) {
+              console.error('Error fetching TMDB details:', tmdbErr);
+              // Continue to fallback method
+            }
+          }
+        }
+        
+        // Regular database media - remove any suffix that might have been added (like -featured or -trending)
         const cleanId = mediaId.split('-')[0];
         
         const response = await ApiService.getMediaById(cleanId);
@@ -159,12 +189,20 @@ const Review = ({ open, onClose, mediaIdProp }) => {
       try {
         if (!mediaId) return;
         
-        const cleanId = mediaId.split('-')[0];
+        // For TMDB IDs, we need to extract the actual ID for the database
+        let effectiveId;
+        if (mediaId.startsWith('tmdb-')) {
+          // We'll use the full TMDB ID format as the review key
+          effectiveId = mediaId;
+        } else {
+          // Remove any suffix that might have been added (like -featured or -trending)
+          effectiveId = mediaId.split('-')[0];
+        }
         
         // Pass includeNonPublic='true' as a string if the user is an admin
         const includeNonPublicValue = isAdmin ? 'true' : 'false';
         
-        const response = await getMediaReviews(cleanId, page, 10, includeNonPublicValue);
+        const response = await getMediaReviews(effectiveId, page, 10, includeNonPublicValue);
         
         
         // Check if we got the expected private review
@@ -194,7 +232,7 @@ const Review = ({ open, onClose, mediaIdProp }) => {
         // If admin but no private reviews found, try forcing the admin flag
         if (isAdmin && !hasPrivateReviews) {
           // Force admin mode by directly specifying 'true' string
-          const retryResponse = await getMediaReviews(cleanId, page, 10, 'true');
+          const retryResponse = await getMediaReviews(effectiveId, page, 10, 'true');
           
           if (retryResponse.data.reviews.some(r => r.isPublic === false)) {
             setReviews(retryResponse.data.reviews);
@@ -348,11 +386,17 @@ const Review = ({ open, onClose, mediaIdProp }) => {
       throw new Error('Invalid media ID');
     }
     
-    // Remove any suffix that might have been added (like -featured or -trending)
-    const cleanId = mediaId.split('-')[0];
+    // For TMDB IDs, use the full ID
+    let effectiveId;
+    if (mediaId.startsWith('tmdb-')) {
+      effectiveId = mediaId;
+    } else {
+      // Remove any suffix that might have been added (like -featured or -trending)
+      effectiveId = mediaId.split('-')[0];
+    }
 
     const reviewData = {
-      mediaId: cleanId,
+      mediaId: effectiveId,
       profileId: profileId,
       rating: review.rating,
       content: review.content.trim(),
@@ -377,7 +421,7 @@ const Review = ({ open, onClose, mediaIdProp }) => {
       // Emit event that review was updated
       eventBus.emit(EVENTS.REVIEW_UPDATED, {
         reviewId: userReview._id,
-        mediaId: cleanId,
+        mediaId: effectiveId,
         profileId: profileId,
         updatedReview: response.data.review
       });
@@ -421,7 +465,7 @@ const Review = ({ open, onClose, mediaIdProp }) => {
     // Refresh reviews after a short delay to ensure we have the latest data
     setTimeout(async () => {
       try {
-        const reviewsResponse = await getMediaReviews(cleanId, page, 10, isAdmin ? 'true' : 'false');
+        const reviewsResponse = await getMediaReviews(effectiveId, page, 10, isAdmin ? 'true' : 'false');
         setReviews(reviewsResponse.data.reviews);
         setTotalPages(reviewsResponse.data.totalPages);
         setAverageRating(reviewsResponse.data.averageRating);
