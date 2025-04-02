@@ -43,14 +43,8 @@ const ActionMedia = ({ mediaType }) => {
       setLoading(true);
       setError(null);
       
-      
-      // Get media with specific filters
-      const response = await ApiService.getMedia({
-        limit: 20, // Get a few more to ensure we have enough after filtering
-        type: mediaType, // Filter by type (movie/tv)
-        genres: ['Action', 'Action & Adventure'] // Filter by action genres
-      });
-      
+      // Use the TMDB API to get action media
+      const response = await ApiService.getTMDBActionMedia(10, mediaType);
       
       if (!response.data || !response.data.results) {
         console.error('Unexpected response format:', response);
@@ -59,28 +53,22 @@ const ActionMedia = ({ mediaType }) => {
         return;
       }
       
-      // Filter for only action genre and limit to 10
-      let actionContent = response.data.results
-        .filter(item => {
-          // Log each item's genres for debugging
-          
-          // Check if genres array exists and contains 'Action'
-          return item.genres && 
-                 Array.isArray(item.genres) && 
-                 item.genres.some(genre => 
-                   genre.toLowerCase().includes('action')
-                 );
-        })
-        .slice(0, 10); // Limit to 10 items
+      // Process the results
+      const actionContent = response.data.results;
       
+      // Set unique IDs for each item to prevent React key conflicts
+      const formattedContent = actionContent.map(item => ({
+        ...item,
+        _id: `tmdb-${item.type}-${item.tmdbId || item.id}`
+      }));
       
-      if (actionContent.length > 0) {
-        setActionMedia(actionContent);
+      if (formattedContent.length > 0) {
+        setActionMedia(formattedContent);
       } else {
         if (mediaType === 'tv') {
           setError(`No action TV shows found. Please try refreshing the page.`);
         } else {
-          setError(`No action ${mediaType || ''} media found in the database`);
+          setError(`No action ${mediaType || ''} media found.`);
         }
       }
       
@@ -117,20 +105,18 @@ const ActionMedia = ({ mediaType }) => {
       // Set loading state for media details
       setMediaDetailsLoading(true);
       
-      
-      // Fetch full media details
-      
-      // Fetch full media details
-      const response = await ApiService.getMediaById(media._id);
-      const fullMediaData = response.data;
-      
+      // For TMDB content, use the TMDB details endpoint
+      const response = await ApiService.getTMDBDetails(
+        media.type,
+        media.tmdbId || media.id
+      );
       
       // Set the selected media with full details and open modal
-      setSelectedMedia(fullMediaData);
+      setSelectedMedia(response.data);
       setMoreInfoOpen(true);
       setMediaDetailsLoading(false);
     } catch (error) {
-      console.error('Error fetching full media details:', error);
+      console.error('Error fetching media details:', error);
       // If there's an error, just use the basic media data we already have
       setSelectedMedia(media);
       setMoreInfoOpen(true);
