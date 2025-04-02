@@ -127,7 +127,6 @@ const Review = ({ open, onClose, mediaIdProp }) => {
   useEffect(() => {
     const fetchMedia = async () => {
       try {
-        
         // Make sure we have a valid ID
         if (!mediaId) {
           console.error('Invalid media ID');
@@ -146,6 +145,7 @@ const Review = ({ open, onClose, mediaIdProp }) => {
             const tmdbId = parts[2];
             
             try {
+              console.log('Fetching TMDB details for:', mediaType, tmdbId);
               // Fetch basic details from TMDB
               const response = await ApiService.getTMDBDetails(mediaType, tmdbId);
               
@@ -154,7 +154,10 @@ const Review = ({ open, onClose, mediaIdProp }) => {
                   ...response.data,
                   _id: mediaId, // Keep the original ID format for consistency
                   tmdbId: tmdbId,
-                  type: mediaType
+                  type: mediaType,
+                  // Add properties to avoid undefined values
+                  releaseDate: response.data.release_date || response.data.first_air_date || new Date().toISOString(),
+                  userRating: { average: 0 } // Default ratings when not available
                 });
                 setLoading(false);
                 return;
@@ -169,8 +172,27 @@ const Review = ({ open, onClose, mediaIdProp }) => {
         // Regular database media - remove any suffix that might have been added (like -featured or -trending)
         const cleanId = mediaId.split('-')[0];
         
-        const response = await ApiService.getMediaById(cleanId);
-        setMedia(response.data);
+        try {
+          console.log('Fetching media details for ID:', cleanId);
+          const response = await ApiService.getMediaById(cleanId);
+          if (response && response.data) {
+            setMedia(response.data);
+          } else {
+            throw new Error('Invalid response format');
+          }
+        } catch (mediaErr) {
+          console.error('Error fetching media by ID:', mediaErr);
+          // If there's an error, create a basic media placeholder to avoid UI errors
+          setMedia({
+            _id: mediaId,
+            title: 'Unknown Media',
+            type: 'unknown',
+            releaseDate: new Date().toISOString(),
+            posterPath: '',
+            userRating: { average: 0 }
+          });
+          setError('Media details could not be loaded');
+        }
         setLoading(false);
       } catch (err) {
         console.error('Error fetching media:', err);
@@ -202,44 +224,71 @@ const Review = ({ open, onClose, mediaIdProp }) => {
         // Pass includeNonPublic='true' as a string if the user is an admin
         const includeNonPublicValue = isAdmin ? 'true' : 'false';
         
-        const response = await getMediaReviews(effectiveId, page, 10, includeNonPublicValue);
+        console.log('Fetching reviews for media ID:', effectiveId);
+        console.log('Current user profile:', currentProfile);
+        console.log('Is admin:', isAdmin);
         
-        
-        // Check if we got the expected private review
-        const hasPrivateReviews = response.data.reviews.some(r => r.isPublic === false);
-        
-        setReviews(response.data.reviews);
-        setTotalPages(response.data.totalPages);
-        setAverageRating(response.data.averageRating);
-        setTotalReviews(response.data.totalReviews);
-        
-        // Get current profile from state
-        if (currentProfile?._id) {
-          const userReview = response.data.reviews.find(
-            r => r.profile?._id === currentProfile._id
-          );
+        try {
+          const response = await getMediaReviews(effectiveId, page, 10, includeNonPublicValue);
+          console.log('Reviews API response:', response);
           
-          if (userReview) {
-            setUserReview(userReview);
-            setReview({
-              rating: userReview.rating,
-              content: userReview.content,
-              isPublic: userReview.isPublic
-            });
+          if (response && response.data) {
+            // Check if we got the expected private review
+            const hasPrivateReviews = response.data.reviews.some(r => r.isPublic === false);
+            
+            setReviews(response.data.reviews);
+            setTotalPages(response.data.totalPages);
+            setAverageRating(response.data.averageRating);
+            setTotalReviews(response.data.totalReviews);
+            
+            // Get current profile from state
+            if (currentProfile?._id) {
+              const userReview = response.data.reviews.find(
+                r => r.profile?._id === currentProfile._id
+              );
+              
+              if (userReview) {
+                setUserReview(userReview);
+                setReview({
+                  rating: userReview.rating,
+                  content: userReview.content,
+                  isPublic: userReview.isPublic
+                });
+              }
+            }
+            
+            // If admin but no private reviews found, try forcing the admin flag
+            if (isAdmin && !hasPrivateReviews) {
+              // Force admin mode by directly specifying 'true' string
+              const retryResponse = await getMediaReviews(effectiveId, page, 10, 'true');
+              
+              if (retryResponse.data.reviews.some(r => r.isPublic === false)) {
+                setReviews(retryResponse.data.reviews);
+                setTotalPages(retryResponse.data.totalPages);
+                setAverageRating(retryResponse.data.averageRating);
+                setTotalReviews(retryResponse.data.totalReviews);
+              }
+            }
+          } else {
+            console.error('Invalid response format from getMediaReviews:', response);
+            setError('Failed to load reviews: Invalid response format');
           }
-        }
-        
-        // If admin but no private reviews found, try forcing the admin flag
-        if (isAdmin && !hasPrivateReviews) {
-          // Force admin mode by directly specifying 'true' string
-          const retryResponse = await getMediaReviews(effectiveId, page, 10, 'true');
-          
-          if (retryResponse.data.reviews.some(r => r.isPublic === false)) {
-            setReviews(retryResponse.data.reviews);
-            setTotalPages(retryResponse.data.totalPages);
-            setAverageRating(retryResponse.data.averageRating);
-            setTotalReviews(retryResponse.data.totalReviews);
+        } catch (apiError) {
+          console.error('API error in getMediaReviews:', apiError);
+          if (apiError.response) {
+            console.error('Response status:', apiError.response.status);
+            console.error('Response data:', apiError.response.data);
+            
+            if (apiError.response.status === 404) {
+              // For 404 errors, don't show error message as there might just be no reviews yet
+              setReviews([]);
+              setTotalPages(1);
+              setAverageRating(0);
+              setTotalReviews(0);
+              return;
+            }
           }
+          throw apiError; // Re-throw for outer catch
         }
       } catch (err) {
         console.error('Error fetching reviews:', err);
@@ -269,14 +318,14 @@ const Review = ({ open, onClose, mediaIdProp }) => {
 
   // Set initial values if editing an existing review
   useEffect(() => {
-    if (userReview && open) {
+    if (userReview && (open || (!open && !onClose))) {
       setReview({
         rating: userReview.rating,
         content: userReview.content,
         isPublic: userReview.isPublic === undefined ? true : userReview.isPublic,
       });
     }
-  }, [userReview, open]);
+  }, [userReview, open, onClose]);
 
   // Set success message timeout
   useEffect(() => {
@@ -692,20 +741,6 @@ const Review = ({ open, onClose, mediaIdProp }) => {
         <Typography variant="h5" gutterBottom>
           Reviews ({totalReviews})
         </Typography>
-        
-        {/* Average Rating */}
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-          <Rating
-            value={averageRating}
-            precision={0.1}
-            readOnly
-            size="large"
-            sx={{ mr: 2, '& .MuiRating-iconFilled': { color: '#E50914' } }}
-          />
-          <Typography variant="h6">
-            {averageRating.toFixed(1)} / 5 ({totalReviews} reviews)
-          </Typography>
-        </Box>
 
         {/* Reviews List */}
         {reviews.map((review) => (

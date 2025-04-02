@@ -69,8 +69,9 @@ const UserReviews = ({ mediaType }) => {
     try {
       setLoading(true);
       setError(null);
+      console.log('Fetching reviews for profile:', currentProfile._id);
       const response = await getUserReviews(currentProfile._id);
-      
+      console.log('User reviews response:', response);
       
       // Check if we have data and results
       if (!response.data || !response.data.results || !Array.isArray(response.data.results)) {
@@ -83,13 +84,23 @@ const UserReviews = ({ mediaType }) => {
       // Make sure we handle reviews that have null or undefined media
       let reviewedMedia = response.data.results
         .filter(review => review && review.media) // Filter out reviews with no media
-        .map(review => review.media);
+        .map(review => {
+          // Add a fallback image if posterPath or backdropPath is missing
+          const defaultImage = 'https://via.placeholder.com/200x120?text=No+Image';
+          
+          return {
+            ...review.media,
+            posterPath: review.media.posterPath || defaultImage,
+            backdropPath: review.media.backdropPath || review.media.posterPath || defaultImage
+          };
+        });
       
       // Filter by mediaType if provided
       if (mediaType) {
         reviewedMedia = reviewedMedia.filter(media => media.type === mediaType);
       }
       
+      console.log('Processed media for display:', reviewedMedia);
       
       setUserReviewedMedia(reviewedMedia);
       setLoading(false);
@@ -299,13 +310,17 @@ const UserReviews = ({ mediaType }) => {
               >
                 <Box 
                   component="img"
-                  src={media.backdropPath || media.posterPath}
-                  alt={media.title}
+                  src={media.backdropPath || media.posterPath || 'https://via.placeholder.com/200x120?text=No+Image'}
+                  alt={media.title || 'Media title'}
                   sx={{ 
                     width: '200px',
                     height: '120px',
                     objectFit: 'cover',
                     borderRadius: '4px'
+                  }}
+                  onError={(e) => {
+                    e.target.onerror = null; // Prevent infinite loop
+                    e.target.src = 'https://via.placeholder.com/200x120?text=Image+Error';
                   }}
                 />
               </Box>
