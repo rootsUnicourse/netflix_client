@@ -351,6 +351,8 @@ export default function Browse() {
         if (!releaseDate) return false;
         
         const released = new Date(releaseDate);
+        if (isNaN(released.getTime())) return false; // Invalid date
+        
         const now = new Date();
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(now.getDate() - 30);
@@ -653,7 +655,7 @@ export default function Browse() {
                                     >
                                         <Box 
                                             component="img"
-                                            src={item.backdropUrl || item.backdropPath}
+                                            src={item.backdropUrl || item.backdropPath || item.posterPath || getImageUrl(item)}
                                             alt={item.title}
                                             sx={{ 
                                                 position: 'absolute',
@@ -665,7 +667,7 @@ export default function Browse() {
                                                 objectPosition: 'center',
                                             }}
                                         />
-                                        {isRecentlyAdded(item.releaseDate) && (
+                                        {isRecentlyAdded(item.releaseDate || item.release_date || item.first_air_date) && (
                                             <RecentlyAddedTag>NEW</RecentlyAddedTag>
                                         )}
                                     </Box>
