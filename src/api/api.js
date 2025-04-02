@@ -93,17 +93,26 @@ export const getMediaByTmdbIds = async (ids) => {
 // Get top rated media by users
 export const getTopRatedMedia = async (limit = 10, mediaType = null) => {
   try {
-    // First try the primary endpoint
-    return await api.get('/media/top-rated-by-users', {
+    // First try the new TMDB endpoint that aggregates reviews
+    return await api.get('/tmdb/top-rated-by-users', {
       params: { limit, mediaType }
     });
   } catch (error) {
-    console.error('Error with top-rated-by-users endpoint:', error.message);
+    console.error('Error with TMDB top-rated-by-users endpoint:', error.message);
     
-    // Fallback to the reviews top-rated endpoint if the first one fails
-    return await api.get('/reviews/top-rated', {
-      params: { limit, mediaType }
-    });
+    // Fall back to the media endpoint
+    try {
+      return await api.get('/media/top-rated-by-users', {
+        params: { limit, mediaType }
+      });
+    } catch (mediaError) {
+      console.error('Error with media top-rated-by-users endpoint:', mediaError.message);
+      
+      // Last resort: use the reviews top-rated endpoint
+      return await api.get('/reviews/top-rated', {
+        params: { limit, mediaType }
+      });
+    }
   }
 };
 
@@ -185,9 +194,14 @@ export const getActionMedia = async (limit = 10) => {
 };
 
 // Watchlist operations
-export const addToWatchlist = async (mediaId, profileId) => {
+export const addToWatchlist = async (mediaId, profileId, mediaObject = null) => {
   try {
-    const response = await api.post('/profiles/watchlist', { mediaId, profileId });
+    // If a media object is provided, send it along with the request
+    const payload = mediaObject 
+      ? { mediaId, profileId, mediaObject }
+      : { mediaId, profileId };
+      
+    const response = await api.post('/profiles/watchlist', payload);
     return response;
   } catch (error) {
     console.error('API error adding to watchlist:', error.response?.data || error.message);

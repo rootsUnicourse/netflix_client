@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Box, Typography, Skeleton, IconButton, Tooltip } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import StarIcon from '@mui/icons-material/Star';
 import MoreInfo from './MoreInfo';
 import { getTopRatedMedia, getMediaById } from '../api/api';
 
@@ -113,11 +112,25 @@ const TopRatedMedia = ({ mediaType }) => {
       // Set loading state for media details
       setMediaDetailsLoading(true);
       
+      // Check if this is a TMDB ID (in format tmdb-type-id)
+      if (media._id && media._id.startsWith('tmdb-')) {
+        // For TMDB media, we can use the data we already have
+        setSelectedMedia({
+          ...media,
+          // Ensure these properties exist
+          userRating: {
+            average: media.averageRating || 0,
+            count: media.totalReviews || 0
+          }
+        });
+        setMoreInfoOpen(true);
+        setMediaDetailsLoading(false);
+        return;
+      }
       
-      // Fetch full media details
+      // For regular DB media, fetch full details
       const response = await getMediaById(media._id);
       const fullMediaData = response.data;
-      
       
       // Set the selected media with full details and open modal
       setSelectedMedia(fullMediaData);

@@ -109,7 +109,7 @@ export const UserProvider = ({ children }) => {
     };
 
     // Add to watchlist
-    const addToWatchlist = async (mediaId) => {
+    const addToWatchlist = async (mediaId, mediaObject = null) => {
         if (!currentProfile) {
             console.error('No profile selected');
             // Fallback to first profile if available
@@ -117,7 +117,7 @@ export const UserProvider = ({ children }) => {
                 const firstProfile = profiles[0];
                 setProfile(firstProfile);
                 try {
-                    const { data } = await ApiService.addToWatchlist(mediaId, firstProfile._id);
+                    const { data } = await ApiService.addToWatchlist(mediaId, firstProfile._id, mediaObject);
                     
                     // Force a complete refresh of watchlist data
                     const fullWatchlistResponse = await ApiService.getWatchlist(firstProfile._id);
@@ -133,7 +133,7 @@ export const UserProvider = ({ children }) => {
         }
         
         try {
-            const { data } = await ApiService.addToWatchlist(mediaId, currentProfile._id);
+            const { data } = await ApiService.addToWatchlist(mediaId, currentProfile._id, mediaObject);
             
             // Force a complete refresh of watchlist data
             const fullWatchlistResponse = await ApiService.getWatchlist(currentProfile._id);
@@ -193,6 +193,21 @@ export const UserProvider = ({ children }) => {
             if (item._id === mediaId) return true;
             if (item._id && mediaId && item._id.toString() === mediaId.toString()) return true;
             if (typeof item === 'string' && item === mediaId) return true;
+            
+            // Check for TMDB format matching
+            if (mediaId.startsWith('tmdb-') && item.tmbdFullId === mediaId) return true;
+            
+            // If the media ID is in TMDB format (tmdb-type-id) and the item has a tmdbId
+            if (mediaId.startsWith('tmdb-') && item.tmdbId) {
+                // Extract the type and id from the TMDB format string
+                const parts = mediaId.split('-');
+                if (parts.length >= 3) {
+                    const [_, type, id] = parts; // Use _ to skip the "tmdb" part
+                    // Match if the item type and tmdbId match
+                    if (item.type === type && item.tmdbId.toString() === id) return true;
+                }
+            }
+            
             return false;
         });
     };

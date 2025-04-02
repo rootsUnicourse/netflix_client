@@ -217,8 +217,20 @@ const MoreInfo = ({ open, onClose, media }) => {
       const newWatchlistStatus = !localInWatchlist;
       setLocalInWatchlist(newWatchlistStatus);
       
+      // Create a media object with essential information for the watchlist
+      const mediaObject = {
+        _id: mediaId,
+        title: media.title || fullMediaDetails.title,
+        type: media.type || fullMediaDetails.type,
+        posterPath: media.posterPath || fullMediaDetails.posterPath,
+        backdropPath: media.backdropPath || fullMediaDetails.backdropPath,
+        tmdbId: media.tmdbId || media.id || fullMediaDetails.id,
+        overview: media.overview || fullMediaDetails.overview,
+        isTMDB: mediaId.startsWith('tmdb-')
+      };
+      
       if (newWatchlistStatus) {
-        addToWatchlist(mediaId).then(success => {
+        addToWatchlist(mediaId, mediaObject).then(success => {
           if (!success) {
             setLocalInWatchlist(false);
             console.error('Failed to add to watchlist');
