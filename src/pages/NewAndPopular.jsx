@@ -60,13 +60,18 @@ const NewAndPopular = () => {
         const response = await getTMDBNewAndPopular(page, 24, 'all');
         
         if (response.data && response.data.results) {
+          // Filter out items without required images before setting state
+          const validResults = response.data.results.filter(item => 
+            item && item.posterPath && item.backdropPath
+          );
+          
           // Add new media to the existing list
           setMedia(prevMedia => {
             // When fetching the first page, replace all items
-            if (page === 1) return response.data.results;
+            if (page === 1) return validResults;
             
             // Otherwise, append new items, ensuring no duplicates
-            const newItems = response.data.results.filter(item => item); // Remove any null items
+            const newItems = validResults; // Already filtered above
             const newMediaIds = new Set(newItems.map(getMediaIdentifier));
             
             const uniquePrevMedia = prevMedia.filter(item => {
@@ -79,9 +84,9 @@ const NewAndPopular = () => {
           // Check if we've reached the end of the list
           setHasMore(page < response.data.totalPages);
           
-          // If no results and it's the first page, show error
-          if (response.data.results.length === 0 && page === 1) {
-            setError('No media found');
+          // If no valid results and it's the first page, show error
+          if (validResults.length === 0 && page === 1) {
+            setError('No valid media found with complete information');
           }
         } else {
           setError('No media found');
@@ -133,6 +138,30 @@ const NewAndPopular = () => {
     return `${type}-${id}`;
   };
 
+  // Helper function to validate an image URL
+  const isValidImageUrl = (url) => {
+    if (!url) return false;
+    
+    // Check if it's a placeholder image
+    if (url.includes('placeholder') || url.includes('no-image')) return false;
+    
+    // Check if it's a valid URL format (basic check)
+    return url.startsWith('http') && (
+      url.endsWith('.jpg') || 
+      url.endsWith('.jpeg') || 
+      url.endsWith('.png') || 
+      url.endsWith('.webp') ||
+      url.includes('image.tmdb.org') // TMDB URLs are valid
+    );
+  };
+
+  // Helper function to check if a media item has valid images
+  const hasValidImages = (item) => {
+    return item && 
+      ((item.posterPath && isValidImageUrl(item.posterPath)) || 
+       (item.backdropPath && isValidImageUrl(item.backdropPath)));
+  };
+
   return (
     <Box sx={{ 
       flexGrow: 1,
@@ -151,12 +180,7 @@ const NewAndPopular = () => {
       <Container maxWidth={false} sx={{ pt: 10, px: { xs: 0 }, overflowX: 'hidden' }}>
         {/* Media Grid */}
         <Grid container spacing={2} sx={{ mb: 4, px: { xs: 2, md: 4 } }}>
-          {media.map((item, index) => {
-            // Skip rendering if essential properties are missing
-            if (!item || !item.posterPath || !item.backdropPath) {
-              return null;
-            }
-            
+          {media.filter(hasValidImages).map((item, index) => {
             // Check if this is the last item
             const isLastElement = index === media.length - 1;
             

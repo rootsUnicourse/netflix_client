@@ -35,33 +35,43 @@ const MediaCard = ({ media, onClick }) => {
     
     // Get image URL based on available properties
     const getImageUrl = (item) => {
-        if (!item) return 'https://via.placeholder.com/300x170?text=No+Image';
+        // If no item, don't return a placeholder
+        if (!item) return null;
         
         // For horizontal images, prefer backdrop over poster when available
         if (item.backdropPath) return item.backdropPath;
         if (item.posterPath) return item.posterPath;
-        if (item.additionalImages && item.additionalImages.length > 0) return item.additionalImages[0];
-        if (item.imageUrl) return item.imageUrl;
-        if (item.posterUrl) return item.posterUrl;
-        if (item.backdropUrl) return item.backdropUrl;
+        if (item.additionalImages && item.additionalImages.length > 0) {
+            // Verify the additionalImage isn't a placeholder
+            const firstImage = item.additionalImages[0];
+            if (firstImage && !firstImage.includes('placeholder')) return firstImage;
+        }
+        
+        if (item.imageUrl && !item.imageUrl.includes('placeholder')) return item.imageUrl;
+        if (item.posterUrl && !item.posterUrl.includes('placeholder')) return item.posterUrl;
+        if (item.backdropUrl && !item.backdropUrl.includes('placeholder')) return item.backdropUrl;
         
         // Fallbacks
-        if (item.img) return item.img;
+        if (item.img && !item.img.includes('placeholder')) return item.img;
         
         // Check if there's a poster object with a path
         if (item.poster) {
-            if (typeof item.poster === 'string') return item.poster;
-            if (item.poster.path) return item.poster.path;
+            if (typeof item.poster === 'string' && !item.poster.includes('placeholder')) 
+                return item.poster;
+            if (item.poster.path && !item.poster.path.includes('placeholder')) 
+                return item.poster.path;
         }
         
         // Check if there's an image object with a path
         if (item.image) {
-            if (typeof item.image === 'string') return item.image;
-            if (item.image.path) return item.image.path;
+            if (typeof item.image === 'string' && !item.image.includes('placeholder')) 
+                return item.image;
+            if (item.image.path && !item.image.path.includes('placeholder')) 
+                return item.image.path;
         }
         
-        // Fallback
-        return 'https://via.placeholder.com/300x170?text=No+Image';
+        // No valid image found
+        return null;
     };
 
     const handleClick = () => {
@@ -73,14 +83,19 @@ const MediaCard = ({ media, onClick }) => {
         }
     };
 
+    // Don't render if we don't have a valid image
+    const imageUrl = getImageUrl(media);
+    if (!imageUrl) return null;
+
     return (
         <MediaCardContainer onClick={handleClick}>
             <MediaImage 
-                src={getImageUrl(media)} 
-                alt={media.title} 
+                src={imageUrl} 
+                alt={media.title || 'Media'} 
                 onError={(e) => {
-                    console.warn(`Image failed to load for: ${media.title}`);
-                    e.target.src = 'https://via.placeholder.com/300x170?text=No+Image';
+                    console.warn(`Image failed to load for: ${media?.title || 'Unknown title'}`);
+                    // Instead of setting a placeholder, hide the component
+                    e.target.style.display = 'none'; 
                 }}
             />
         </MediaCardContainer>
