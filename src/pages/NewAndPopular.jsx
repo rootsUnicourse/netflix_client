@@ -11,7 +11,7 @@ import Navbar from '../components/Navbar';
 import MediaCard from '../components/MediaCard';
 import MoreInfo from '../components/MoreInfo';
 import Footer from '../components/Footer';
-import { getMedia } from '../api/api';
+import ApiService, { getTMDBNewAndPopular } from '../api/api';
 
 const NewAndPopular = () => {
   const [media, setMedia] = useState([]);
@@ -56,15 +56,8 @@ const NewAndPopular = () => {
         setLoading(true);
         setError(null);
         
-        // Fetch all media sorted by release date
-        const params = {
-          page,
-          limit: 24,
-          sort: 'releaseDate',
-          order: 'desc',
-        };
-        
-        const response = await getMedia(params);
+        // Fetch new and popular media from TMDB
+        const response = await getTMDBNewAndPopular(page, 24, 'all');
         
         if (response.data && response.data.results) {
           // Add new media to the existing list
@@ -73,10 +66,14 @@ const NewAndPopular = () => {
             if (page === 1) return response.data.results;
             
             // Otherwise, append new items, ensuring no duplicates
-            const newMediaIds = new Set(response.data.results.map(item => item._id));
-            const uniquePrevMedia = prevMedia.filter(item => !newMediaIds.has(item._id));
+            const newItems = response.data.results.filter(item => item); // Remove any null items
+            const newMediaIds = new Set(newItems.map(getMediaIdentifier));
             
-            return [...uniquePrevMedia, ...response.data.results];
+            const uniquePrevMedia = prevMedia.filter(item => {
+              return item && !newMediaIds.has(getMediaIdentifier(item));
+            });
+            
+            return [...uniquePrevMedia, ...newItems];
           });
           
           // Check if we've reached the end of the list
@@ -128,6 +125,14 @@ const NewAndPopular = () => {
     setMoreInfoOpen(false);
   };
 
+  // Helper function to ensure we don't break on undefined properties
+  const getMediaIdentifier = (item) => {
+    if (!item) return '';
+    const type = item.type || 'unknown';
+    const id = item.tmdbId || item.id || 'unknown';
+    return `${type}-${id}`;
+  };
+
   return (
     <Box sx={{ 
       flexGrow: 1,
@@ -147,8 +152,16 @@ const NewAndPopular = () => {
         {/* Media Grid */}
         <Grid container spacing={2} sx={{ mb: 4, px: { xs: 2, md: 4 } }}>
           {media.map((item, index) => {
+            // Skip rendering if essential properties are missing
+            if (!item || !item.posterPath || !item.backdropPath) {
+              return null;
+            }
+            
             // Check if this is the last item
             const isLastElement = index === media.length - 1;
+            
+            // Generate a unique key for TMDB items
+            const itemKey = item._id || `tmdb-${item.type || 'unknown'}-${item.tmdbId || index}-${index}`;
             
             return (
               <Grid 
@@ -157,7 +170,7 @@ const NewAndPopular = () => {
                 sm={3} 
                 md={2} 
                 lg={2} 
-                key={`${item._id}-${index}`}
+                key={itemKey}
                 ref={isLastElement ? lastMediaElementRef : undefined}
               >
                 <MediaCard media={item} onClick={() => handleMediaClick(item)} />

@@ -309,6 +309,17 @@ export const getTMDBAnimationMedia = async (limit = 10, mediaType = null) => {
   });
 };
 
+// Get new and popular media from TMDB with pagination
+export const getTMDBNewAndPopular = async (page = 1, limit = 24, mediaType = 'all') => {
+  return api.get('/tmdb/new-and-popular', {
+    params: {
+      page,
+      limit,
+      mediaType
+    }
+  });
+};
+
 // Get action media from TMDB
 export const getTMDBActionMedia = async (limit = 10, mediaType = null) => {
   return api.get('/tmdb/action', {
@@ -357,6 +368,7 @@ const ApiService = {
   getTMDBPopularMedia,
   getTMDBNewReleases,
   getTMDBAnimationMedia,
+  getTMDBNewAndPopular,
   getTMDBActionMedia,
 };
 
