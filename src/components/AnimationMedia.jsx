@@ -42,10 +42,8 @@ const AnimationMedia = ({ mediaType }) => {
       setLoading(true);
       setError(null);
       
-      // Get all media first
-      const response = await ApiService.getMedia({
-        limit: 100 // Get more to filter through
-      });
+      // Use the TMDB API to get animation media
+      const response = await ApiService.getTMDBAnimationMedia(10, mediaType);
       
       if (!response.data || !response.data.results) {
         console.error('Unexpected response format:', response);
@@ -54,60 +52,16 @@ const AnimationMedia = ({ mediaType }) => {
         return;
       }
       
-      // Filter for only animation genre
-      let animationContent = response.data.results.filter(item => {
-        // Check if genres array exists and contains 'Animation'
-        return item.genres && 
-               Array.isArray(item.genres) && 
-               item.genres.some(genre => genre === 'Animation');
-      });
+      // Process the results
+      const animationContent = response.data.results;
       
+      // Set unique IDs for each item to prevent React key conflicts
+      const formattedContent = animationContent.map(item => ({
+        ...item,
+        _id: `tmdb-${item.type}-${item.tmdbId || item.id}`
+      }));
       
-      // If mediaType is specified, filter by that too
-      if (mediaType) {
-        animationContent = animationContent.filter(item => item.type === mediaType);
-      }
-      
-      // If not enough items found, try a more direct API call specifically for animation genre
-      if (animationContent.length < 10) {
-        try {
-          const genreResponse = await ApiService.getMedia({
-            genres: 'Animation', // Directly specify Animation genre
-            limit: 30,
-            type: mediaType || undefined
-          });
-          
-          if (genreResponse.data && genreResponse.data.results && genreResponse.data.results.length > 0) {
-            // Add only new items that aren't already in animationContent
-            const existingIds = new Set(animationContent.map(item => item._id));
-            const newItems = genreResponse.data.results.filter(item => !existingIds.has(item._id));
-            
-            animationContent = [...animationContent, ...newItems];
-          }
-        } catch (error) {
-          console.warn('Error with direct genre query:', error);
-        }
-      }
-      
-      // If we still don't have enough, ensure we have items by duplicating existing ones
-      if (animationContent.length < 10 && animationContent.length > 0) {
-        const itemsNeeded = 10 - animationContent.length;
-        for (let i = 0; i < itemsNeeded; i++) {
-          // Duplicate an item from the existing data (cycling through available items)
-          const itemToDuplicate = animationContent[i % animationContent.length];
-          // Create a shallow copy with a slightly modified id to prevent key conflicts
-          const duplicatedItem = {
-            ...itemToDuplicate,
-            _id: `${itemToDuplicate._id}-dup-${i}`
-          };
-          animationContent.push(duplicatedItem);
-        }
-      }
-      
-      // Limit to 10 items
-      const finalMediaData = animationContent.slice(0, 10);
-      
-      setAnimationMedia(finalMediaData);
+      setAnimationMedia(formattedContent);
       setLoading(false);
       
       // Check if we can scroll right after content is loaded
@@ -132,16 +86,18 @@ const AnimationMedia = ({ mediaType }) => {
       // Set loading state for media details
       setMediaDetailsLoading(true);
       
-      
-      // Fetch full media details
-      const response = await ApiService.getMediaById(media._id);
-      const fullMediaData = response.data;
+      // For TMDB content, use the TMDB details endpoint
+      const response = await ApiService.getTMDBDetails(
+        media.type,
+        media.tmdbId || media.id
+      );
       
       // Set the selected media with full details and open modal
-      setSelectedMedia(fullMediaData);
+      setSelectedMedia(response.data);
       setMoreInfoOpen(true);
       setMediaDetailsLoading(false);
     } catch (error) {
+      console.error('Error fetching media details:', error);
       // If there's an error, just use the basic media data we already have
       setSelectedMedia(media);
       setMoreInfoOpen(true);

@@ -285,6 +285,16 @@ export const getTMDBNewReleases = async (limit = 10, mediaType = null) => {
   });
 };
 
+// Get animation media from TMDB
+export const getTMDBAnimationMedia = async (limit = 10, mediaType = null) => {
+  return api.get('/tmdb/animation', {
+    params: {
+      limit,
+      mediaType
+    }
+  });
+};
+
 const ApiService = {
   signUp,
   login,
@@ -322,6 +332,7 @@ const ApiService = {
   getTMDBFeaturedMedia,
   getTMDBPopularMedia,
   getTMDBNewReleases,
+  getTMDBAnimationMedia,
 };
 
 export default ApiService;
