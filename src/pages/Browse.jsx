@@ -632,51 +632,82 @@ export default function Browse() {
                     <Loading />
                 ) : (
                     <Box sx={{ p: 3 }}>
-                        <Grid container spacing={2}>
-                            {media.map((item) => (
-                                <Grid item key={item.tmdbId || item._id} xs={6} sm={4} md={3} lg={2.4}>
-                                    <Box 
-                                        sx={{ 
-                                            position: 'relative',
-                                            height: 0,
-                                            paddingTop: '56.25%', // 16:9 aspect ratio
-                                            overflow: 'hidden',
-                                            cursor: 'pointer',
-                                            transition: 'transform 0.3s ease',
-                                            borderRadius: '4px',
-                                            boxShadow: '0 0 10px rgba(0,0,0,0.3)',
-                                            backgroundColor: '#333',
-                                            '&:hover': {
-                                                transform: 'scale(1.05)',
-                                                zIndex: 1,
-                                            },
-                                        }}
-                                        onClick={() => handleMediaClick(item)}
-                                    >
+                        {media.length > 0 ? (
+                            <Grid container spacing={2}>
+                                {media.map((item) => (
+                                    <Grid item key={item.tmdbId || item._id} xs={6} sm={4} md={3} lg={2.4}>
                                         <Box 
-                                            component="img"
-                                            src={item.backdropUrl || item.backdropPath || item.posterPath || getImageUrl(item)}
-                                            alt={item.title}
                                             sx={{ 
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                width: '100%',
-                                                height: '100%',
-                                                objectFit: 'cover',
-                                                objectPosition: 'center',
+                                                position: 'relative',
+                                                height: 0,
+                                                paddingTop: '56.25%', // 16:9 aspect ratio
+                                                overflow: 'hidden',
+                                                cursor: 'pointer',
+                                                transition: 'transform 0.3s ease',
+                                                borderRadius: '4px',
+                                                boxShadow: '0 0 10px rgba(0,0,0,0.3)',
+                                                backgroundColor: '#333',
+                                                '&:hover': {
+                                                    transform: 'scale(1.05)',
+                                                    zIndex: 1,
+                                                },
                                             }}
-                                        />
-                                        {isRecentlyAdded(item.releaseDate || item.release_date || item.first_air_date) && (
-                                            <RecentlyAddedTag>NEW</RecentlyAddedTag>
-                                        )}
-                                    </Box>
-                                </Grid>
-                            ))}
-                        </Grid>
+                                            onClick={() => handleMediaClick(item)}
+                                        >
+                                            <Box 
+                                                component="img"
+                                                src={item.backdropUrl || item.backdropPath || item.posterPath || getImageUrl(item)}
+                                                alt={item.title}
+                                                sx={{ 
+                                                    position: 'absolute',
+                                                    top: 0,
+                                                    left: 0,
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    objectFit: 'cover',
+                                                    objectPosition: 'center',
+                                                }}
+                                            />
+                                            {isRecentlyAdded(item.releaseDate || item.release_date || item.first_air_date) && (
+                                                <RecentlyAddedTag>NEW</RecentlyAddedTag>
+                                            )}
+                                        </Box>
+                                    </Grid>
+                                ))}
+                            </Grid>
+                        ) : (
+                            <Box sx={{ 
+                                display: 'flex', 
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                height: '50vh',
+                                color: 'white'
+                            }}>
+                                <Typography variant="h5" sx={{ mb: 2 }}>
+                                    No results found for your current filters
+                                </Typography>
+                                <Typography variant="body1" sx={{ mb: 4, textAlign: 'center' }}>
+                                    Try adjusting your filters or resetting them to see more titles.
+                                </Typography>
+                                <Button 
+                                    variant="contained" 
+                                    color="primary" 
+                                    onClick={handleResetFilters}
+                                    sx={{
+                                        backgroundColor: '#E50914',
+                                        '&:hover': {
+                                            backgroundColor: '#B81D24',
+                                        }
+                                    }}
+                                >
+                                    Reset Filters
+                                </Button>
+                            </Box>
+                        )}
                         
                         {/* Pagination */}
-                        {totalPages > 1 && (
+                        {totalPages > 1 && media.length > 0 && (
                             <Box sx={{ 
                                 display: 'flex', 
                                 justifyContent: 'center',
