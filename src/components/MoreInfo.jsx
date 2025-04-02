@@ -183,13 +183,14 @@ const MoreInfo = ({ open, onClose, media }) => {
   }
 
   const handleReviewClick = () => {
-    // Use either the existing _id or create a unique identifier based on tmdbId
-    const mediaId = media._id || `tmdb-${media.type}-${media.tmdbId || media.id}`;
+    // Ensure we use the correct format for the media ID
+    const mediaId = media._id || (media.tmdbId ? `tmdb-${media.type || 'movie'}-${media.tmdbId}` : (media.id ? `tmdb-${media.type || 'movie'}-${media.id}` : null));
     
     if (!mediaId) {
       console.error('Media ID is missing or invalid');
       return;
     }
+    console.log('Opening review modal with media ID:', mediaId);
     setReviewModalOpen(true);
   };
 
@@ -721,7 +722,7 @@ const MoreInfo = ({ open, onClose, media }) => {
       <Review 
         open={reviewModalOpen} 
         onClose={handleCloseReviewModal}
-        mediaIdProp={media._id || `tmdb-${media.type}-${media.tmdbId || media.id}`}
+        mediaIdProp={media._id || (media.tmdbId ? `tmdb-${media.type || 'movie'}-${media.tmdbId}` : (media.id ? `tmdb-${media.type || 'movie'}-${media.id}` : null))}
       />
     </>
   );

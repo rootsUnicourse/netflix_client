@@ -127,21 +127,37 @@ const UserReviews = ({ mediaType }) => {
       // Set loading state for media details
       setMediaDetailsLoading(true);
       
-      // Remove any suffix that might have been added (like -featured or -trending)
+      // Check if this is a TMDB ID (starting with tmdb-)
+      if (media._id.startsWith('tmdb-')) {
+        console.log('TMDB media detected:', media);
+        // For TMDB media, we'll use it directly
+        setSelectedMedia(media);
+        setMoreInfoOpen(true);
+        setMediaDetailsLoading(false);
+        return;
+      }
+      
+      // For regular DB media, remove any suffix that might have been added (like -featured or -trending)
       const cleanId = media._id.split('-')[0];
       
-      // Fetch full media details
-      const response = await getMediaById(cleanId);
-      const fullMediaData = response.data;
+      try {
+        // Fetch full media details
+        const response = await getMediaById(cleanId);
+        const fullMediaData = response.data;
+        
+        // Set the selected media with full details and open modal
+        setSelectedMedia(fullMediaData);
+      } catch (error) {
+        console.error('Error fetching full media details:', error);
+        // If there's an error, just use the basic media data we already have
+        setSelectedMedia(media);
+      }
       
-      
-      // Set the selected media with full details and open modal
-      setSelectedMedia(fullMediaData);
       setMoreInfoOpen(true);
       setMediaDetailsLoading(false);
     } catch (error) {
-      console.error('Error fetching full media details:', error);
-      // If there's an error, just use the basic media data we already have
+      console.error('Error handling media click:', error);
+      // Use the media we have even if there's an error
       setSelectedMedia(media);
       setMoreInfoOpen(true);
       setMediaDetailsLoading(false);

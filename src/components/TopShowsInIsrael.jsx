@@ -20,7 +20,29 @@ const TopShowsInIsrael = () => {
         setLoading(true);
         const response = await getTopShowsInIsrael(10);
 
-        setTopShows(response.data.results);
+        // Make sure we process media objects correctly
+        const processedShows = response.data.results.map(show => {
+          // Check if this is a TMDB ID
+          if (typeof show._id === 'string' && show._id.startsWith('tmdb-')) {
+            // Already in correct format
+            return show;
+          }
+          
+          // Check if this has a tmdbId field
+          if (show.tmdbId) {
+            // Ensure the _id field is in the right format for TMDB media
+            return {
+              ...show,
+              _id: `tmdb-${show.type || 'movie'}-${show.tmdbId}`
+            };
+          }
+          
+          // Regular DB media
+          return show;
+        });
+
+        console.log('Processed top shows:', processedShows);
+        setTopShows(processedShows);
         setLoading(false);
 
         // Check if we can scroll right after content is loaded
@@ -43,7 +65,16 @@ const TopShowsInIsrael = () => {
   };
 
   const handleShowClick = (media) => {
-    setSelectedMedia(media);
+    // Ensure media has the correct ID format before passing to MoreInfo
+    let mediaToShow = { ...media };
+    
+    // If it has a tmdbId but the _id is not in the right format, fix it
+    if (media.tmdbId && !media._id.startsWith('tmdb-')) {
+      mediaToShow._id = `tmdb-${media.type || 'movie'}-${media.tmdbId}`;
+    }
+    
+    console.log('Showing media details:', mediaToShow);
+    setSelectedMedia(mediaToShow);
     setMoreInfoOpen(true);
   };
 

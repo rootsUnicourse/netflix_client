@@ -444,9 +444,28 @@ const Review = ({ open, onClose, mediaIdProp }) => {
       effectiveId = mediaId.split('-')[0];
     }
 
+    // Get current user ID from localStorage
+    const userData = localStorage.getItem('user');
+    let userId = null;
+    
+    if (userData) {
+      try {
+        const userObj = JSON.parse(userData);
+        userId = userObj._id;
+      } catch (err) {
+        console.error('Error parsing user data:', err);
+        throw new Error('Unable to get user ID from localStorage');
+      }
+    }
+    
+    if (!userId) {
+      throw new Error('User ID not found. Please log in again.');
+    }
+
     const reviewData = {
       mediaId: effectiveId,
       profileId: profileId,
+      userId: userId,  // Add the user ID to the review data
       rating: review.rating,
       content: review.content.trim(),
       isPublic: review.isPublic
@@ -454,12 +473,13 @@ const Review = ({ open, onClose, mediaIdProp }) => {
     
     
     // Validate required fields
-    if (!reviewData.mediaId || !reviewData.content) {
+    if (!reviewData.mediaId || !reviewData.content || !reviewData.userId) {
       console.error('Missing required fields:', { 
         hasMediaId: !!reviewData.mediaId, 
-        hasContent: !!reviewData.content
+        hasContent: !!reviewData.content,
+        hasUserId: !!reviewData.userId
       });
-      throw new Error('Media ID and content are required');
+      throw new Error('Media ID, content, and user ID are required');
     }
 
     let response;
