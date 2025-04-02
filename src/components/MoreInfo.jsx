@@ -33,20 +33,61 @@ const MoreInfo = ({ open, onClose, media }) => {
   const [localInWatchlist, setLocalInWatchlist] = useState(false);
   const [fullMediaDetails, setFullMediaDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [additionalImages, setAdditionalImages] = useState([]);
+  const [imagesLoading, setImagesLoading] = useState(false);
   const { user, addToWatchlist, removeFromWatchlist, isInWatchlist, watchlist, currentProfile } = useContext(UserContext);
 
   // Clear details when dialog closes
   useEffect(() => {
     if (!open) {
       setFullMediaDetails(null);
+      setAdditionalImages([]);
     }
   }, [open]);
 
   // Clear details when media changes
   useEffect(() => {
     setFullMediaDetails(null);
+    setAdditionalImages([]);
     setIsLoading(true);
   }, [media]);
+
+  // Fetch additional images for the media item
+  const fetchAdditionalImages = useCallback(async () => {
+    if (!media) return;
+    
+    try {
+      setImagesLoading(true);
+      const mediaType = media.type;
+      const tmdbId = media.tmdbId || media.id;
+      
+      const response = await ApiService.getTMDBImages(mediaType, tmdbId, { 
+        limit: 6,
+        // Request a mix of different image types
+        types: 'backdrop,still,logo,video' 
+      });
+      
+      if (response.data && response.data.images) {
+        // Filter out any images that match the main backdrop or poster
+        const mainUrls = [
+          fullMediaDetails?.backdropPath,
+          fullMediaDetails?.posterPath
+        ].filter(Boolean);
+        
+        const filteredImages = response.data.images
+          .filter(img => !mainUrls.some(url => 
+            img.url === url || img.thumbnailUrl === url
+          ))
+          .slice(0, 6);
+          
+        setAdditionalImages(filteredImages);
+      }
+    } catch (error) {
+      console.error('Error fetching additional images:', error);
+    } finally {
+      setImagesLoading(false);
+    }
+  }, [media, fullMediaDetails]);
 
   // Fetch full media details when the dialog opens
   useEffect(() => {
@@ -81,6 +122,13 @@ const MoreInfo = ({ open, onClose, media }) => {
       fetchMediaDetails();
     }
   }, [open, media]);
+
+  // Fetch additional images once we have the media details
+  useEffect(() => {
+    if (fullMediaDetails && open) {
+      fetchAdditionalImages();
+    }
+  }, [fullMediaDetails, open, fetchAdditionalImages]);
 
   // Update local watchlist status whenever any relevant state changes
   const updateWatchlistStatus = useCallback(() => {
@@ -215,6 +263,17 @@ const MoreInfo = ({ open, onClose, media }) => {
       return [];
     }
     return fullMediaDetails.seasonData[selectedSeason].episodes;
+  };
+
+  // Get images to display in the photos section
+  const getPhotosToDisplay = () => {
+    // First try to use the new API results
+    if (additionalImages.length > 0) {
+      return additionalImages.slice(0, 3).map(img => img.url || img.thumbnailUrl);
+    }
+    
+    // Fall back to the original additionalImages from the media details
+    return fullMediaDetails.additionalImages || [];
   };
 
   return (
@@ -547,37 +606,43 @@ const MoreInfo = ({ open, onClose, media }) => {
               <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
                 Photos
               </Typography>
-              <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 2 }}>
-                {fullMediaDetails.additionalImages?.length > 0 ? (
-                  fullMediaDetails.additionalImages.slice(0, 3).map((image, index) => (
-                    <Box
-                      key={index}
-                      component="img"
-                      src={image}
-                      alt={`${fullMediaDetails.title} scene ${index + 1}`}
-                      sx={{
-                        width: '200px',
-                        height: '120px',
-                        objectFit: 'cover',
-                        borderRadius: '4px'
-                      }}
-                    />
-                  ))
-                ) : (
-                  // Placeholder images if none available
-                  [1, 2, 3].map((num) => (
-                    <Box
-                      key={num}
-                      sx={{
-                        width: '200px',
-                        height: '120px',
-                        bgcolor: '#333',
-                        borderRadius: '4px'
-                      }}
-                    />
-                  ))
-                )}
-              </Box>
+              {imagesLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                  <CircularProgress size={30} sx={{ color: '#E50914' }} />
+                </Box>
+              ) : (
+                <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 2 }}>
+                  {getPhotosToDisplay().length > 0 ? (
+                    getPhotosToDisplay().map((image, index) => (
+                      <Box
+                        key={index}
+                        component="img"
+                        src={image}
+                        alt={`${fullMediaDetails.title} scene ${index + 1}`}
+                        sx={{
+                          width: '200px',
+                          height: '120px',
+                          objectFit: 'cover',
+                          borderRadius: '4px'
+                        }}
+                      />
+                    ))
+                  ) : (
+                    // Placeholder images if none available
+                    [1, 2, 3].map((num) => (
+                      <Box
+                        key={num}
+                        sx={{
+                          width: '200px',
+                          height: '120px',
+                          bgcolor: '#333',
+                          borderRadius: '4px'
+                        }}
+                      />
+                    ))
+                  )}
+                </Box>
+              )}
             </Box>
 
             {/* About section */}

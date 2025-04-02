@@ -238,6 +238,14 @@ export const getTMDBDetails = async (mediaType, tmdbId) => {
   return api.get(`/tmdb/details/${mediaType}/${tmdbId}`);
 };
 
+// Get all available images for a media item
+export const getTMDBImages = async (mediaType, tmdbId, options = {}) => {
+  const { limit = 10, types = 'all' } = options;
+  return api.get(`/tmdb/images/${mediaType}/${tmdbId}`, {
+    params: { limit, types }
+  });
+};
+
 export const checkMediaExists = async (tmdbId) => {
   return api.get(`/media/exists/${tmdbId}`);
 };
@@ -306,6 +314,7 @@ const ApiService = {
   getTMDBRecommendations,
   searchTMDB,
   getTMDBDetails,
+  getTMDBImages,
   checkMediaExists,
   addMedia,
   getSystemLogs,
