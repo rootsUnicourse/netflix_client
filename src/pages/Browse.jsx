@@ -9,7 +9,8 @@ import {
     FormControl,
     Select,
     MenuItem,
-    Button
+    Button,
+    Pagination
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import FilterAltOffIcon from '@mui/icons-material/FilterAltOff';
@@ -141,50 +142,22 @@ export default function Browse() {
     const [languageFilter, setLanguageFilter] = useState('all');
     const [ageRatingFilter, setAgeRatingFilter] = useState('all');
     
-    // Genre options (derived from typical Netflix genres)
+    // Pagination states
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalResults, setTotalResults] = useState(0);
+    
+    // Filter options states
     const [genres, setGenres] = useState([
-        { value: 'all', label: 'All Genres' },
-        { value: 'action', label: 'Action' },
-        { value: 'animation', label: 'Animation' },
-        { value: 'comedy', label: 'Comedy' },
-        { value: 'documentary', label: 'Documentary' },
-        { value: 'drama', label: 'Drama' },
-        { value: 'horror', label: 'Horror' },
-        { value: 'romance', label: 'Romance' },
-        { value: 'sci-fi', label: 'Sci-Fi' },
-        { value: 'thriller', label: 'Thriller' }
+        { value: 'all', label: 'All Genres' }
     ]);
     
-    // Language options
     const [languages, setLanguages] = useState([
-        { value: 'all', label: 'All Languages' },
-        { value: 'en', label: 'English' },
-        { value: 'fr', label: 'French' },
-        { value: 'es', label: 'Spanish' },
-        { value: 'de', label: 'German' },
-        { value: 'ja', label: 'Japanese' },
-        { value: 'ko', label: 'Korean' },
-        { value: 'zh', label: 'Chinese' },
-        { value: 'hi', label: 'Hindi' },
-        { value: 'he', label: 'Hebrew' },
-        { value: 'ar', label: 'Arabic' }
+        { value: 'all', label: 'All Languages' }
     ]);
     
-    // Age rating options updated to match actual maturityRating values
     const [ageRatings, setAgeRatings] = useState([
-        { value: 'all', label: 'All Ratings' },
-        { value: 'G', label: 'G' },
-        { value: 'PG', label: 'PG' },
-        { value: 'PG-13', label: 'PG-13' },
-        { value: 'R', label: 'R' },
-        { value: 'NC-17', label: 'NC-17' },
-        { value: 'TV-Y', label: 'TV-Y' },
-        { value: 'TV-Y7', label: 'TV-Y7' },
-        { value: 'TV-G', label: 'TV-G' },
-        { value: 'TV-PG', label: 'TV-PG' },
-        { value: 'TV-14', label: 'TV-14' },
-        { value: 'TV-MA', label: 'TV-MA' },
-        { value: 'Not Rated', label: 'Not Rated' }
+        { value: 'all', label: 'All Ratings' }
     ]);
 
     // Get the current profile from sessionStorage or use the first profile
@@ -204,66 +177,34 @@ export default function Browse() {
             try {
                 setIsLoading(true);
                 
-                // Fetch all media to populate filter options
-                const response = await ApiService.getMedia({ limit: 200 });
+                // Fetch media using the new TMDB browse endpoint
+                const response = await ApiService.getBrowseMedia({
+                    genre: 'all',
+                    language: 'all',
+                    rating: 'all',
+                    page: 1,
+                    limit: 100
+                });
                 
-                if (response.data.results && response.data.results.length > 0) {
-                    // Extract unique genres, languages, and ratings
-                    const uniqueGenres = new Set();
-                    const uniqueLanguages = new Set();
-                    const uniqueRatings = new Set();
+                if (response && response.results) {
+                    setMedia(response.results);
+                    setTotalPages(response.totalPages);
+                    setTotalResults(response.totalResults);
                     
-                    response.data.results.forEach(item => {
-                        if (item.genres && Array.isArray(item.genres)) {
-                            item.genres.forEach(genre => uniqueGenres.add(genre));
+                    // Update filter options with data from the response
+                    if (response.filters) {
+                        if (response.filters.genres) {
+                            setGenres(response.filters.genres);
                         }
-                        if (item.originalLanguage) {
-                            uniqueLanguages.add(item.originalLanguage);
+                        
+                        if (response.filters.languages) {
+                            setLanguages(response.filters.languages);
                         }
-                        if (item.maturityRating) {
-                            uniqueRatings.add(item.maturityRating);
+                        
+                        if (response.filters.ratings) {
+                            setAgeRatings(response.filters.ratings);
                         }
-                    });
-                    
-                    
-                    // Update filter options with actual data from API
-                    // Keep 'all' option at the top
-                    setGenres([
-                        { value: 'all', label: 'All Genres' },
-                        ...[...uniqueGenres].map(genre => ({ value: genre, label: genre }))
-                    ]);
-                    
-                    const languageMap = {
-                        'en': 'English',
-                        'fr': 'French',
-                        'es': 'Spanish',
-                        'de': 'German',
-                        'ja': 'Japanese',
-                        'ko': 'Korean',
-                        'zh': 'Chinese',
-                        'hi': 'Hindi',
-                        'he': 'Hebrew',
-                        'ar': 'Arabic',
-                        'ru': 'Russian',
-                        'it': 'Italian',
-                        'pt': 'Portuguese'
-                    };
-                    
-                    setLanguages([
-                        { value: 'all', label: 'All Languages' },
-                        ...[...uniqueLanguages].map(lang => ({ 
-                            value: lang, 
-                            label: languageMap[lang] || lang.toUpperCase() 
-                        }))
-                    ]);
-                    
-                    setAgeRatings([
-                        { value: 'all', label: 'All Ratings' },
-                        ...[...uniqueRatings].map(rating => ({ value: rating, label: rating }))
-                    ]);
-                    
-                    // Also set the initial media
-                    setMedia(response.data.results);
+                    }
                 } else {
                     setMedia([]);
                 }
@@ -284,54 +225,23 @@ export default function Browse() {
             try {
                 setIsLoading(true);
                 
-                // Fetch media using API service
-                const response = await ApiService.getMedia({
+                // Fetch media using the new TMDB browse endpoint with filters
+                const response = await ApiService.getBrowseMedia({
+                    genre: genreFilter,
+                    language: languageFilter,
+                    rating: ageRatingFilter,
+                    page: page,
                     limit: 100
                 });
                 
-                if (response.data.results && response.data.results.length > 0) {                    
-                    // Apply client-side filtering based on selected filters
-                    let filteredResults = response.data.results;
-                    
-                    // Only apply filtering if at least one filter is not 'all'
-                    if (genreFilter !== 'all' || languageFilter !== 'all' || ageRatingFilter !== 'all') {
-                        filteredResults = response.data.results.filter(item => {
-                            // Skip items without proper data for filtering
-                            if (!item) return false;
-                            
-                            // Genre filter
-                            let genreMatch = genreFilter === 'all';
-                            if (!genreMatch && item.genres && Array.isArray(item.genres)) {
-                                genreMatch = item.genres.some(genre => 
-                                    genre.toLowerCase() === genreFilter.toLowerCase());
-                            }
-                            
-                            // Language filter
-                            let languageMatch = languageFilter === 'all';
-                            if (!languageMatch && item.originalLanguage) {
-                                languageMatch = item.originalLanguage.toLowerCase() === languageFilter.toLowerCase();
-                            }
-                            
-                            // Age rating filter
-                            let ratingMatch = ageRatingFilter === 'all';
-                            if (!ratingMatch && item.maturityRating) {
-                                ratingMatch = item.maturityRating === ageRatingFilter;
-                            }
-                            
-                            return genreMatch && languageMatch && ratingMatch;
-                        });
-                        
-                       
-                    } else {
-                        // If all filters are 'all', use all results
-                        console.log('All filters set to "All" - showing all media');
-                    }
-                    
-                    // Update both media and allMedia states to ensure filtering works properly
-                    setMedia(filteredResults);
+                if (response && response.results) {
+                    setMedia(response.results);
+                    setTotalPages(response.totalPages);
+                    setTotalResults(response.totalResults);
                 } else {
                     setMedia([]);
                 }
+                
                 setIsLoading(false);
             } catch (error) {
                 console.error('Error fetching media with filters:', error);
@@ -340,7 +250,7 @@ export default function Browse() {
         };
 
         fetchFilteredMedia();
-    }, [genreFilter, languageFilter, ageRatingFilter]);
+    }, [genreFilter, languageFilter, ageRatingFilter, page]);
 
     // Remove redundant media fetch
     // Keep only the fetched filtered media effect
@@ -374,14 +284,22 @@ export default function Browse() {
 
     const handleGenreChange = (event) => {
         setGenreFilter(event.target.value);
+        setPage(1); // Reset to first page when changing filters
     };
 
     const handleLanguageChange = (event) => {
         setLanguageFilter(event.target.value);
+        setPage(1); // Reset to first page when changing filters
     };
 
     const handleAgeRatingChange = (event) => {
         setAgeRatingFilter(event.target.value);
+        setPage(1); // Reset to first page when changing filters
+    };
+    
+    const handlePageChange = (event, value) => {
+        setPage(value);
+        window.scrollTo(0, 0); // Scroll to top when changing pages
     };
     
     // Reset all filters to 'all'
@@ -389,6 +307,7 @@ export default function Browse() {
         setGenreFilter('all');
         setLanguageFilter('all');
         setAgeRatingFilter('all');
+        setPage(1); // Reset to first page when resetting filters
     };
 
     // Calculate number of active filters
@@ -408,42 +327,16 @@ export default function Browse() {
         setMoreInfoOpen(true);
     };
     
-    // Prepare media object for MoreInfo component by ensuring all required properties exist
+    // Prepare media object for MoreInfo component
     const prepareMediaForMoreInfo = (media) => {
         if (!media) return null;
         
         // Create a copy to avoid modifying the original
         const prepared = { ...media };
         
-        // Ensure image properties are set
-        prepared.posterPath = prepared.posterPath || getImageUrl(prepared);
-        
-        // Set backdrop image (MoreInfo uses this for the background)
-        if (!prepared.backdropPath && prepared.additionalImages && prepared.additionalImages.length > 0) {
-            prepared.backdropPath = prepared.additionalImages[0];
-        } else if (!prepared.backdropPath) {
-            // Use poster as fallback if no backdrop is available
-            prepared.backdropPath = prepared.posterPath;
-        }
-        
-        // Ensure genres are an array
-        if (!prepared.genres || !Array.isArray(prepared.genres)) {
-            prepared.genres = [];
-        }
-        
-        // Ensure types and formats that MoreInfo expects
-        if (prepared.releaseDate && typeof prepared.releaseDate === 'string') {
-            prepared.releaseDate = new Date(prepared.releaseDate);
-        }
-        
-        // Ensure cast is an array
-        if (!prepared.cast || !Array.isArray(prepared.cast)) {
-            prepared.cast = [];
-        }
-        
-        // Ensure seasonData is an array
-        if (!prepared.seasonData || !Array.isArray(prepared.seasonData)) {
-            prepared.seasonData = [];
+        // TMDB ID handling
+        if (prepared.tmdbId && !prepared._id) {
+            prepared._id = `tmdb-${prepared.mediaType}-${prepared.tmdbId}`;
         }
         
         return prepared;
@@ -739,7 +632,7 @@ export default function Browse() {
                     <Box sx={{ p: 3 }}>
                         <Grid container spacing={2}>
                             {media.map((item) => (
-                                <Grid item key={item._id} xs={6} sm={4} md={3} lg={2.4}>
+                                <Grid item key={item.tmdbId || item._id} xs={6} sm={4} md={3} lg={2.4}>
                                     <Box 
                                         sx={{ 
                                             position: 'relative',
@@ -760,7 +653,7 @@ export default function Browse() {
                                     >
                                         <Box 
                                             component="img"
-                                            src={getImageUrl(item)}
+                                            src={item.backdropUrl || item.backdropPath}
                                             alt={item.title}
                                             sx={{ 
                                                 position: 'absolute',
@@ -779,6 +672,35 @@ export default function Browse() {
                                 </Grid>
                             ))}
                         </Grid>
+                        
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                            <Box sx={{ 
+                                display: 'flex', 
+                                justifyContent: 'center',
+                                mt: 4,
+                                mb: 2
+                            }}>
+                                <Pagination 
+                                    count={totalPages} 
+                                    page={page} 
+                                    onChange={handlePageChange}
+                                    color="primary"
+                                    size="large"
+                                    sx={{
+                                        '& .MuiPaginationItem-root': {
+                                            color: 'white',
+                                        },
+                                        '& .Mui-selected': {
+                                            backgroundColor: 'rgba(255, 0, 0, 0.8) !important',
+                                        },
+                                        '& .MuiPaginationItem-root:hover': {
+                                            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                                        }
+                                    }}
+                                />
+                            </Box>
+                        )}
                     </Box>
                 )}
             </Container>

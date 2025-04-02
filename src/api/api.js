@@ -330,6 +330,22 @@ export const getTMDBActionMedia = async (limit = 10, mediaType = null) => {
   });
 };
 
+// Get browse media with filtering options
+export const getBrowseMedia = async (filters = {}) => {
+  try {
+    const { genre = 'all', language = 'all', rating = 'all', page = 1, limit = 100 } = filters;
+    
+    const response = await api.get(`/tmdb/browse`, { 
+      params: { genre, language, rating, page, limit }
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching browse media:', error);
+    throw error;
+  }
+};
+
 const ApiService = {
   signUp,
   login,
@@ -370,6 +386,7 @@ const ApiService = {
   getTMDBAnimationMedia,
   getTMDBNewAndPopular,
   getTMDBActionMedia,
+  getBrowseMedia,
 };
 
 export default ApiService;
