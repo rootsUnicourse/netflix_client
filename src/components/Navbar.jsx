@@ -36,7 +36,7 @@ const NavButton = styled(Button)(({ theme }) => ({
 }));
 
 const Navbar = ({ transparent = false }) => {
-    const { profiles, logout, user, isAdmin, setProfile, currentProfile } = useContext(UserContext);
+    const { profiles, logout, isAdmin, setProfile, currentProfile } = useContext(UserContext);
     const navigate = useNavigate();
     const location = useLocation();
     const [anchorEl, setAnchorEl] = useState(null);
