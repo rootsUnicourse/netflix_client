@@ -9,10 +9,15 @@ import {
     Menu,
     MenuItem,
     Avatar,
-    Divider
+    Divider,
+    Drawer,
+    List,
+    ListItem,
+    ListItemText
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
+import MenuIcon from '@mui/icons-material/Menu';
 import UserContext from '../context/UserContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import NetflixLogo from '../assets/images/netflixlogo.png';
@@ -37,6 +42,7 @@ const Navbar = ({ transparent = false }) => {
     const [anchorEl, setAnchorEl] = useState(null);
     const [adminMenuAnchorEl, setAdminMenuAnchorEl] = useState(null);
     const [selectedProfile, setSelectedProfile] = useState(null);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     
     // Set the current profile
     useEffect(() => {
@@ -98,6 +104,17 @@ const Navbar = ({ transparent = false }) => {
         return location.pathname === path;
     };
 
+    // Toggle mobile menu
+    const toggleMobileMenu = () => {
+        setMobileMenuOpen(!mobileMenuOpen);
+    };
+
+    // Handle mobile navigation
+    const handleMobileNavigation = (path) => {
+        navigate(path);
+        setMobileMenuOpen(false);
+    };
+
     return (
         <AppBar
             position="fixed"
@@ -124,6 +141,20 @@ const Navbar = ({ transparent = false }) => {
                         onClick={() => navigate('/home')}
                     />
                 </Box>
+
+                {/* Hamburger Menu for Mobile */}
+                <IconButton 
+                    color="inherit" 
+                    aria-label="menu"
+                    edge="start"
+                    onClick={toggleMobileMenu}
+                    sx={{ 
+                        display: { xs: 'flex', md: 'none' },
+                        color: 'white'
+                    }}
+                >
+                    <MenuIcon />
+                </IconButton>
 
                 {/* Navigation Links - Desktop */}
                 <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
@@ -230,12 +261,6 @@ const Navbar = ({ transparent = false }) => {
                             </Menu>
                         </>
                     )}
-                    
-                </Box>
-
-                {/* Navigation Links - Mobile (Dropdown) */}
-                <Box sx={{ display: { xs: 'flex', md: 'none' }, flexGrow: 1 }}>
-                    <NavButton>Browse</NavButton>
                 </Box>
 
                 {/* Right side - Search and Profile */}
@@ -342,6 +367,122 @@ const Navbar = ({ transparent = false }) => {
                     </Menu>
                 </Box>
             </Toolbar>
+
+            {/* Mobile Navigation Drawer */}
+            <Drawer
+                anchor="left"
+                open={mobileMenuOpen}
+                onClose={toggleMobileMenu}
+                PaperProps={{
+                    sx: {
+                        width: '70%',
+                        maxWidth: '300px',
+                        backgroundColor: '#141414',
+                        color: 'white'
+                    }
+                }}
+            >
+                <Box sx={{ p: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                        {selectedProfile && (
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                <Avatar
+                                    src={selectedProfile.avatar}
+                                    alt={selectedProfile.name}
+                                    sx={{ width: 36, height: 36, mr: 1 }}
+                                />
+                                <Typography variant="subtitle1">{selectedProfile.name}</Typography>
+                            </Box>
+                        )}
+                    </Box>
+                    
+                    <Divider sx={{ backgroundColor: '#333' }} />
+                    
+                    <List>
+                        <ListItem button onClick={() => handleMobileNavigation('/home')}>
+                            <ListItemText 
+                                primary="Home" 
+                                primaryTypographyProps={{ 
+                                    style: { 
+                                        color: isActive('/home') ? 'white' : '#e5e5e5',
+                                        fontWeight: isActive('/home') ? 'bold' : 'normal'
+                                    } 
+                                }}
+                            />
+                        </ListItem>
+                        <ListItem button onClick={() => handleMobileNavigation('/tvshows')}>
+                            <ListItemText 
+                                primary="TV Shows" 
+                                primaryTypographyProps={{ 
+                                    style: { 
+                                        color: isActive('/tvshows') ? 'white' : '#e5e5e5',
+                                        fontWeight: isActive('/tvshows') ? 'bold' : 'normal'
+                                    } 
+                                }}
+                            />
+                        </ListItem>
+                        <ListItem button onClick={() => handleMobileNavigation('/movies')}>
+                            <ListItemText 
+                                primary="Movies" 
+                                primaryTypographyProps={{ 
+                                    style: { 
+                                        color: isActive('/movies') ? 'white' : '#e5e5e5',
+                                        fontWeight: isActive('/movies') ? 'bold' : 'normal'
+                                    } 
+                                }}
+                            />
+                        </ListItem>
+                        <ListItem button onClick={() => handleMobileNavigation('/new-and-popular')}>
+                            <ListItemText 
+                                primary="New & Popular" 
+                                primaryTypographyProps={{ 
+                                    style: { 
+                                        color: isActive('/new-and-popular') ? 'white' : '#e5e5e5',
+                                        fontWeight: isActive('/new-and-popular') ? 'bold' : 'normal'
+                                    } 
+                                }}
+                            />
+                        </ListItem>
+                        <ListItem button onClick={() => { 
+                            document.getElementById('watchlist-section')?.scrollIntoView({ behavior: 'smooth' });
+                            setMobileMenuOpen(false);
+                        }}>
+                            <ListItemText primary="My List" />
+                        </ListItem>
+                        <ListItem button onClick={() => handleMobileNavigation('/browse')}>
+                            <ListItemText 
+                                primary="Browse" 
+                                primaryTypographyProps={{ 
+                                    style: { 
+                                        color: isActive('/browse') ? 'white' : '#e5e5e5',
+                                        fontWeight: isActive('/browse') ? 'bold' : 'normal'
+                                    } 
+                                }}
+                            />
+                        </ListItem>
+                        
+                        {isAdmin && isAdmin() && (
+                            <>
+                                <Divider sx={{ backgroundColor: '#333', my: 1 }} />
+                                <ListItem button onClick={() => handleMobileNavigation('/admin/media/insert')}>
+                                    <ListItemText primary="Add New Media" />
+                                </ListItem>
+                                <ListItem button onClick={() => handleMobileNavigation('/admin/logs')}>
+                                    <ListItemText primary="System Logs" />
+                                </ListItem>
+                            </>
+                        )}
+                        
+                        <Divider sx={{ backgroundColor: '#333', my: 1 }} />
+                        <ListItem button onClick={handleSwitchProfiles}>
+                            <ListItemText primary="Switch Profiles" />
+                        </ListItem>
+                        <ListItem button onClick={handleLogout}>
+                            <ListItemText primary="Sign Out" />
+                        </ListItem>
+                    </List>
+                </Box>
+            </Drawer>
         </AppBar>
     );
 };

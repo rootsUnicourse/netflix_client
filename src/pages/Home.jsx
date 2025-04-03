@@ -2,7 +2,9 @@ import React, { useContext, useState, useEffect } from 'react';
 import {
     Box,
     Container,
-    CssBaseline
+    CssBaseline,
+    useMediaQuery,
+    useTheme
 } from '@mui/material';
 import UserContext from '../context/UserContext';
 import ApiService from '../api/api';
@@ -24,6 +26,8 @@ export default function Home() {
     const { profiles } = useContext(UserContext);
     const [featuredMedia, setFeaturedMedia] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
     // Get the current profile from sessionStorage or use the first profile
     useEffect(() => {
@@ -91,29 +95,32 @@ export default function Home() {
             {/* Use shared Navbar component with transparent background */}
             <Navbar transparent={true} />
 
-            {/* Cover Photo Section */}
-            {!isLoading && featuredMedia.length > 0 && (
-                <CoverPhotoSection 
-                    featuredMediaList={featuredMedia} 
-                    key={featuredMedia[0]?.id} // Add key to force re-render when data changes
-                />
-            )}
+            {/* Add extra padding for mobile view to account for navbar */}
+            <Box sx={{ pt: isMobile ? '56px' : 0 }}>
+                {/* Cover Photo Section */}
+                {!isLoading && featuredMedia.length > 0 && (
+                    <CoverPhotoSection 
+                        featuredMediaList={featuredMedia} 
+                        key={featuredMedia[0]?.id} // Add key to force re-render when data changes
+                    />
+                )}
 
-            {/* Main Content Container */}
-            <Container maxWidth={false} sx={{ pt: 0, px: { xs: 0 }, overflowX: 'hidden' }}>
-                {/* Rows */}
-                <MatchForYou />
-                <NewOnNetflix />
-                <TopShowsInIsrael />
-                <UserReviews />
-                <TopRatedMedia />
-                <AnimationMedia />
-                <ActionMedia />
-                {/* Watchlist Section */}
-                <Box id="watchlist-section">
-                    <WatchlistMedia />
-                </Box>
-            </Container>
+                {/* Main Content Container */}
+                <Container maxWidth={false} sx={{ pt: 0, px: { xs: 0 }, overflowX: 'hidden' }}>
+                    {/* Rows */}
+                    <MatchForYou />
+                    <NewOnNetflix />
+                    <TopShowsInIsrael />
+                    <UserReviews />
+                    <TopRatedMedia />
+                    <AnimationMedia />
+                    <ActionMedia />
+                    {/* Watchlist Section */}
+                    <Box id="watchlist-section">
+                        <WatchlistMedia />
+                    </Box>
+                </Container>
+            </Box>
             
             {/* Footer */}
             <Footer />
