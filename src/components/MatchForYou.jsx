@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef, useContext } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box, Typography, Skeleton, IconButton } from '@mui/material';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import MoreInfo from './MoreInfo';
-import UserContext from '../context/UserContext';
 import ApiService from '../api/api';
 
 // Helper function to ensure image URLs are properly formatted
@@ -33,7 +32,6 @@ const MatchForYou = ({ mediaType }) => {
   const [scrollPosition, setScrollPosition] = useState(0);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const rowRef = useRef(null);
-  const { watchlist } = useContext(UserContext);
 
   // Fetch media on component mount
   useEffect(() => {
