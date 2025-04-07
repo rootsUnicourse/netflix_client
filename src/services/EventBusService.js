@@ -1,4 +1,4 @@
-// EventBusService.js - A simple event bus for component communication
+
 
 class EventBus {
   constructor() {
