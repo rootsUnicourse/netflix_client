@@ -50,8 +50,8 @@ const MatchForYou = ({ mediaType }) => {
       try {
         const response = await ApiService.getTMDBRecommendations(mediaType || 'all', 10);
         
-        if (response.data && response.data.results) {
-          setMatchedMedia(response.data.results);
+        if (response.data && Array.isArray(response.data)) {
+          setMatchedMedia(response.data);
           setLoading(false);
           setTimeout(checkScrollability, 100);
           return;
@@ -65,8 +65,8 @@ const MatchForYou = ({ mediaType }) => {
       try {
         const response = await ApiService.getAIRecommendations(mediaType || 'all', 10);
         
-        if (response.data && response.data.results) {
-          setMatchedMedia(response.data.results);
+        if (response.data && Array.isArray(response.data)) {
+          setMatchedMedia(response.data);
           setLoading(false);
           setTimeout(checkScrollability, 100);
           return;

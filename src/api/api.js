@@ -231,7 +231,7 @@ export const getWatchlist = async (profileId) => {
 
 // Get AI recommendations
 export const getAIRecommendations = async (mediaType = 'all', limit = 10) => {
-  return api.get('/media/ai-recommendations', {
+  return api.get('/tmdb/recommendations', {
     params: { mediaType, limit }
   });
 };
